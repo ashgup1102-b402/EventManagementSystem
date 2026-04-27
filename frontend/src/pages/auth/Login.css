@@ -1,0 +1,42 @@
+.login-page {
+  min-height: 100vh; display: flex; align-items: center; justify-content: center;
+  padding: 20px; position: relative; overflow: hidden;
+  background: var(--gradient-hero);
+}
+.login-bg { position: absolute; inset: 0; overflow: hidden; pointer-events: none; }
+.login-orb {
+  position: absolute; border-radius: 50%;
+  filter: blur(80px); opacity: 0.3; animation: pulse 4s ease-in-out infinite;
+}
+.login-orb-1 { width: 400px; height: 400px; background: var(--brand-primary); top: -100px; left: -100px; }
+.login-orb-2 { width: 350px; height: 350px; background: var(--brand-secondary); bottom: -100px; right: -50px; animation-delay: 1s; }
+.login-orb-3 { width: 250px; height: 250px; background: var(--brand-accent); top: 50%; left: 50%; transform: translate(-50%,-50%); animation-delay: 2s; opacity: 0.15; }
+
+.login-card {
+  background: var(--surface-glass); backdrop-filter: blur(20px);
+  border: 1px solid var(--border); border-radius: var(--radius-xl);
+  padding: 40px; width: 100%; max-width: 420px;
+  position: relative; z-index: 1;
+  box-shadow: 0 25px 50px rgba(0,0,0,0.5);
+}
+.login-brand { text-align: center; margin-bottom: 28px; }
+.login-brand-icon { font-size: 48px; margin-bottom: 8px; }
+.login-brand-name { font-size: 28px; font-family: 'Outfit',sans-serif; font-weight: 800; background: var(--gradient-primary); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+.login-brand-tag { font-size: 12px; color: var(--text-muted); letter-spacing: 1px; }
+.login-title { font-size: 22px; margin-bottom: 4px; text-align: center; }
+.login-subtitle { font-size: 14px; color: var(--text-secondary); text-align: center; margin-bottom: 28px; }
+.login-form { display: flex; flex-direction: column; gap: 16px; margin-bottom: 20px; }
+.pass-toggle {
+  position: absolute; right: 12px; top: 50%; transform: translateY(-50%);
+  background: none; border: none; font-size: 16px; cursor: pointer; padding: 4px;
+}
+.login-register { text-align: center; font-size: 14px; color: var(--text-secondary); margin-bottom: 20px; }
+.login-demo { border-top: 1px solid var(--border-subtle); padding-top: 16px; }
+.demo-btn {
+  display: inline-block; margin: 4px;
+  padding: 5px 12px; border-radius: var(--radius-full);
+  font-size: 11px; font-weight: 600; background: var(--bg-tertiary);
+  border: 1px solid var(--border); color: var(--text-secondary);
+  cursor: pointer; transition: var(--transition);
+}
+.demo-btn:hover { border-color: var(--brand-primary); color: var(--brand-primary); }
