@@ -10,6 +10,7 @@ import Register from './pages/auth/Register'
 import SearchPage from './pages/enduser/SearchPage'
 import PropertyDetail from './pages/enduser/PropertyDetail'
 import MyBookings from './pages/enduser/MyBookings'
+import Profile from './pages/enduser/Profile'
 
 // Property Pages
 import PropertyDashboard from './pages/property/PropertyDashboard'
@@ -21,6 +22,10 @@ import WhatsappPromo from './pages/property/WhatsappPromo'
 
 // Admin & Super Admin Pages
 import AdminDashboard from './pages/admin/AdminDashboard'
+import PropertiesManager from './pages/admin/PropertiesManager'
+import UsersManager from './pages/admin/UsersManager'
+import AllBookings from './pages/admin/AllBookings'
+import Reports from './pages/admin/Reports'
 import SuperAdminDashboard from './pages/superadmin/SuperAdminDashboard'
 import SystemConfig from './pages/superadmin/SystemConfig'
 import Placeholder from './pages/Placeholder'
@@ -37,6 +42,8 @@ const App = () => {
           <Route path="/property/:id" element={<PropertyDetail />} />
 
           {/* End User Protected */}
+          <Route path="/dashboard" element={<Navigate to="/bookings" replace />} />
+          <Route path="/profile" element={<ProtectedRoute roles={['end_user']}><Profile /></ProtectedRoute>} />
           <Route path="/bookings" element={<ProtectedRoute roles={['end_user', 'admin', 'super_admin']}><MyBookings /></ProtectedRoute>} />
 
           {/* Property Routes */}
@@ -45,14 +52,16 @@ const App = () => {
           <Route path="/property/menu" element={<ProtectedRoute roles={['property']}><MenuManager /></ProtectedRoute>} />
           <Route path="/property/slots" element={<ProtectedRoute roles={['property']}><SlotManager /></ProtectedRoute>} />
           <Route path="/property/discounts" element={<ProtectedRoute roles={['property']}><DiscountManager /></ProtectedRoute>} />
+          <Route path="/property/guests" element={<ProtectedRoute roles={['property']}><Placeholder title="Guest List" /></ProtectedRoute>} />
           <Route path="/property/whatsapp" element={<ProtectedRoute roles={['property']}><WhatsappPromo /></ProtectedRoute>} />
+          <Route path="/property/settings" element={<ProtectedRoute roles={['property']}><Placeholder title="Property Settings" /></ProtectedRoute>} />
 
           {/* Admin Routes */}
           <Route path="/admin/dashboard" element={<ProtectedRoute roles={['admin', 'super_admin']}><AdminDashboard /></ProtectedRoute>} />
-          <Route path="/admin/properties" element={<ProtectedRoute roles={['admin', 'super_admin']}><Placeholder title="Properties Management" /></ProtectedRoute>} />
-          <Route path="/admin/users" element={<ProtectedRoute roles={['admin', 'super_admin']}><Placeholder title="Users Management" /></ProtectedRoute>} />
-          <Route path="/admin/bookings" element={<ProtectedRoute roles={['admin', 'super_admin']}><Placeholder title="All Bookings" /></ProtectedRoute>} />
-          <Route path="/admin/reports" element={<ProtectedRoute roles={['admin', 'super_admin']}><Placeholder title="Reports & Analytics" /></ProtectedRoute>} />
+          <Route path="/admin/properties" element={<ProtectedRoute roles={['admin', 'super_admin']}><PropertiesManager /></ProtectedRoute>} />
+          <Route path="/admin/users" element={<ProtectedRoute roles={['admin', 'super_admin']}><UsersManager /></ProtectedRoute>} />
+          <Route path="/admin/bookings" element={<ProtectedRoute roles={['admin', 'super_admin']}><AllBookings /></ProtectedRoute>} />
+          <Route path="/admin/reports" element={<ProtectedRoute roles={['admin', 'super_admin']}><Reports /></ProtectedRoute>} />
 
           {/* Super Admin Routes */}
           <Route path="/superadmin/dashboard" element={<ProtectedRoute roles={['super_admin']}><SuperAdminDashboard /></ProtectedRoute>} />

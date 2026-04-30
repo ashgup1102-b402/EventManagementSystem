@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
 import api from '../../api/axios'
-import Layout from '../../components/Layout'
+import SiteLayout from '../../components/SiteLayout'
 import toast from 'react-hot-toast'
 import './Search.css'
 
@@ -46,8 +46,8 @@ const SearchPage = () => {
     : 0
 
   return (
-    <Layout>
-      {/* Hero Search */}
+    <SiteLayout>
+      {/* Premium Hero Section */}
       <div className="search-hero">
         <div className="search-hero-content">
           <h1 className="search-hero-title">Discover Amazing <span className="text-gradient">Experiences</span></h1>
@@ -67,7 +67,8 @@ const SearchPage = () => {
         </div>
       </div>
 
-      {/* Filters */}
+      <div className="site-container">
+        {/* Filters */}
       <div className="search-filters">
         <div className="filter-section">
           <span className="filter-label">🎭 Event Type</span>
@@ -221,7 +222,8 @@ const SearchPage = () => {
           )}
         </>
       )}
-    </Layout>
+      </div>
+    </SiteLayout>
   )
 }
 

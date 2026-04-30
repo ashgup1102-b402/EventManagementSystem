@@ -74,11 +74,16 @@ const getOne = async (req, res, next) => {
 const create = async (req, res, next) => {
   const t = await sequelize.transaction();
   try {
-    const { property_id, booking_type, event_id, slot_id, booking_date, num_guests, items = [], special_requests, promo_code } = req.body;
+    const { property_id, booking_type, event_id, slot_id, booking_date, num_guests, items = [], special_requests, promo_code, guest_name, guest_email, guest_phone } = req.body;
 
     if (!property_id || !booking_type || !booking_date || !num_guests) {
       await t.rollback();
       return res.status(400).json({ success: false, message: 'Missing required booking fields.' });
+    }
+
+    if (!req.user && (!guest_name || !guest_email || !guest_phone)) {
+      await t.rollback();
+      return res.status(400).json({ success: false, message: 'Guest details required for unauthenticated bookings.' });
     }
 
     const property = await Property.findByPk(property_id, { transaction: t });
@@ -134,7 +139,11 @@ const create = async (req, res, next) => {
     // Create booking
     const booking_ref = generateRef();
     const booking = await Booking.create({
-      booking_ref, user_id: req.user.id, property_id, booking_type,
+      booking_ref, user_id: req.user ? req.user.id : null,
+      guest_name: req.user ? null : guest_name,
+      guest_email: req.user ? null : guest_email,
+      guest_phone: req.user ? null : guest_phone,
+      property_id, booking_type,
       event_id: event_id || null, slot_id: slot_id || null,
       booking_date, num_guests, subtotal_amount: subtotal,
       discount_amount, total_amount: totalAmount,
@@ -157,9 +166,12 @@ const create = async (req, res, next) => {
     await t.commit();
 
     // Send confirmation email (async, non-blocking)
-    const user = await User.findByPk(req.user.id);
+    const userOrGuest = req.user 
+      ? await User.findByPk(req.user.id) 
+      : { email: guest_email, first_name: guest_name };
+      
     const event = event_id ? await Event.findByPk(event_id) : null;
-    sendBookingConfirmation(user, booking, property, event).catch(console.error);
+    sendBookingConfirmation(userOrGuest, booking, property, event).catch(console.error);
 
     res.status(201).json({ success: true, message: 'Booking confirmed!', data: booking });
   } catch (err) {

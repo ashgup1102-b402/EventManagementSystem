@@ -1,0 +1,137 @@
+How to start application:
+Here are the step-by-step instructions to fix it:
+
+Step 1: Start the Backend Server
+
+Open a new terminal in your IDE.
+Navigate to your backend folder:
+bash
+cd backend
+Start the backend development server:
+bash
+npm run dev
+(You should see a message indicating the server is running on a port, like port 5000, and connected to the database)
+Step 2: Start the Frontend Server
+
+Open a second, separate terminal window (leave the backend running in the first one).
+Navigate to your frontend folder:
+bash
+cd frontend
+Start the frontend development server:
+bash
+npm run dev
+(This will typically start Vite on http://localhost:5173/ or a similar port)
+Step 3: Open in Browser Look at the output in your frontend terminal. It will give you a local URL (usually http://localhost:5173/). Ctrl + Click (or Cmd + Click) that link, or paste it into your browser.
+
+If you've run both commands successfully, your site should now load without the connection error! Let me know if you run into any other errors in the terminal after running these commands.
+
+=======================
+
+
+…\Event Management > winget install --id PostgreSQL.PostgreSQL.16 -e --silent --override "--unattendedmodeui none --mode unattended --superpassword your_password --serverport 5432"
+
+…\backend > node -e "const { Client } = require('pg'); const client = new Client({ user: 'postgres', password: 'your_password', host: 'localhost', port: 5432, database: 'postgres' }); client.connect().then(() => client.query('CREATE DATABASE event_management')).then(() => { console.log('DB created'); client.end(); }).catch(e => { console.error(e); client.end(); });"
+
+  Test Credentials:
+  Super Admin → superadmin / Admin@1234
+  Admin       → admin / Admin@1234
+  Property    → thegrandvenue / Prop@1234
+  End User    → john_doe / User@1234
+
+
+
+Basic requirements: 
+This should be a persistent application with multiuser and data should be stored in backend. Ensure all freeware/opensource should be used for integration.
+Need to create an event management system where users will be
+End user's, Super Admin, Admin and Properties
+End users should be able to search for based on Place, Event (Singer, Comedy show, Group Troup etc.) or Food type. End users should only be able to search and if require should be able to book event tickets, table for a specific day/slot
+Super Admin should have 100% full assess on all modules
+Admin should be able to access majority of the modules except system configuration. On board property  and grant an access to users etc..
+Properties should be able to access their property data where they should be allowed to update property details, Events (Singer, Comedy show, Group Troup etc.), Food type (Menu with price) etc..
+There should be a login module where user should be able to login using user name and password, no g-mail integration etc.. Property should be able to set prices for their menu items, combo deals.
+Property should be allowed to set discount for their any item with mix of combinations like menu, event or place etc...There should be a dashboard configured for each user to view their data like property should be able to track property specific details, booking, revenue, % shared for portal, Guest lists who booked, Promotions to guests through this portal on click of button Whatsapp message should go.
+
+
+Last Action pending:
+Logged in as Super Admin " Recent System Audit Logs" , Time is no showing correct , it should be date time . There should be an option to purge data. Add From and to Range and teh  new button purge on top on clicking this data will be purged from Audit Log. Before deleting , it should prompt do you really want to purge data , these many records wil be delete from this date till this date.  Can we add more meaning data like what action on tool tip, old data and new data on the action tool tips.
+
+New Requirements: 
+
+Login As Super Admin> 
+
+Add from and to date filters on top just next to Purge from and to date panel. All data should be filtered based on date range.
+
+Instead of calling Property, rename it to Entity Management.
+Entity Tile should show total Entities, in second line split entities based on status Active and Inactive. If there are total 10 entities, 6 are active and 4 are inactive. All 3 should be links and act as filter when on clicking taking super admin to entity screen.
+Clicking Entities should take Super Admin to Entities screen, which was property earlier. 
+Property name to be replaced by "Entity Name"
+Add new field entity CODE uniquely identity Entity it should be 5 characters alphanumeric. Every entity code should be unique. 
+Create the unique number for every entity as YYYYMMDD & <Five character entity code>
+Add few new fields:
+Either PAN or Aadhar number one of them is mandatory with attachment 
+PAN Number, it is optional for Organization
+Aadhar Number, it is optional for Organization
+GST Number, mandatory for company/organization while it is optional for Individuals
+Mobile Number 1
+Mobile Number 2 optional 
+Email ID
+Website if any
+As soon a new Entity is created, a new user mapped to it should be created. Every Entity will be given a username and password to login....username will always be "unique number" and Password by default will be "Entity123"
+Add status field, Active and Inactive
+Profile photo which will be shown on top right when login
+Entity should be able to manage only their records and to having visibility to other records across application. 
+
+Users Tile should show total Users, in second line split users based on status Active and Inactive. If there are total 10 users, 6 are active and 4 are inactive. All 3 should be links and act as filter when on clicking taking super admin to user screen.
+Clicking Users should take Super Admin to Users screen.
+Add new field User CODE uniquely identity user it should be 5 characters alphanumeric. Every user code should be unique.
+Create the unique number for every entity as YYYYMMDD & <Five character entity code>
+Either PAN or Aadhar number one of them is mandatory with attachment
+PAN Number
+Aadhar Number
+Mobile Number1
+Mobile Number 2, optional
+Email ID
+Website if any
+Every new user will be given a username and password to login....username will always be "unique number" and Password by default will be "User123"
+Add status field, Active and Inactive. Only user with status Active should be able to login. 
+Profile photo which will be shown on top right when login
+User should be able to see only their records. 
+
+Booking Tile should show total Booking in bracket the total booking amount, in second line split booking based on Open bookings, Cancelled Status , On hold status and Completed Status. If there are total 10 bookings, 2 are cancelled, 1 On Hold, 6 are completed and  1 is open. All 5 should be links and act as filter when on clicking taking super admin to booking screen.
+Clicking booking should take Super Admin to booking screen.
+Admin and Super admin should be able to change the status of booking with mandatory comments. 
+Add a drop down with reason for change in booking status. 
+
+Dashboard should by default show 2 panels instead of Audit Log. 
+Audit log screen should only be visible when clicking Audit Log link on left navigation bar. 
+List of Entities in one block with pagination, sorted based on active with latest entry to in active
+List of bookings in the other block with pagination, first sorted based on Open, On Hold, Cancel and Completed ,folowed by sort on event date of booking. 
+
+Role Management Module, allow super admin to create new roles
+
+Add Authorization module where Super Admin should be able to allow roles to see which screens. Authorization module should have roles listed  ascolumn headers and all screens as rows under first column Screens...there should be a drop down values "Read Only", "Read and Edit", "Full Access  i.e, read, Write, Delete" as mapping between role and screens
+Super Admin should have all access and no one can modify authorization for super admin. 
+Admin can only view Entity and User specific records under Users module, Only super admin shoudl be able to add new admin or remove admin. 
+Admin cannot add new admin or remove any one from admin role. 
+
+Reports should by default filter for Users as they login, Admin should be able to view report across all Entities, Events, Booking etc... 
+
+System config module SHOULD ONLY HAVE "GENERAL SETTINGS" AND is only accessible to Super Admin. 
+
+Add new navigation link on left setting where Admin and Super Admin should view SMTP /Email settings and Business Rules. 
+
+Audit Logs should have old value and new value columns to track change in values. 
+Add Export to excel feature for Audit log. 
+Every purge operation will perform 2 actions, export to excel all records to be purged and the purging of records.  
+
+Login As Entity > 
+Instead of calling Property, rename it to Entity Management.
+
+For Entity Management:
+Categories under Entity should come from system configuration, so add module for super admin to add categories. Only active once should be visible in drop down. 
+
+For Event Management:
+Event Type under event Management drop down, should come from system configuration, so add module for super admin to add Event Types. Only active once should be visible in drop down.
+
+
+ 

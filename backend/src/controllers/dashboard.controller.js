@@ -126,7 +126,7 @@ const superAdminDashboard = async (req, res, next) => {
   try {
     const auditLogs = await AuditLog.findAll({
       include: [{ model: User, as: 'user', attributes: ['id','username','role'] }],
-      order: [['created_at', 'DESC']], limit: 20
+      order: [['created_at', 'DESC']], limit: 50
     });
     // Reuse admin dashboard data
     req.user.role = 'admin'; // temporary
@@ -186,4 +186,30 @@ const userDashboard = async (req, res, next) => {
   } catch (err) { next(err); }
 };
 
-module.exports = { propertyDashboard, adminDashboard, superAdminDashboard, userDashboard };
+// POST /api/dashboard/audit/purge
+const purgeAuditLogs = async (req, res, next) => {
+  try {
+    const { from_date, to_date, dry_run } = req.body;
+    if (!from_date || !to_date) return res.status(400).json({ success: false, message: 'Please provide from_date and to_date.' });
+
+    const where = {
+      created_at: {
+        [Op.between]: [moment(from_date).startOf('day').toDate(), moment(to_date).endOf('day').toDate()]
+      }
+    };
+
+    const count = await AuditLog.count({ where });
+
+    if (dry_run) {
+      return res.json({ success: true, data: { count } });
+    }
+
+    if (count > 0) {
+      await AuditLog.destroy({ where });
+    }
+
+    res.json({ success: true, message: `Successfully purged ${count} audit logs.`, data: { count } });
+  } catch (err) { next(err); }
+};
+
+module.exports = { propertyDashboard, adminDashboard, superAdminDashboard, userDashboard, purgeAuditLogs };

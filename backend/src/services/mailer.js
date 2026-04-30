@@ -58,7 +58,7 @@ const sendBookingConfirmation = async (user, booking, property, event) => {
         <h1 style="color:white;margin:0;">Booking Confirmed! 🎉</h1>
       </div>
       <div style="background:white;padding:25px;border-radius:12px;box-shadow:0 2px 10px rgba(0,0,0,0.08);">
-        <p style="color:#333;font-size:16px;">Hi <strong>${user.first_name || user.username}</strong>,</p>
+        <p style="color:#333;font-size:16px;">Hi <strong>${user.first_name || user.username || 'Guest'}</strong>,</p>
         <p>Your booking has been confirmed. Here are your details:</p>
         <table style="width:100%;border-collapse:collapse;margin:15px 0;">
           <tr style="background:#f0f4ff;"><td style="padding:10px;font-weight:bold;width:40%;">Booking Ref</td><td style="padding:10px;color:#667eea;font-weight:bold;">${booking.booking_ref}</td></tr>

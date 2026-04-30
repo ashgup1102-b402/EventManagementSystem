@@ -11,6 +11,12 @@ const BookingFlow = ({ property, bookingData, onClose, onSuccess }) => {
   const [date, setDate] = useState(type === 'event_ticket' ? item.event_date : '')
   const [promoCode, setPromoCode] = useState('')
   const [requests, setRequests] = useState('')
+  
+  // Guest fields
+  const [guestName, setGuestName] = useState('')
+  const [guestEmail, setGuestEmail] = useState('')
+  const [guestPhone, setGuestPhone] = useState('')
+
   const [loading, setLoading] = useState(false)
 
   const pricePerHead = type === 'event_ticket' ? parseFloat(item.ticket_price) : parseFloat(item.price_per_head || 0)
@@ -28,7 +34,10 @@ const BookingFlow = ({ property, bookingData, onClose, onSuccess }) => {
         booking_date: date,
         num_guests: guests,
         promo_code: promoCode || null,
-        special_requests: requests || null
+        special_requests: requests || null,
+        guest_name: user ? null : guestName,
+        guest_email: user ? null : guestEmail,
+        guest_phone: user ? null : guestPhone
       })
       toast.success('Booking confirmed! Check your email.')
       onSuccess()
@@ -96,9 +105,36 @@ const BookingFlow = ({ property, bookingData, onClose, onSuccess }) => {
               <label>Special Requests (optional)</label>
               <textarea className="input" placeholder="Dietary requirements, seating preferences…" value={requests} onChange={e => setRequests(e.target.value)} rows={3} />
             </div>
+
+            {!user && (
+              <div style={{ marginTop: 24, padding: 16, background: 'var(--bg-tertiary)', borderRadius: 'var(--radius-md)' }}>
+                <h4 style={{ marginBottom: 16 }}>Guest Details</h4>
+                <div className="input-group" style={{ marginBottom: 12 }}>
+                  <label>Full Name *</label>
+                  <input className="input" placeholder="John Doe" value={guestName} onChange={e => setGuestName(e.target.value)} />
+                </div>
+                <div className="input-group" style={{ marginBottom: 12 }}>
+                  <label>Email *</label>
+                  <input className="input" type="email" placeholder="john@example.com" value={guestEmail} onChange={e => setGuestEmail(e.target.value)} />
+                </div>
+                <div className="input-group" style={{ marginBottom: 12 }}>
+                  <label>Phone Number *</label>
+                  <input className="input" type="tel" placeholder="1234567890" value={guestPhone} onChange={e => setGuestPhone(e.target.value)} />
+                </div>
+                <div style={{ fontSize: 13, color: 'var(--text-secondary)', marginTop: 8 }}>
+                  <a href="/login" style={{ color: 'var(--brand-primary)', fontWeight: 600 }}>Login to your account</a> to track your bookings.
+                </div>
+              </div>
+            )}
+
             <div className="modal-footer">
               <button className="btn btn-secondary" onClick={() => setStep(1)}>← Back</button>
-              <button className="btn btn-primary" onClick={() => setStep(3)}>Next →</button>
+              <button className="btn btn-primary" onClick={() => {
+                if (!user && (!guestName || !guestEmail || !guestPhone)) {
+                  return toast.error('Please fill in your contact details.')
+                }
+                setStep(3)
+              }}>Next →</button>
             </div>
           </div>
         )}
@@ -127,7 +163,7 @@ const BookingFlow = ({ property, bookingData, onClose, onSuccess }) => {
               </div>
             </div>
             <div style={{ fontSize: 12, color: 'var(--text-muted)', marginBottom: 16 }}>
-              📧 Confirmation will be sent to <strong>{user?.email}</strong> · Payment at venue
+              📧 Confirmation will be sent to <strong>{user?.email || guestEmail}</strong> · Payment at venue
             </div>
             <div className="modal-footer">
               <button className="btn btn-secondary" onClick={() => setStep(2)}>← Back</button>

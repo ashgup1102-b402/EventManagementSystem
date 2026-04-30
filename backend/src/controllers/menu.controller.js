@@ -14,8 +14,11 @@ const getAll = async (req, res, next) => {
     if (property_id) where.property_id = property_id;
     if (category) where.category = category;
     if (is_veg !== undefined) where.is_veg = is_veg === 'true';
-    if (is_available !== undefined) where.is_available = is_available === 'true';
-    else where.is_available = true;
+    if (is_available !== undefined && is_available !== '') {
+      where.is_available = is_available === 'true';
+    } else if (is_available === undefined) {
+      where.is_available = true;
+    }
     if (search) where.name = { [Op.iLike]: `%${search}%` };
     if (req.user?.role === 'property') {
       const prop = await Property.findOne({ where: { property_user_id: req.user.id } });

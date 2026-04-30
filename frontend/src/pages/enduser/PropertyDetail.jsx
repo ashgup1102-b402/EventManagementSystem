@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import api from '../../api/axios'
-import Layout from '../../components/Layout'
+import SiteLayout from '../../components/SiteLayout'
 import BookingFlow from './BookingFlow'
 import toast from 'react-hot-toast'
 
@@ -27,14 +27,14 @@ const PropertyDetail = () => {
     }).catch(() => toast.error('Failed to load property.')).finally(() => setLoading(false))
   }, [id])
 
-  if (loading) return <Layout><div className="loading-center"><div className="spinner" /></div></Layout>
-  if (!property) return <Layout><div className="empty-state"><h3>Property not found</h3></div></Layout>
+  if (loading) return <SiteLayout><div className="loading-center"><div className="spinner" /></div></SiteLayout>
+  if (!property) return <SiteLayout><div className="empty-state"><h3>Property not found</h3></div></SiteLayout>
 
   return (
-    <Layout>
+    <SiteLayout>
       {booking && <BookingFlow property={property} bookingData={booking} onClose={() => setBooking(null)} onSuccess={() => { setBooking(null); navigate('/bookings') }} />}
 
-      <div style={{ position:'relative', borderRadius:'var(--radius-xl)', overflow:'hidden', marginBottom:28, height:260 }}>
+      <div style={{ position:'relative', borderRadius:'var(--radius-xl)', overflow:'hidden', marginBottom:28, height:360 }}>
         {property.cover_image ? <img src={property.cover_image} alt={property.name} style={{ width:'100%',height:'100%',objectFit:'cover' }} /> : <div style={{ height:'100%',background:'var(--gradient-hero)',display:'flex',alignItems:'center',justifyContent:'center',fontSize:72 }}>🏢</div>}
         <div style={{ position:'absolute',inset:0,background:'linear-gradient(to top,rgba(0,0,0,0.8),transparent 60%)' }} />
         <div style={{ position:'absolute',bottom:24,left:28,right:28 }}>
@@ -44,7 +44,8 @@ const PropertyDetail = () => {
         </div>
       </div>
 
-      <div style={{ display:'grid',gridTemplateColumns:'1fr 300px',gap:24,alignItems:'start' }}>
+      <div className="site-container">
+        <div style={{ display:'grid',gridTemplateColumns:'1fr 300px',gap:32,alignItems:'start' }}>
         <div>
           <div className="tabs" style={{ marginBottom:20 }}>
             {[{k:'events',l:`🎭 Events (${events.length})`},{k:'menu',l:`🍽️ Menu (${menu.length})`},{k:'slots',l:`📅 Slots (${slots.length})`}].map(t=>(
@@ -136,7 +137,8 @@ const PropertyDetail = () => {
           </div>
         </div>
       </div>
-    </Layout>
+      </div>
+    </SiteLayout>
   )
 }
 export default PropertyDetail

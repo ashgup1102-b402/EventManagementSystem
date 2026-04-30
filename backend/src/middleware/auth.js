@@ -22,6 +22,24 @@ const authenticate = async (req, res, next) => {
     return res.status(401).json({ success: false, message: 'Invalid token.' });
   }
 };
+  
+const optionalAuthenticate = async (req, res, next) => {
+  try {
+    const authHeader = req.headers.authorization;
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      return next(); // Proceed without req.user
+    }
+    const token = authHeader.split(' ')[1];
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const user = await User.findByPk(decoded.id);
+    if (user && user.is_active) {
+      req.user = user;
+    }
+    next();
+  } catch (error) {
+    next(); // Ignore errors and proceed as guest
+  }
+};
 
 const authorize = (...roles) => {
   return (req, res, next) => {
@@ -44,4 +62,4 @@ const isAdmin = authorize('admin', 'super_admin');
 const isProperty = authorize('property', 'admin', 'super_admin');
 const isAuthenticated = authenticate;
 
-module.exports = { authenticate, authorize, isSuperAdmin, isAdmin, isProperty, isAuthenticated };
+module.exports = { authenticate, authorize, isSuperAdmin, isAdmin, isProperty, isAuthenticated, optionalAuthenticate };

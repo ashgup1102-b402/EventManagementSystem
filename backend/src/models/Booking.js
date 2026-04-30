@@ -4,7 +4,10 @@ const { sequelize } = require('../config/database');
 const Booking = sequelize.define('Booking', {
   id:           { type: DataTypes.UUID, defaultValue: DataTypes.UUIDV4, primaryKey: true },
   booking_ref:  { type: DataTypes.STRING(20), allowNull: false, unique: true },
-  user_id:      { type: DataTypes.UUID, allowNull: false, references: { model: 'users', key: 'id' } },
+  user_id:      { type: DataTypes.UUID, allowNull: true, references: { model: 'users', key: 'id' } },
+  guest_name:   { type: DataTypes.STRING(100), allowNull: true },
+  guest_email:  { type: DataTypes.STRING(100), allowNull: true },
+  guest_phone:  { type: DataTypes.STRING(20), allowNull: true },
   property_id:  { type: DataTypes.UUID, allowNull: false, references: { model: 'properties', key: 'id' } },
   booking_type: { type: DataTypes.ENUM('event_ticket','table_reservation','combo'), allowNull: false },
   event_id:     { type: DataTypes.UUID, allowNull: true, references: { model: 'events', key: 'id' } },

@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import api from '../../api/axios'
-import Layout from '../../components/Layout'
+import SiteLayout from '../../components/SiteLayout'
 import toast from 'react-hot-toast'
 
 const STATUS_COLOR = { confirmed:'badge-success', cancelled:'badge-danger', completed:'badge-info', no_show:'badge-muted' }
@@ -31,7 +31,7 @@ const MyBookings = () => {
   const filtered = filter === 'all' ? bookings : bookings.filter(b => b.booking_status === filter)
 
   return (
-    <Layout>
+    <SiteLayout>
       <div className="page-header">
         <div className="page-header-row">
           <div><h1>🎟️ My Bookings</h1><p>Track and manage your bookings</p></div>
@@ -77,7 +77,7 @@ const MyBookings = () => {
           ))}
         </div>
       }
-    </Layout>
+    </SiteLayout>
   )
 }
 
