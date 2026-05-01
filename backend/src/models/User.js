@@ -14,6 +14,8 @@ const User = sequelize.define('User', {
     unique: true,
     validate: { len: [3, 50], notEmpty: true }
   },
+  user_code: { type: DataTypes.STRING(5), allowNull: true, unique: true },
+  unique_number: { type: DataTypes.STRING(20), allowNull: true, unique: true },
   email: {
     type: DataTypes.STRING(150),
     allowNull: false,
@@ -25,15 +27,27 @@ const User = sequelize.define('User', {
     allowNull: false
   },
   role: {
-    type: DataTypes.ENUM('end_user', 'property', 'admin', 'super_admin'),
-    defaultValue: 'end_user',
+    type: DataTypes.STRING(50),
+    defaultValue: 'End_User',
     allowNull: false
   },
   first_name: { type: DataTypes.STRING(80), allowNull: true },
   last_name:  { type: DataTypes.STRING(80), allowNull: true },
-  phone:      { type: DataTypes.STRING(20), allowNull: true },
+  mobile_1:   { type: DataTypes.STRING(20), allowNull: true },
+  mobile_2:   { type: DataTypes.STRING(20), allowNull: true },
+  phone:      { type: DataTypes.STRING(20), allowNull: true }, // Keeping for compatibility
+  pan_number: { type: DataTypes.STRING(10), allowNull: true },
+  aadhar_number: { type: DataTypes.STRING(12), allowNull: true },
+  pan_attachment: { type: DataTypes.STRING, allowNull: true },
+  aadhar_attachment: { type: DataTypes.STRING, allowNull: true },
+  website:    { type: DataTypes.STRING, allowNull: true },
   avatar:     { type: DataTypes.STRING, allowNull: true },
-  is_active:  { type: DataTypes.BOOLEAN, defaultValue: true },
+  profile_photo: { type: DataTypes.STRING, allowNull: true },
+  status: {
+    type: DataTypes.ENUM('Active', 'Inactive'),
+    defaultValue: 'Active'
+  },
+  is_active:  { type: DataTypes.BOOLEAN, defaultValue: true }, // Keeping for compatibility
   last_login: { type: DataTypes.DATE, allowNull: true }
 }, {
   tableName: 'users',

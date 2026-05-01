@@ -1,5 +1,5 @@
 const jwt = require('jsonwebtoken');
-const { User, AuditLog, SystemConfig } = require('../models');
+const { User, Role, AuditLog, SystemConfig } = require('../models');
 
 const generateToken = (user) => jwt.sign(
   { id: user.id, role: user.role, username: user.username },
@@ -19,9 +19,18 @@ const login = async (req, res, next) => {
     if (!user) {
       return res.status(401).json({ success: false, message: 'Invalid credentials.' });
     }
-    if (!user.is_active) {
+    
+    // Check account status
+    if (!user.is_active || user.status === 'Inactive') {
       return res.status(403).json({ success: false, message: 'Your account has been deactivated.' });
     }
+
+    // Check Role status
+    const roleRecord = await Role.findOne({ where: { name: user.role } });
+    if (roleRecord && roleRecord.status === 'Inactive') {
+      return res.status(403).json({ success: false, message: 'Your assigned role is currently inactive. Please contact administrator.' });
+    }
+
     const isValid = await user.validatePassword(password);
     if (!isValid) {
       return res.status(401).json({ success: false, message: 'Invalid credentials.' });
@@ -60,7 +69,7 @@ const register = async (req, res, next) => {
 
     const user = await User.create({
       username, email, password_hash: password,
-      first_name, last_name, phone, role: 'end_user'
+      first_name, last_name, phone, role: 'End_User'
     });
 
     const token = generateToken(user);

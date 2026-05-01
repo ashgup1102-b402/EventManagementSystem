@@ -1,10 +1,10 @@
-const { Discount, ComboDeal, Property } = require('../models');
+const { Discount, ComboDeal, Entity } = require('../models');
 const { Op } = require('sequelize');
 
 const checkAccess = async (propertyId, user) => {
-  if (['super_admin', 'admin'].includes(user.role)) return true;
-  const prop = await Property.findByPk(propertyId);
-  return prop && prop.property_user_id === user.id;
+  if (['Super Admin', 'Admin'].includes(user.role)) return true;
+  const ent = await Entity.findByPk(propertyId);
+  return ent && ent.entity_user_id === user.id;
 };
 
 // ─── DISCOUNTS ────────────────────────────────────────────────
@@ -15,9 +15,9 @@ const getDiscounts = async (req, res, next) => {
     const where = {};
     if (property_id) where.property_id = property_id;
     if (is_active !== undefined) where.is_active = is_active === 'true';
-    if (req.user?.role === 'property') {
-      const prop = await Property.findOne({ where: { property_user_id: req.user.id } });
-      if (prop) where.property_id = prop.id;
+    if (req.user?.role === 'Entity') {
+      const ent = await Entity.findOne({ where: { entity_user_id: req.user.id } });
+      if (ent) where.property_id = ent.id;
     }
     const discounts = await Discount.findAll({ where, order: [['created_at', 'DESC']] });
     res.json({ success: true, data: discounts });
@@ -64,9 +64,9 @@ const getCombos = async (req, res, next) => {
     if (property_id) where.property_id = property_id;
     if (is_active !== undefined) where.is_active = is_active === 'true';
     else where.is_active = true;
-    if (req.user?.role === 'property') {
-      const prop = await Property.findOne({ where: { property_user_id: req.user.id } });
-      if (prop) where.property_id = prop.id;
+    if (req.user?.role === 'Entity') {
+      const ent = await Entity.findOne({ where: { entity_user_id: req.user.id } });
+      if (ent) where.property_id = ent.id;
     }
     const combos = await ComboDeal.findAll({ where, order: [['created_at', 'DESC']] });
     res.json({ success: true, data: combos });

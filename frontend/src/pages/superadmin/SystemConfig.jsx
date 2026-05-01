@@ -8,17 +8,43 @@ const SystemConfig = () => {
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [form, setForm] = useState({})
+  const [logoFile, setLogoFile] = useState(null)
+  const BASE_URL = 'http://localhost:5000';
 
   useEffect(() => {
     api.get('/config').then(r => { setConfig(r.data.data); setForm(r.data.data) }).catch(() => toast.error('Failed to load config.')).finally(() => setLoading(false))
   }, [])
 
+  const getImgUrl = (path) => {
+    if (!path) return null;
+    if (path.startsWith('http')) return path;
+    return `${BASE_URL}${path}`;
+  }
+
   const save = async () => {
     setSaving(true)
     try {
-      await api.put('/config', form)
+      let res;
+      if (logoFile) {
+        const formData = new FormData();
+        Object.keys(form).forEach(key => {
+          if (form[key] !== null && form[key] !== undefined) {
+            formData.append(key, form[key]);
+          }
+        });
+        formData.append('site_logo', logoFile);
+        res = await api.put('/config', formData, {
+          headers: { 'Content-Type': 'multipart/form-data' }
+        })
+      } else {
+        // Send as JSON if no file, easier to handle booleans
+        res = await api.put('/config', form)
+      }
+      
       toast.success('Configuration saved successfully!')
-      setConfig(form)
+      setConfig(res.data.data)
+      setForm(res.data.data)
+      setLogoFile(null)
     } catch (err) { toast.error(err.response?.data?.message || 'Save failed.') }
     finally { setSaving(false) }
   }
@@ -36,6 +62,19 @@ const SystemConfig = () => {
         <div className="card">
           <h3 style={{ marginBottom: 16 }}>General Settings</h3>
           <div className="form-grid">
+            <div style={{ display: 'flex', alignItems: 'center', gap: 16, marginBottom: 12, padding: 12, background: 'var(--bg-tertiary)', borderRadius: 'var(--radius-md)' }}>
+              <div style={{ width: 60, height: 60, background: 'white', borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'center', border: '1px solid var(--border-subtle)', overflow: 'hidden' }}>
+                {logoFile ? (
+                  <img src={URL.createObjectURL(logoFile)} alt="Preview" style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
+                ) : form.site_logo ? (
+                  <img src={getImgUrl(form.site_logo)} alt="Logo" style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
+                ) : '🎪'}
+              </div>
+              <div className="input-group" style={{ flex: 1, marginBottom: 0 }}>
+                <label>Portal Logo</label>
+                <input type="file" className="input" accept="image/*" onChange={e => setLogoFile(e.target.files[0])} />
+              </div>
+            </div>
             <div className="input-group"><label>Site Name</label><input className="input" value={form.site_name||''} onChange={set('site_name')} /></div>
             <div className="input-group"><label>Site Tagline</label><input className="input" value={form.site_tagline||''} onChange={set('site_tagline')} /></div>
             <div className="input-group"><label>Cancellation Policy</label><textarea className="input" rows={3} value={form.cancellation_policy||''} onChange={set('cancellation_policy')} /></div>

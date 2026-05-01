@@ -31,9 +31,9 @@ const Navbar = () => {
 
   // We could add links for admins, but since they have dashboards, we might just link them to dashboard.
   const dashboardLink = 
-    user?.role === 'super_admin' ? '/superadmin/dashboard' :
-    user?.role === 'admin' ? '/admin/dashboard' :
-    user?.role === 'property' ? '/property/dashboard' : null
+    user?.role === 'Super Admin' ? '/superadmin/dashboard' :
+    user?.role === 'Admin' ? '/admin/dashboard' :
+    user?.role === 'Entity' ? '/property/dashboard' : null
 
   return (
     <nav className={`site-navbar ${scrolled ? 'scrolled' : ''}`}>
@@ -42,11 +42,14 @@ const Navbar = () => {
         <Link to="/search" className="site-navbar-brand">
           <span className="brand-icon">🎪</span>
           <span className="brand-name">{siteConfig.site_name}</span>
+          {user?.role === 'Super Admin' && <span className="badge badge-primary ml-2" style={{ fontSize: '10px' }}>Super Admin</span>}
+          {user?.role === 'Admin' && <span className="badge badge-secondary ml-2" style={{ fontSize: '10px' }}>Admin</span>}
+          {user?.role === 'Entity' && <span className="badge badge-muted ml-2" style={{ fontSize: '10px' }}>Entity</span>}
         </Link>
 
         <div className="site-navbar-links desktop-only">
           <Link to="/search" className="nav-link">Discover</Link>
-          {user?.role === 'end_user' && endUserLinks.slice(1).map(l => (
+          {user?.role === 'End_User' && endUserLinks.slice(1).map(l => (
             <Link key={l.to} to={l.to} className="nav-link">{l.label}</Link>
           ))}
           {dashboardLink && (
@@ -69,7 +72,7 @@ const Navbar = () => {
                     <div className="text-xs text-muted">{user.email}</div>
                   </div>
                   <div className="dropdown-divider"></div>
-                  {user.role === 'end_user' ? (
+                  {user?.role === 'End_User' ? (
                     <>
                       <Link to="/bookings" className="dropdown-item" onClick={() => setMenuOpen(false)}>🎟️ My Bookings</Link>
                       <Link to="/profile" className="dropdown-item" onClick={() => setMenuOpen(false)}>👤 Profile</Link>

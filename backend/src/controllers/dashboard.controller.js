@@ -1,24 +1,24 @@
-const { Booking, Property, Event, User, AuditLog, Discount, sequelize } = require('../models');
+const { Booking, Entity, Event, User, AuditLog, Discount, sequelize } = require('../models');
 const { fn, col, literal, Op } = require('sequelize');
 const moment = require('moment');
 
 // GET /api/dashboard/property  (property role)
 const propertyDashboard = async (req, res, next) => {
   try {
-    const prop = await Property.findOne({ where: { property_user_id: req.user.id } });
-    if (!prop) return res.status(404).json({ success: false, message: 'No property assigned.' });
+    const ent = await Entity.findOne({ where: { entity_user_id: req.user.id } });
+    if (!ent) return res.status(404).json({ success: false, message: 'No entity assigned.' });
 
-    const propertyId = prop.id;
+    const entityId = ent.id;
     const today = moment().format('YYYY-MM-DD');
     const monthStart = moment().startOf('month').format('YYYY-MM-DD');
 
     const [totalBookings, thisMonthBookings, totalRevenue, thisMonthRevenue, recentBookings, guestList, upcomingEvents] = await Promise.all([
-      Booking.count({ where: { property_id: propertyId, booking_status: { [Op.ne]: 'cancelled' } } }),
-      Booking.count({ where: { property_id: propertyId, booking_status: { [Op.ne]: 'cancelled' }, booking_date: { [Op.gte]: monthStart } } }),
-      Booking.sum('total_amount', { where: { property_id: propertyId, booking_status: { [Op.ne]: 'cancelled' } } }),
-      Booking.sum('total_amount', { where: { property_id: propertyId, booking_status: { [Op.ne]: 'cancelled' }, booking_date: { [Op.gte]: monthStart } } }),
+      Booking.count({ where: { property_id: entityId, booking_status: { [Op.ne]: 'cancelled' } } }),
+      Booking.count({ where: { property_id: entityId, booking_status: { [Op.ne]: 'cancelled' }, booking_date: { [Op.gte]: monthStart } } }),
+      Booking.sum('total_amount', { where: { property_id: entityId, booking_status: { [Op.ne]: 'cancelled' } } }),
+      Booking.sum('total_amount', { where: { property_id: entityId, booking_status: { [Op.ne]: 'cancelled' }, booking_date: { [Op.gte]: monthStart } } }),
       Booking.findAll({
-        where: { property_id: propertyId },
+        where: { property_id: entityId },
         include: [
           { model: User, as: 'user', attributes: ['id','username','first_name','last_name','phone','email'] },
           { model: Event, as: 'event', attributes: ['id','name','type'], required: false }
@@ -26,12 +26,12 @@ const propertyDashboard = async (req, res, next) => {
         order: [['created_at', 'DESC']], limit: 10
       }),
       Booking.findAll({
-        where: { property_id: propertyId, booking_status: 'confirmed', booking_date: { [Op.gte]: today } },
+        where: { property_id: entityId, booking_status: 'confirmed', booking_date: { [Op.gte]: today } },
         include: [{ model: User, as: 'user', attributes: ['id','username','first_name','last_name','phone','email'] }],
         order: [['booking_date', 'ASC']], limit: 50
       }),
       Event.findAll({
-        where: { property_id: propertyId, is_active: true, event_date: { [Op.gte]: today } },
+        where: { property_id: entityId, is_active: true, event_date: { [Op.gte]: today } },
         order: [['event_date', 'ASC']], limit: 5
       })
     ]);
@@ -39,7 +39,7 @@ const propertyDashboard = async (req, res, next) => {
     // Revenue by month (last 6 months)
     const revenueByMonth = await Booking.findAll({
       where: {
-        property_id: propertyId,
+        property_id: entityId,
         booking_status: { [Op.ne]: 'cancelled' },
         booking_date: { [Op.gte]: moment().subtract(5, 'months').startOf('month').format('YYYY-MM-DD') }
       },
@@ -56,14 +56,14 @@ const propertyDashboard = async (req, res, next) => {
     res.json({
       success: true,
       data: {
-        property: prop,
+        entity: ent,
         stats: {
           total_bookings: totalBookings,
           this_month_bookings: thisMonthBookings,
           total_revenue: parseFloat(totalRevenue || 0).toFixed(2),
           this_month_revenue: parseFloat(thisMonthRevenue || 0).toFixed(2),
-          commission_percent: prop.portal_commission_percent,
-          commission_this_month: ((parseFloat(thisMonthRevenue || 0) * parseFloat(prop.portal_commission_percent)) / 100).toFixed(2)
+          commission_percent: ent.portal_commission_percent,
+          commission_this_month: ((parseFloat(thisMonthRevenue || 0) * parseFloat(ent.portal_commission_percent)) / 100).toFixed(2)
         },
         recent_bookings: recentBookings,
         guest_list: guestList,
@@ -77,30 +77,49 @@ const propertyDashboard = async (req, res, next) => {
 // GET /api/dashboard/admin
 const adminDashboard = async (req, res, next) => {
   try {
-    const today = moment().format('YYYY-MM-DD');
-    const monthStart = moment().startOf('month').format('YYYY-MM-DD');
+    const { from_date, to_date } = req.query;
+    const where = {};
+    if (from_date && to_date) {
+      where.createdAt = { [Op.between]: [new Date(from_date), new Date(to_date)] };
+    }
 
-    const [totalProperties, totalUsers, totalBookings, totalRevenue, monthRevenue, recentBookings, topProperties] = await Promise.all([
-      Property.count({ where: { is_active: true } }),
-      User.count({ where: { is_active: true, role: 'end_user' } }),
-      Booking.count({ where: { booking_status: { [Op.ne]: 'cancelled' } } }),
-      Booking.sum('total_amount', { where: { booking_status: { [Op.ne]: 'cancelled' } } }),
-      Booking.sum('total_amount', { where: { booking_status: { [Op.ne]: 'cancelled' }, booking_date: { [Op.gte]: monthStart } } }),
-      Booking.findAll({
-        include: [
-          { model: User, as: 'user', attributes: ['id','username','first_name','last_name'] },
-          { model: Property, as: 'property', attributes: ['id','name','city'] }
+    const [
+      totalEntities, activeEntities, inactiveEntities,
+      totalUsers, activeUsers, inactiveUsers,
+      totalBookings, totalAmount, openBookings, cancelledBookings, onHoldBookings, completedBookings,
+      entityList, bookingList
+    ] = await Promise.all([
+      Entity.count({ where }),
+      Entity.count({ where: { ...where, status: 'Active' } }),
+      Entity.count({ where: { ...where, status: 'Inactive' } }),
+      User.count({ where }),
+      User.count({ where: { ...where, status: 'Active' } }),
+      User.count({ where: { ...where, status: 'Inactive' } }),
+      Booking.count({ where }),
+      Booking.sum('total_amount', { where }),
+      Booking.count({ where: { ...where, booking_status: 'open' } }),
+      Booking.count({ where: { ...where, booking_status: 'cancelled' } }),
+      Booking.count({ where: { ...where, booking_status: 'on_hold' } }),
+      Booking.count({ where: { ...where, booking_status: 'completed' } }),
+      Entity.findAll({
+        where,
+        order: [
+          [literal("CASE WHEN status = 'Active' THEN 0 ELSE 1 END"), 'ASC'],
+          ['createdAt', 'DESC']
         ],
-        order: [['created_at', 'DESC']], limit: 10
+        limit: 10
       }),
       Booking.findAll({
-        where: { booking_status: { [Op.ne]: 'cancelled' } },
-        attributes: ['property_id', [fn('COUNT', col('Booking.id')), 'bookings'], [fn('SUM', col('total_amount')), 'revenue']],
-        include: [{ model: Property, as: 'property', attributes: ['id','name','city'] }],
-        group: ['property_id', 'property.id'],
-        order: [[literal('revenue'), 'DESC']],
-        limit: 5,
-        raw: false
+        where,
+        include: [
+          { model: Entity, as: 'entity', attributes: ['id', 'name'] },
+          { model: User, as: 'user', attributes: ['id', 'username'] }
+        ],
+        order: [
+          [literal("CASE WHEN booking_status = 'open' THEN 0 WHEN booking_status = 'on_hold' THEN 1 WHEN booking_status = 'cancelled' THEN 2 WHEN booking_status = 'completed' THEN 3 ELSE 4 END"), 'ASC'],
+          ['booking_date', 'ASC']
+        ],
+        limit: 10
       })
     ]);
 
@@ -108,14 +127,19 @@ const adminDashboard = async (req, res, next) => {
       success: true,
       data: {
         stats: {
-          total_properties: totalProperties,
-          total_users: totalUsers,
-          total_bookings: totalBookings,
-          total_revenue: parseFloat(totalRevenue || 0).toFixed(2),
-          month_revenue: parseFloat(monthRevenue || 0).toFixed(2)
+          entities: { total: totalEntities, active: activeEntities, inactive: inactiveEntities },
+          users: { total: totalUsers, active: activeUsers, inactive: inactiveUsers },
+          bookings: { 
+            total: totalBookings, 
+            amount: parseFloat(totalAmount || 0).toFixed(2),
+            open: openBookings,
+            cancelled: cancelledBookings,
+            on_hold: onHoldBookings,
+            completed: completedBookings
+          }
         },
-        recent_bookings: recentBookings,
-        top_properties: topProperties
+        entity_panel: entityList,
+        booking_panel: bookingList
       }
     });
   } catch (err) { next(err); }
@@ -124,33 +148,69 @@ const adminDashboard = async (req, res, next) => {
 // GET /api/dashboard/superadmin
 const superAdminDashboard = async (req, res, next) => {
   try {
-    const auditLogs = await AuditLog.findAll({
-      include: [{ model: User, as: 'user', attributes: ['id','username','role'] }],
-      order: [['created_at', 'DESC']], limit: 50
-    });
-    // Reuse admin dashboard data
-    req.user.role = 'admin'; // temporary
-    // Call admin dashboard and append audit logs
-    const monthStart = moment().startOf('month').format('YYYY-MM-DD');
-    const [totalProperties, totalUsers, totalBookings, totalRevenue, totalCommission] = await Promise.all([
-      Property.count(),
-      User.count(),
-      Booking.count({ where: { booking_status: { [Op.ne]: 'cancelled' } } }),
-      Booking.sum('total_amount', { where: { booking_status: { [Op.ne]: 'cancelled' } } }),
-      Booking.sum('commission_amount', { where: { booking_status: { [Op.ne]: 'cancelled' } } })
+    const { from_date, to_date } = req.query;
+    const where = {};
+    if (from_date && to_date) {
+      where.createdAt = { [Op.between]: [new Date(from_date), new Date(to_date)] };
+    }
+
+    const [
+      totalEntities, activeEntities, inactiveEntities,
+      totalUsers, activeUsers, inactiveUsers,
+      totalBookings, totalAmount, openBookings, cancelledBookings, onHoldBookings, completedBookings,
+      entityList, bookingList
+    ] = await Promise.all([
+      Entity.count({ where }),
+      Entity.count({ where: { ...where, status: 'Active' } }),
+      Entity.count({ where: { ...where, status: 'Inactive' } }),
+      User.count({ where }),
+      User.count({ where: { ...where, status: 'Active' } }),
+      User.count({ where: { ...where, status: 'Inactive' } }),
+      Booking.count({ where }),
+      Booking.sum('total_amount', { where }),
+      Booking.count({ where: { ...where, booking_status: 'open' } }),
+      Booking.count({ where: { ...where, booking_status: 'cancelled' } }),
+      Booking.count({ where: { ...where, booking_status: 'on_hold' } }),
+      Booking.count({ where: { ...where, booking_status: 'completed' } }),
+      Entity.findAll({
+        where,
+        order: [
+          [literal("CASE WHEN status = 'Active' THEN 0 ELSE 1 END"), 'ASC'],
+          ['createdAt', 'DESC']
+        ],
+        limit: 10
+      }),
+      Booking.findAll({
+        where,
+        include: [
+          { model: Entity, as: 'entity', attributes: ['id', 'name'] },
+          { model: User, as: 'user', attributes: ['id', 'username'] }
+        ],
+        order: [
+          [literal("CASE WHEN booking_status = 'open' THEN 0 WHEN booking_status = 'on_hold' THEN 1 WHEN booking_status = 'cancelled' THEN 2 WHEN booking_status = 'completed' THEN 3 ELSE 4 END"), 'ASC'],
+          ['booking_date', 'ASC']
+        ],
+        limit: 10
+      })
     ]);
 
     res.json({
       success: true,
       data: {
         stats: {
-          total_properties: totalProperties,
-          total_users: totalUsers,
-          total_bookings: totalBookings,
-          total_revenue: parseFloat(totalRevenue || 0).toFixed(2),
-          total_commission: parseFloat(totalCommission || 0).toFixed(2)
+          entities: { total: totalEntities, active: activeEntities, inactive: inactiveEntities },
+          users: { total: totalUsers, active: activeUsers, inactive: inactiveUsers },
+          bookings: { 
+            total: totalBookings, 
+            amount: parseFloat(totalAmount || 0).toFixed(2),
+            open: openBookings,
+            cancelled: cancelledBookings,
+            on_hold: onHoldBookings,
+            completed: completedBookings
+          }
         },
-        audit_logs: auditLogs
+        entity_panel: entityList,
+        booking_panel: bookingList
       }
     });
   } catch (err) { next(err); }
@@ -163,14 +223,14 @@ const userDashboard = async (req, res, next) => {
       Booking.findAll({
         where: { user_id: req.user.id },
         include: [
-          { model: Property, as: 'property', attributes: ['id','name','city','cover_image'] },
+          { model: Entity, as: 'entity', attributes: ['id','name','city','cover_image'] },
           { model: Event, as: 'event', attributes: ['id','name','type','event_date'], required: false }
         ],
         order: [['created_at', 'DESC']], limit: 10
       }),
       Booking.findAll({
         where: { user_id: req.user.id, booking_status: 'confirmed', booking_date: { [Op.gte]: moment().format('YYYY-MM-DD') } },
-        include: [{ model: Property, as: 'property', attributes: ['id','name','city'] }],
+        include: [{ model: Entity, as: 'entity', attributes: ['id','name','city'] }],
         order: [['booking_date', 'ASC']]
       })
     ]);
@@ -205,11 +265,58 @@ const purgeAuditLogs = async (req, res, next) => {
     }
 
     if (count > 0) {
+      const XLSX = require('xlsx');
+      const fs = require('fs');
+      const path = require('path');
+
+      const logs = await AuditLog.findAll({ where, include: [{ model: User, as: 'user', attributes: ['username', 'role'] }] });
+      
+      const data = logs.map(l => ({
+        ID: l.id,
+        Date: moment(l.created_at).format('YYYY-MM-DD HH:mm:ss'),
+        User: l.user?.username || 'System',
+        Role: l.user?.role || 'N/A',
+        Action: l.action,
+        Entity: l.entity_type,
+        EntityID: l.entity_id,
+        OldValues: JSON.stringify(l.old_values),
+        NewValues: JSON.stringify(l.new_values),
+        IP: l.ip_address,
+        UserAgent: l.user_agent
+      }));
+
+      const wb = XLSX.utils.book_new();
+      const ws = XLSX.utils.json_to_sheet(data);
+      XLSX.utils.book_append_sheet(wb, ws, 'AuditLogs');
+
+      const purgesDir = path.join(__dirname, '../../uploads/purges');
+      if (!fs.existsSync(purgesDir)) fs.mkdirSync(purgesDir, { recursive: true });
+
+      const fileName = `purge_${from_date.replace(/-/g,'')}_to_${to_date.replace(/-/g,'')}_${Date.now()}.xlsx`;
+      const filePath = path.join(purgesDir, fileName);
+      XLSX.writeFile(wb, filePath);
+
       await AuditLog.destroy({ where });
     }
 
-    res.json({ success: true, message: `Successfully purged ${count} audit logs.`, data: { count } });
+    res.json({ success: true, message: `Successfully purged ${count} audit logs. Exported to Excel.`, data: { count } });
   } catch (err) { next(err); }
 };
 
-module.exports = { propertyDashboard, adminDashboard, superAdminDashboard, userDashboard, purgeAuditLogs };
+const getPurgeHistory = async (req, res, next) => {
+  try {
+    const fs = require('fs');
+    const path = require('path');
+    const purgesDir = path.join(__dirname, '../../uploads/purges');
+    if (!fs.existsSync(purgesDir)) return res.json({ success: true, data: [] });
+
+    const files = fs.readdirSync(purgesDir).map(file => {
+      const stats = fs.statSync(path.join(purgesDir, file));
+      return { name: file, size: stats.size, date: stats.mtime, url: `/uploads/purges/${file}` };
+    }).sort((a, b) => b.date - a.date);
+
+    res.json({ success: true, data: files });
+  } catch (err) { next(err); }
+};
+
+module.exports = { propertyDashboard, adminDashboard, superAdminDashboard, userDashboard, purgeAuditLogs, getPurgeHistory };

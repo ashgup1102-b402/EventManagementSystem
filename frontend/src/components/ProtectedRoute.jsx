@@ -7,7 +7,9 @@ const ProtectedRoute = ({ children, roles }) => {
 
   if (loading) return <div className="loading-page"><div className="spinner" /></div>
   if (!user) return <Navigate to="/login" state={{ from: location }} replace />
-  if (roles && !roles.includes(user.role)) return <Navigate to="/unauthorized" replace />
+  if (roles && !roles.map(r => r.toLowerCase()).includes(user.role?.toLowerCase())) {
+    return <Navigate to="/unauthorized" replace />
+  }
 
   return children
 }

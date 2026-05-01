@@ -12,7 +12,7 @@ const errorHandler = require('./middleware/errorHandler');
 // Import routes
 const authRoutes = require('./routes/auth.routes');
 const userRoutes = require('./routes/user.routes');
-const propertyRoutes = require('./routes/property.routes');
+const entityRoutes = require('./routes/entity.routes');
 const eventRoutes = require('./routes/event.routes');
 const menuRoutes = require('./routes/menu.routes');
 const discountRoutes = require('./routes/discount.routes');
@@ -22,6 +22,7 @@ const whatsappRoutes = require('./routes/whatsapp.routes');
 const searchRoutes = require('./routes/search.routes');
 const configRoutes = require('./routes/config.routes');
 const slotRoutes = require('./routes/slot.routes');
+const categoryRoutes = require('./routes/category.routes');
 
 const app = express();
 
@@ -47,7 +48,7 @@ app.use('/api/', limiter);
 // Auth-specific stricter limiter
 const authLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
-  max: 20,
+  max: 100,
   message: { success: false, message: 'Too many login attempts, please try again later.' }
 });
 
@@ -66,7 +67,7 @@ app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
 // API Routes
 app.use('/api/auth', authLimiter, authRoutes);
 app.use('/api/users', userRoutes);
-app.use('/api/properties', propertyRoutes);
+app.use('/api/entities', entityRoutes);
 app.use('/api/events', eventRoutes);
 app.use('/api/menu', menuRoutes);
 app.use('/api/discounts', discountRoutes);
@@ -76,6 +77,7 @@ app.use('/api/whatsapp', whatsappRoutes);
 app.use('/api/search', searchRoutes);
 app.use('/api/config', configRoutes);
 app.use('/api/slots', slotRoutes);
+app.use('/api/categories', categoryRoutes);
 
 // Health check
 app.get('/api/health', (req, res) => {
@@ -100,6 +102,12 @@ const startServer = async () => {
     
     await sequelize.sync({ alter: true });
     console.log('✅ Database models synchronized.');
+    
+    // Seed Roles & Auth
+    const seedRoles = require('./seeders/roleSeeder');
+    const seedCategories = require('./seeders/categorySeeder');
+    await seedRoles();
+    await seedCategories();
     
     app.listen(PORT, () => {
       console.log(`🚀 Server running on port ${PORT} in ${process.env.NODE_ENV || 'development'} mode`);

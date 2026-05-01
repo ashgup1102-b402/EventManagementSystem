@@ -23,48 +23,52 @@ const seed = async () => {
     console.log('✅ System config seeded.');
 
     // Super Admin
-    const [superAdmin] = await User.findOrCreate({
+    const [superAdminUser] = await User.findOrCreate({
       where: { username: 'superadmin' },
       defaults: {
         username: 'superadmin', email: 'superadmin@eventportal.com',
-        password_hash: 'Admin@1234', role: 'super_admin',
+        password_hash: 'Admin@1234', role: 'Super Admin',
         first_name: 'Super', last_name: 'Admin', is_active: true
       }
     });
-    console.log('✅ Super Admin: username=superadmin  password=Admin@1234');
+    await superAdminUser.update({ role: 'Super Admin' });
+    console.log('✅ Super Admin synchronized.');
 
     // Admin
-    const [admin] = await User.findOrCreate({
+    const [adminUser] = await User.findOrCreate({
       where: { username: 'admin' },
       defaults: {
         username: 'admin', email: 'admin@eventportal.com',
-        password_hash: 'Admin@1234', role: 'admin',
+        password_hash: 'Admin@1234', role: 'Admin',
         first_name: 'Portal', last_name: 'Admin', is_active: true
       }
     });
-    console.log('✅ Admin: username=admin  password=Admin@1234');
+    await adminUser.update({ role: 'Admin' });
+    console.log('✅ Admin synchronized.');
 
     // Property User
-    const [propUser] = await User.findOrCreate({
+    const [propUserRecord] = await User.findOrCreate({
       where: { username: 'thegrandvenue' },
       defaults: {
         username: 'thegrandvenue', email: 'property@grandvenue.com',
-        password_hash: 'Prop@1234', role: 'property',
+        password_hash: 'Prop@1234', role: 'Entity',
         first_name: 'Grand', last_name: 'Venue', phone: '9876543210', is_active: true
       }
     });
-    console.log('✅ Property User: username=thegrandvenue  password=Prop@1234');
+    await propUserRecord.update({ role: 'Entity' });
+    console.log('✅ Property User synchronized.');
 
     // End User
-    await User.findOrCreate({
+    const [endUserRecord] = await User.findOrCreate({
       where: { username: 'john_doe' },
       defaults: {
         username: 'john_doe', email: 'john@example.com',
-        password_hash: 'User@1234', role: 'end_user',
+        password_hash: 'User@1234', role: 'End_User',
         first_name: 'John', last_name: 'Doe', phone: '9123456789', is_active: true
       }
     });
-    console.log('✅ End User: username=john_doe  password=User@1234');
+    await endUserRecord.update({ role: 'End_User' });
+    console.log('✅ End User synchronized.');
 
     // Sample Property
     const [property] = await Property.findOrCreate({

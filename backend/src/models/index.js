@@ -1,7 +1,7 @@
 const { sequelize } = require('../config/database');
 const User = require('./User');
-const Property = require('./Property');
-const PropertySlot = require('./PropertySlot');
+const Entity = require('./Entity');
+const EntitySlot = require('./EntitySlot');
 const Event = require('./Event');
 const MenuItem = require('./MenuItem');
 const ComboDeal = require('./ComboDeal');
@@ -11,52 +11,55 @@ const BookingItem = require('./BookingItem');
 const WhatsappLog = require('./WhatsappLog');
 const AuditLog = require('./AuditLog');
 const SystemConfig = require('./SystemConfig');
+const Role = require('./Role');
+const Authorization = require('./Authorization');
+const Category = require('./Category');
 
 // ─── Associations ──────────────────────────────────────────────
 
-// User ↔ Property (admin_user)
-User.hasMany(Property, { foreignKey: 'admin_user_id', as: 'managed_properties' });
-Property.belongsTo(User, { foreignKey: 'admin_user_id', as: 'admin' });
+// User ↔ Entity (admin_user)
+User.hasMany(Entity, { foreignKey: 'admin_user_id', as: 'managed_entities' });
+Entity.belongsTo(User, { foreignKey: 'admin_user_id', as: 'admin' });
 
-// User ↔ Property (property_user)
-User.hasOne(Property, { foreignKey: 'property_user_id', as: 'property' });
-Property.belongsTo(User, { foreignKey: 'property_user_id', as: 'property_user' });
+// User ↔ Entity (entity_user)
+User.hasOne(Entity, { foreignKey: 'entity_user_id', as: 'entity' });
+Entity.belongsTo(User, { foreignKey: 'entity_user_id', as: 'entity_user' });
 
-// Property → Events
-Property.hasMany(Event, { foreignKey: 'property_id', as: 'events', onDelete: 'CASCADE' });
-Event.belongsTo(Property, { foreignKey: 'property_id', as: 'property' });
+// Entity → Events
+Entity.hasMany(Event, { foreignKey: 'property_id', as: 'events', onDelete: 'CASCADE' });
+Event.belongsTo(Entity, { foreignKey: 'property_id', as: 'entity' });
 
-// Property → Slots
-Property.hasMany(PropertySlot, { foreignKey: 'property_id', as: 'slots', onDelete: 'CASCADE' });
-PropertySlot.belongsTo(Property, { foreignKey: 'property_id', as: 'property' });
+// Entity → Slots
+Entity.hasMany(EntitySlot, { foreignKey: 'property_id', as: 'slots', onDelete: 'CASCADE' });
+EntitySlot.belongsTo(Entity, { foreignKey: 'property_id', as: 'entity' });
 
-// Property → Menu
-Property.hasMany(MenuItem, { foreignKey: 'property_id', as: 'menu_items', onDelete: 'CASCADE' });
-MenuItem.belongsTo(Property, { foreignKey: 'property_id', as: 'property' });
+// Entity → Menu
+Entity.hasMany(MenuItem, { foreignKey: 'property_id', as: 'menu_items', onDelete: 'CASCADE' });
+MenuItem.belongsTo(Entity, { foreignKey: 'property_id', as: 'entity' });
 
-// Property → Combos
-Property.hasMany(ComboDeal, { foreignKey: 'property_id', as: 'combo_deals', onDelete: 'CASCADE' });
-ComboDeal.belongsTo(Property, { foreignKey: 'property_id', as: 'property' });
+// Entity → Combos
+Entity.hasMany(ComboDeal, { foreignKey: 'property_id', as: 'combo_deals', onDelete: 'CASCADE' });
+ComboDeal.belongsTo(Entity, { foreignKey: 'property_id', as: 'entity' });
 
-// Property → Discounts
-Property.hasMany(Discount, { foreignKey: 'property_id', as: 'discounts', onDelete: 'CASCADE' });
-Discount.belongsTo(Property, { foreignKey: 'property_id', as: 'property' });
+// Entity → Discounts
+Entity.hasMany(Discount, { foreignKey: 'property_id', as: 'discounts', onDelete: 'CASCADE' });
+Discount.belongsTo(Entity, { foreignKey: 'property_id', as: 'entity' });
 
 // User → Bookings
-User.hasMany(Booking, { foreignKey: 'user_id', as: 'bookings' });
+User.hasMany(Booking, { foreignKey: 'user_id', as: 'bookings', onDelete: 'SET NULL' });
 Booking.belongsTo(User, { foreignKey: 'user_id', as: 'user' });
 
-// Property → Bookings
-Property.hasMany(Booking, { foreignKey: 'property_id', as: 'bookings' });
-Booking.belongsTo(Property, { foreignKey: 'property_id', as: 'property' });
+// Entity → Bookings
+Entity.hasMany(Booking, { foreignKey: 'property_id', as: 'bookings' });
+Booking.belongsTo(Entity, { foreignKey: 'property_id', as: 'entity' });
 
 // Event → Bookings
 Event.hasMany(Booking, { foreignKey: 'event_id', as: 'bookings' });
 Booking.belongsTo(Event, { foreignKey: 'event_id', as: 'event' });
 
 // Slot → Bookings
-PropertySlot.hasMany(Booking, { foreignKey: 'slot_id', as: 'bookings' });
-Booking.belongsTo(PropertySlot, { foreignKey: 'slot_id', as: 'slot' });
+EntitySlot.hasMany(Booking, { foreignKey: 'slot_id', as: 'bookings' });
+Booking.belongsTo(EntitySlot, { foreignKey: 'slot_id', as: 'slot' });
 
 // Discount → Bookings
 Discount.hasMany(Booking, { foreignKey: 'discount_id', as: 'bookings' });
@@ -66,17 +69,21 @@ Booking.belongsTo(Discount, { foreignKey: 'discount_id', as: 'discount' });
 Booking.hasMany(BookingItem, { foreignKey: 'booking_id', as: 'items', onDelete: 'CASCADE' });
 BookingItem.belongsTo(Booking, { foreignKey: 'booking_id', as: 'booking' });
 
-// Property → WhatsappLogs
-Property.hasMany(WhatsappLog, { foreignKey: 'property_id', as: 'whatsapp_logs' });
-WhatsappLog.belongsTo(Property, { foreignKey: 'property_id', as: 'property' });
+// Entity → WhatsappLogs
+Entity.hasMany(WhatsappLog, { foreignKey: 'property_id', as: 'whatsapp_logs' });
+WhatsappLog.belongsTo(Entity, { foreignKey: 'property_id', as: 'entity' });
 
 // User → AuditLogs
-User.hasMany(AuditLog, { foreignKey: 'user_id', as: 'audit_logs' });
+User.hasMany(AuditLog, { foreignKey: 'user_id', as: 'audit_logs', onDelete: 'SET NULL' });
 AuditLog.belongsTo(User, { foreignKey: 'user_id', as: 'user' });
+
+// Category ↔ Entity
+Category.hasMany(Entity, { foreignKey: 'category_id', as: 'entities' });
+Entity.belongsTo(Category, { foreignKey: 'category_id', as: 'entity_category' });
 
 module.exports = {
   sequelize,
-  User, Property, PropertySlot, Event, MenuItem,
+  User, Entity, EntitySlot, Event, MenuItem,
   ComboDeal, Discount, Booking, BookingItem,
-  WhatsappLog, AuditLog, SystemConfig
+  WhatsappLog, AuditLog, SystemConfig, Role, Authorization, Category
 };

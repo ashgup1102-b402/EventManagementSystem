@@ -1,10 +1,10 @@
-const { Event, Property } = require('../models');
+const { Event, Entity } = require('../models');
 const { Op } = require('sequelize');
 
 const checkPropertyAccess = async (propertyId, user) => {
-  if (['super_admin', 'admin'].includes(user.role)) return true;
-  const prop = await Property.findByPk(propertyId);
-  return prop && prop.property_user_id === user.id;
+  if (['Super Admin', 'Admin'].includes(user.role)) return true;
+  const ent = await Entity.findByPk(propertyId);
+  return ent && ent.entity_user_id === user.id;
 };
 
 const getAll = async (req, res, next) => {
@@ -13,16 +13,16 @@ const getAll = async (req, res, next) => {
     const where = { is_active: true };
     if (property_id) where.property_id = property_id;
     if (type) where.type = type;
-    if (req.user?.role === 'property') {
-      const prop = await Property.findOne({ where: { property_user_id: req.user.id } });
-      if (prop) where.property_id = prop.id;
+    if (req.user?.role === 'Entity') {
+      const ent = await Entity.findOne({ where: { entity_user_id: req.user.id } });
+      if (ent) where.property_id = ent.id;
     }
     if (date_from && date_to) where.event_date = { [Op.between]: [date_from, date_to] };
     else if (date_from) where.event_date = { [Op.gte]: date_from };
     const offset = (page - 1) * limit;
     const { rows, count } = await Event.findAndCountAll({
       where, limit: parseInt(limit), offset: parseInt(offset),
-      include: [{ model: Property, as: 'property', attributes: ['id','name','city'] }],
+      include: [{ model: Entity, as: 'entity', attributes: ['id','name','city'] }],
       order: [['event_date', 'ASC']]
     });
     res.json({ success: true, data: rows, meta: { total: count, page: parseInt(page), limit: parseInt(limit) } });
@@ -32,7 +32,7 @@ const getAll = async (req, res, next) => {
 const getOne = async (req, res, next) => {
   try {
     const event = await Event.findByPk(req.params.id, {
-      include: [{ model: Property, as: 'property' }]
+      include: [{ model: Entity, as: 'entity' }]
     });
     if (!event) return res.status(404).json({ success: false, message: 'Event not found.' });
     res.json({ success: true, data: event });

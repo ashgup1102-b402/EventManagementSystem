@@ -1,6 +1,6 @@
 const whatsappService = require('../services/whatsapp');
 const { sendPromotionEmail } = require('../services/mailer');
-const { Booking, User, Property, WhatsappLog } = require('../models');
+const { Booking, User, Entity, WhatsappLog } = require('../models');
 const { Op } = require('sequelize');
 
 // POST /api/whatsapp/init-session  (property/admin)
@@ -31,12 +31,12 @@ const sendPromotion = async (req, res, next) => {
   try {
     const { property_id, message, recipient_type, event_id, send_email, email_subject } = req.body;
 
-    // Get property
-    const property = await Property.findByPk(property_id);
-    if (!property) return res.status(404).json({ success: false, message: 'Property not found.' });
+    // Get entity
+    const entity = await Entity.findByPk(property_id);
+    if (!entity) return res.status(404).json({ success: false, message: 'Entity not found.' });
 
     // Check access
-    if (req.user.role === 'property' && property.property_user_id !== req.user.id) {
+    if (req.user.role === 'property' && entity.entity_user_id !== req.user.id) {
       return res.status(403).json({ success: false, message: 'Access denied.' });
     }
 
@@ -67,9 +67,9 @@ const sendPromotion = async (req, res, next) => {
     if (send_email && emailAddresses.length > 0) {
       await sendPromotionEmail({
         recipients: emailAddresses,
-        subject: email_subject || `Special offer from ${property.name}`,
+        subject: email_subject || `Special offer from ${entity.name}`,
         message,
-        propertyName: property.name
+        propertyName: entity.name
       });
       results.email = { sent: emailAddresses.length };
     }
@@ -92,8 +92,8 @@ const getLogs = async (req, res, next) => {
     const { property_id } = req.query;
     const where = {};
     if (req.user.role === 'property') {
-      const prop = await Property.findOne({ where: { property_user_id: req.user.id } });
-      if (prop) where.property_id = prop.id;
+      const ent = await Entity.findOne({ where: { entity_user_id: req.user.id } });
+      if (ent) where.property_id = ent.id;
     } else if (property_id) {
       where.property_id = property_id;
     }

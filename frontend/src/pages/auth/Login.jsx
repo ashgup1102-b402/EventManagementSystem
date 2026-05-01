@@ -13,10 +13,10 @@ const Login = () => {
   const location = useLocation()
 
   const ROLE_HOME = {
-    end_user: '/search',
-    property: '/property/dashboard',
-    admin: '/admin/dashboard',
-    super_admin: '/superadmin/dashboard'
+    End_User: '/search',
+    Entity: '/property/dashboard',
+    Admin: '/admin/dashboard',
+    'Super Admin': '/superadmin/dashboard'
   }
 
   const handleSubmit = async e => {

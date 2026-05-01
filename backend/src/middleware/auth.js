@@ -57,9 +57,9 @@ const authorize = (...roles) => {
 };
 
 // Shorthand role guards
-const isSuperAdmin = authorize('super_admin');
-const isAdmin = authorize('admin', 'super_admin');
-const isProperty = authorize('property', 'admin', 'super_admin');
+const isSuperAdmin = authorize('Super Admin');
+const isAdmin = authorize('Admin', 'Super Admin');
+const isEntity = authorize('Entity', 'Admin', 'Super Admin');
 const isAuthenticated = authenticate;
 
-module.exports = { authenticate, authorize, isSuperAdmin, isAdmin, isProperty, isAuthenticated, optionalAuthenticate };
+module.exports = { authenticate, authorize, isSuperAdmin, isAdmin, isEntity, isAuthenticated, optionalAuthenticate };

@@ -1,10 +1,10 @@
-const { MenuItem, Property } = require('../models');
+const { MenuItem, Entity } = require('../models');
 const { Op } = require('sequelize');
 
 const checkAccess = async (propertyId, user) => {
-  if (['super_admin', 'admin'].includes(user.role)) return true;
-  const prop = await Property.findByPk(propertyId);
-  return prop && prop.property_user_id === user.id;
+  if (['Super Admin', 'Admin'].includes(user.role)) return true;
+  const ent = await Entity.findByPk(propertyId);
+  return ent && ent.entity_user_id === user.id;
 };
 
 const getAll = async (req, res, next) => {
@@ -20,14 +20,14 @@ const getAll = async (req, res, next) => {
       where.is_available = true;
     }
     if (search) where.name = { [Op.iLike]: `%${search}%` };
-    if (req.user?.role === 'property') {
-      const prop = await Property.findOne({ where: { property_user_id: req.user.id } });
-      if (prop) where.property_id = prop.id;
+    if (req.user?.role === 'Entity') {
+      const ent = await Entity.findOne({ where: { entity_user_id: req.user.id } });
+      if (ent) where.property_id = ent.id;
     }
     const offset = (page - 1) * limit;
     const { rows, count } = await MenuItem.findAndCountAll({
       where, limit: parseInt(limit), offset: parseInt(offset),
-      include: [{ model: Property, as: 'property', attributes: ['id','name'] }],
+      include: [{ model: Entity, as: 'entity', attributes: ['id','name'] }],
       order: [['category', 'ASC'], ['name', 'ASC']]
     });
     res.json({ success: true, data: rows, meta: { total: count, page: parseInt(page), limit: parseInt(limit) } });

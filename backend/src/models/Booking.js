@@ -26,9 +26,11 @@ const Booking = sequelize.define('Booking', {
   payment_method: { type: DataTypes.STRING(50), allowNull: true, comment: 'For future: upi, card, etc.' },
   payment_ref:    { type: DataTypes.STRING(100), allowNull: true },
   booking_status: {
-    type: DataTypes.ENUM('confirmed','cancelled','completed','no_show'),
-    defaultValue: 'confirmed'
+    type: DataTypes.ENUM('open','confirmed','cancelled','on_hold','completed','no_show'),
+    defaultValue: 'open'
   },
+  status_change_reason: { type: DataTypes.STRING, allowNull: true },
+  status_change_comment: { type: DataTypes.TEXT, allowNull: true },
   discount_id:   { type: DataTypes.UUID, allowNull: true, references: { model: 'discounts', key: 'id' } },
   promo_code:    { type: DataTypes.STRING(30), allowNull: true },
   special_requests: { type: DataTypes.TEXT, allowNull: true },

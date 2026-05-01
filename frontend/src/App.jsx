@@ -22,11 +22,16 @@ import WhatsappPromo from './pages/property/WhatsappPromo'
 
 // Admin & Super Admin Pages
 import AdminDashboard from './pages/admin/AdminDashboard'
-import PropertiesManager from './pages/admin/PropertiesManager'
+import EntityManager from './pages/admin/EntityManager'
 import UsersManager from './pages/admin/UsersManager'
 import AllBookings from './pages/admin/AllBookings'
 import Reports from './pages/admin/Reports'
+import SMTPSettings from './pages/admin/SMTPSettings'
+import BusinessRules from './pages/admin/BusinessRules'
 import SuperAdminDashboard from './pages/superadmin/SuperAdminDashboard'
+import RoleManagement from './pages/superadmin/RoleManagement'
+import AuthorizationMatrix from './pages/superadmin/AuthorizationMatrix'
+import CategoryManagement from './pages/superadmin/CategoryManagement'
 import SystemConfig from './pages/superadmin/SystemConfig'
 import Placeholder from './pages/Placeholder'
 
@@ -43,30 +48,35 @@ const App = () => {
 
           {/* End User Protected */}
           <Route path="/dashboard" element={<Navigate to="/bookings" replace />} />
-          <Route path="/profile" element={<ProtectedRoute roles={['end_user']}><Profile /></ProtectedRoute>} />
-          <Route path="/bookings" element={<ProtectedRoute roles={['end_user', 'admin', 'super_admin']}><MyBookings /></ProtectedRoute>} />
+          <Route path="/profile" element={<ProtectedRoute roles={['End_User', 'Admin', 'Super Admin', 'Entity']}><Profile /></ProtectedRoute>} />
+          <Route path="/bookings" element={<ProtectedRoute roles={['End_User', 'Admin', 'Super Admin']}><MyBookings /></ProtectedRoute>} />
 
           {/* Property Routes */}
-          <Route path="/property/dashboard" element={<ProtectedRoute roles={['property']}><PropertyDashboard /></ProtectedRoute>} />
-          <Route path="/property/events" element={<ProtectedRoute roles={['property']}><EventsManager /></ProtectedRoute>} />
-          <Route path="/property/menu" element={<ProtectedRoute roles={['property']}><MenuManager /></ProtectedRoute>} />
-          <Route path="/property/slots" element={<ProtectedRoute roles={['property']}><SlotManager /></ProtectedRoute>} />
-          <Route path="/property/discounts" element={<ProtectedRoute roles={['property']}><DiscountManager /></ProtectedRoute>} />
-          <Route path="/property/guests" element={<ProtectedRoute roles={['property']}><Placeholder title="Guest List" /></ProtectedRoute>} />
-          <Route path="/property/whatsapp" element={<ProtectedRoute roles={['property']}><WhatsappPromo /></ProtectedRoute>} />
-          <Route path="/property/settings" element={<ProtectedRoute roles={['property']}><Placeholder title="Property Settings" /></ProtectedRoute>} />
+          <Route path="/property/dashboard" element={<ProtectedRoute roles={['Entity']}><PropertyDashboard /></ProtectedRoute>} />
+          <Route path="/property/events" element={<ProtectedRoute roles={['Entity']}><EventsManager /></ProtectedRoute>} />
+          <Route path="/property/menu" element={<ProtectedRoute roles={['Entity']}><MenuManager /></ProtectedRoute>} />
+          <Route path="/property/slots" element={<ProtectedRoute roles={['Entity']}><SlotManager /></ProtectedRoute>} />
+          <Route path="/property/discounts" element={<ProtectedRoute roles={['Entity']}><DiscountManager /></ProtectedRoute>} />
+          <Route path="/property/guests" element={<ProtectedRoute roles={['Entity']}><Placeholder title="Guest List" /></ProtectedRoute>} />
+          <Route path="/property/whatsapp" element={<ProtectedRoute roles={['Entity']}><WhatsappPromo /></ProtectedRoute>} />
+          <Route path="/property/settings" element={<ProtectedRoute roles={['Entity']}><Placeholder title="Property Settings" /></ProtectedRoute>} />
 
           {/* Admin Routes */}
-          <Route path="/admin/dashboard" element={<ProtectedRoute roles={['admin', 'super_admin']}><AdminDashboard /></ProtectedRoute>} />
-          <Route path="/admin/properties" element={<ProtectedRoute roles={['admin', 'super_admin']}><PropertiesManager /></ProtectedRoute>} />
-          <Route path="/admin/users" element={<ProtectedRoute roles={['admin', 'super_admin']}><UsersManager /></ProtectedRoute>} />
-          <Route path="/admin/bookings" element={<ProtectedRoute roles={['admin', 'super_admin']}><AllBookings /></ProtectedRoute>} />
-          <Route path="/admin/reports" element={<ProtectedRoute roles={['admin', 'super_admin']}><Reports /></ProtectedRoute>} />
+          <Route path="/admin/dashboard" element={<ProtectedRoute roles={['Admin', 'Super Admin']}><AdminDashboard /></ProtectedRoute>} />
+          <Route path="/admin/entities" element={<ProtectedRoute roles={['Admin', 'Super Admin']}><EntityManager /></ProtectedRoute>} />
+          <Route path="/admin/users" element={<ProtectedRoute roles={['Admin', 'Super Admin']}><UsersManager /></ProtectedRoute>} />
+          <Route path="/admin/bookings" element={<ProtectedRoute roles={['Admin', 'Super Admin']}><AllBookings /></ProtectedRoute>} />
+          <Route path="/admin/reports" element={<ProtectedRoute roles={['Admin', 'Super Admin']}><Reports /></ProtectedRoute>} />
+          <Route path="/admin/smtp" element={<ProtectedRoute roles={['Admin', 'Super Admin']}><SMTPSettings /></ProtectedRoute>} />
+          <Route path="/admin/rules" element={<ProtectedRoute roles={['Admin', 'Super Admin']}><BusinessRules /></ProtectedRoute>} />
 
           {/* Super Admin Routes */}
-          <Route path="/superadmin/dashboard" element={<ProtectedRoute roles={['super_admin']}><SuperAdminDashboard /></ProtectedRoute>} />
-          <Route path="/superadmin/config" element={<ProtectedRoute roles={['super_admin']}><SystemConfig /></ProtectedRoute>} />
-          <Route path="/superadmin/audit" element={<ProtectedRoute roles={['super_admin']}><Placeholder title="Audit Logs" /></ProtectedRoute>} />
+          <Route path="/superadmin/dashboard" element={<ProtectedRoute roles={['Super Admin']}><SuperAdminDashboard /></ProtectedRoute>} />
+          <Route path="/superadmin/roles" element={<ProtectedRoute roles={['Super Admin']}><RoleManagement /></ProtectedRoute>} />
+          <Route path="/superadmin/auth" element={<ProtectedRoute roles={['Super Admin']}><AuthorizationMatrix /></ProtectedRoute>} />
+          <Route path="/superadmin/categories" element={<ProtectedRoute roles={['Super Admin']}><CategoryManagement /></ProtectedRoute>} />
+          <Route path="/superadmin/config" element={<ProtectedRoute roles={['Super Admin']}><SystemConfig /></ProtectedRoute>} />
+          <Route path="/superadmin/audit" element={<ProtectedRoute roles={['Super Admin']}><Placeholder title="Audit Logs" /></ProtectedRoute>} />
 
           {/* Fallback */}
           <Route path="/unauthorized" element={<div style={{ textAlign: 'center', padding: '100px 20px' }}><h2>403 - Unauthorized</h2><p>You do not have permission to view this page.</p><a href="/search" style={{ color: 'var(--brand-primary)' }}>Return Home</a></div>} />
