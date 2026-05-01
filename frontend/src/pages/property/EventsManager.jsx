@@ -145,7 +145,7 @@ const EventsManager = () => {
                   </td>
                   <td>
                     <div className="table-actions">
-                      <button className="btn btn-sm btn-light" onClick={() => setForm({...ev}); setModal(ev)}>Edit</button>
+                      <button className="btn btn-sm btn-light" onClick={() => { setForm({...ev}); setModal(ev); }}>Edit</button>
                       <button className="btn btn-sm btn-light" onClick={() => fetchHistory(ev.id)}>📜 History</button>
                       {ev.status === 'Active' && <button className="btn btn-sm btn-danger" onClick={() => remove(ev.id)}>✕</button>}
                     </div>
