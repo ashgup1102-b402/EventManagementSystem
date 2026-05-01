@@ -40,8 +40,10 @@ const seedRoles = async () => {
     'Dashboard', 'Entity Management', 'User Management', 'Booking Management', 
     'Event Management', 'Menu Management', 'Slot Management', 'Discount Management',
     'SMTP Settings', 'Business Rules', 'System Configuration', 'Audit Logs',
-    'Role Management', 'Authorization'
+    'Role Management', 'Authorization', 'Event Types', 'Performers', 'Menu Categories', 'Cuisine Types'
   ];
+
+  const restrictedForAdmin = ['System Configuration', 'Event Types', 'Performers', 'Menu Categories', 'Cuisine Types'];
 
   for (const screen of screens) {
     // 1. Super Admin: Full Access to all
@@ -54,8 +56,8 @@ const seedRoles = async () => {
       }
     });
 
-    // 2. Admin: Full Access to most, restricted on System Configuration
-    const adminPermission = screen === 'System Configuration' ? 'None' : 'Full Access';
+    // 2. Admin: Full Access to most, restricted on specific screens
+    const adminPermission = restrictedForAdmin.includes(screen) ? 'None' : 'Full Access';
     await Authorization.findOrCreate({
       where: { role_name: 'Admin', screen_name: screen },
       defaults: { role_name: 'Admin', screen_name: screen, permission: adminPermission }

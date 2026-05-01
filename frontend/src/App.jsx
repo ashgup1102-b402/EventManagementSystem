@@ -77,7 +77,7 @@ const App = () => {
           <Route path="/superadmin/roles" element={<ProtectedRoute roles={['Super Admin']}><RoleManagement /></ProtectedRoute>} />
           <Route path="/superadmin/auth" element={<ProtectedRoute roles={['Super Admin']}><AuthorizationMatrix /></ProtectedRoute>} />
           <Route path="/superadmin/categories" element={<ProtectedRoute roles={['Super Admin']}><CategoryManagement /></ProtectedRoute>} />
-          <Route path="/superadmin/masters/:type" element={<ProtectedRoute roles={['Super Admin', 'Admin']}><MasterManagement /></ProtectedRoute>} />
+          <Route path="/superadmin/masters/:type" element={<ProtectedRoute roles={['Super Admin']}><MasterManagement /></ProtectedRoute>} />
           <Route path="/superadmin/config" element={<ProtectedRoute roles={['Super Admin']}><SystemConfig /></ProtectedRoute>} />
           <Route path="/superadmin/audit" element={<ProtectedRoute roles={['Super Admin']}><Placeholder title="Audit Logs" /></ProtectedRoute>} />
 
