@@ -36,8 +36,8 @@ const getAll = async (req, res, next) => {
       where, limit: parseInt(limit), offset: parseInt(offset),
       include: [
         { model: Entity, as: 'entity', attributes: ['id','name'] },
-        { model: MenuCategory, as: 'menu_category', attributes: ['id', 'name'] },
-        { model: CuisineType, as: 'cuisine_type', attributes: ['id', 'name'] }
+        { model: MenuCategory, as: 'menu_category_ref', attributes: ['id', 'name'] },
+        { model: CuisineType, as: 'cuisine_type_ref', attributes: ['id', 'name'] }
       ],
       order: [['name', 'ASC']]
     });
@@ -49,8 +49,8 @@ const getOne = async (req, res, next) => {
   try {
     const item = await MenuItem.findByPk(req.params.id, {
       include: [
-        { model: MenuCategory, as: 'menu_category' },
-        { model: CuisineType, as: 'cuisine_type' }
+        { model: MenuCategory, as: 'menu_category_ref' },
+        { model: CuisineType, as: 'cuisine_type_ref' }
       ]
     });
     if (!item) return res.status(404).json({ success: false, message: 'Menu item not found.' });

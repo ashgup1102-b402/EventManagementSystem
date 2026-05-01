@@ -96,10 +96,10 @@ Performer.hasMany(Event, { foreignKey: 'performer_id', as: 'events' });
 Event.belongsTo(Performer, { foreignKey: 'performer_id', as: 'performer_ref' });
 
 MenuCategory.hasMany(MenuItem, { foreignKey: 'menu_category_id', as: 'menu_items' });
-MenuItem.belongsTo(MenuCategory, { foreignKey: 'menu_category_id', as: 'menu_category' });
+MenuItem.belongsTo(MenuCategory, { foreignKey: 'menu_category_id', as: 'menu_category_ref' });
 
 CuisineType.hasMany(MenuItem, { foreignKey: 'cuisine_type_id', as: 'menu_items' });
-MenuItem.belongsTo(CuisineType, { foreignKey: 'cuisine_type_id', as: 'cuisine_type' });
+MenuItem.belongsTo(CuisineType, { foreignKey: 'cuisine_type_id', as: 'cuisine_type_ref' });
 
 module.exports = {
   sequelize,

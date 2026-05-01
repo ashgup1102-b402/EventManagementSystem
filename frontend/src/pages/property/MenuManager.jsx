@@ -120,8 +120,8 @@ const MenuManager = () => {
                     <strong>{item.name}</strong>
                     <div className="text-muted text-xs">{item.is_veg ? '🟢 Veg' : '🔴 Non-veg'} · {item.is_available ? 'Available' : 'Sold Out'}</div>
                   </td>
-                  <td>{item.menu_category?.name || '-'}</td>
-                  <td>{item.cuisine_type?.name || '-'}</td>
+                  <td>{item.menu_category_ref?.name || '-'}</td>
+                  <td>{item.cuisine_type_ref?.name || '-'}</td>
                   <td><span className="fw-700 color-primary">₹{item.price}</span></td>
                   <td>
                     <span className={`badge ${item.status === 'Active' ? 'badge-success' : 'badge-danger'}`}>
