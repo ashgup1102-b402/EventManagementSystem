@@ -40,7 +40,7 @@ const seedRoles = async () => {
     'Dashboard', 'Entity Management', 'User Management', 'Booking Management', 
     'Event Management', 'Menu Management', 'Slot Management', 'Discount Management',
     'SMTP Settings', 'Business Rules', 'System Configuration', 'Audit Logs',
-    'Role Management', 'Authorization', 'Event Types', 'Performers', 'Menu Categories', 'Cuisine Types'
+    'Role Management', 'Authorization', 'Category Management', 'Event Types', 'Performers', 'Menu Categories', 'Cuisine Types'
   ];
 
   const restrictedForAdmin = ['System Configuration', 'Event Types', 'Performers', 'Menu Categories', 'Cuisine Types'];

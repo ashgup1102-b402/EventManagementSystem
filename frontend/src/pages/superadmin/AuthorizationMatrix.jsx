@@ -8,7 +8,8 @@ const SCREENS = [
   'Dashboard', 'Entity Management', 'User Management', 'Booking Management', 
   'Event Management', 'Menu Management', 'Slot Management', 'Discount Management',
   'SMTP Settings', 'Business Rules', 'System Configuration', 'Audit Logs',
-  'Role Management', 'Authorization', 'Category Management'
+  'Role Management', 'Authorization', 'Category Management',
+  'Event Types', 'Performers', 'Menu Categories', 'Cuisine Types'
 ]
 
 const PERMISSIONS = ['None', 'Read Only', 'Read and Edit', 'Full Access']
