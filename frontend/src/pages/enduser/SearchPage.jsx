@@ -123,7 +123,7 @@ const SearchPage = () => {
               <div className="section-title">🏢 Venues</div>
               <div className="grid-auto">
                 {results.properties.rows.map(p => (
-                  <div key={p.id} className="property-card" onClick={() => navigate(`/property/${p.id}`)}>
+                  <div key={p.id} className="property-card" onClick={() => navigate(`/entity/${p.id}`)}>
                     {p.cover_image
                       ? <img src={p.cover_image} alt={p.name} className="property-card-img" />
                       : <div className="property-card-img-placeholder">🏢</div>}
@@ -154,7 +154,7 @@ const SearchPage = () => {
                   const avail = ev.total_capacity - ev.booked_count
                   const pct = Math.round((ev.booked_count / ev.total_capacity) * 100)
                   return (
-                    <div key={ev.id} className="event-card" onClick={() => navigate(`/property/${ev.property_id}`, { state: { openEvent: ev.id } })}>
+                    <div key={ev.id} className="event-card" onClick={() => navigate(`/entity/${ev.property_id}`, { state: { openEvent: ev.id } })}>
                       {ev.image ? <img src={ev.image} alt={ev.name} className="event-card-img" /> : <div className="event-card-img-placeholder">🎭</div>}
                       <div className="event-card-body">
                         <div className="flex items-center gap-2 mb-2" style={{ marginBottom: 8 }}>
@@ -190,7 +190,7 @@ const SearchPage = () => {
               <div className="section-title">🍽️ Food & Drinks</div>
               <div className="grid-auto">
                 {results.menu_items.rows.map(item => (
-                  <div key={item.id} className="event-card" onClick={() => navigate(`/property/${item.property_id}`)}>
+                  <div key={item.id} className="event-card" onClick={() => navigate(`/entity/${item.property_id}`)}>
                     {item.image ? <img src={item.image} alt={item.name} className="event-card-img" /> : <div className="event-card-img-placeholder" style={{ height: 140 }}>🍽️</div>}
                     <div className="event-card-body">
                       <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
@@ -204,7 +204,7 @@ const SearchPage = () => {
                     </div>
                     <div className="event-card-footer">
                       <span style={{ fontSize: 12, color: 'var(--text-muted)' }}>{item.property?.name}</span>
-                      <button className="btn btn-secondary btn-sm" onClick={e => { e.stopPropagation(); navigate(`/property/${item.property_id}`) }}>View Venue</button>
+                      <button className="btn btn-secondary btn-sm" onClick={e => { e.stopPropagation(); navigate(`/entity/${item.property_id}`) }}>View Venue</button>
                     </div>
                   </div>
                 ))}

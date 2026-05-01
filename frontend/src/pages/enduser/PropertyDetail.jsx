@@ -18,7 +18,7 @@ const PropertyDetail = () => {
 
   useEffect(() => {
     Promise.all([
-      api.get(`/properties/${id}`),
+      api.get(`/entities/${id}`),
       api.get('/events', { params: { property_id: id } }),
       api.get('/menu', { params: { property_id: id } }),
       api.get('/slots', { params: { property_id: id } })

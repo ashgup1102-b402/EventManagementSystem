@@ -1,114 +1,161 @@
 import { useState, useEffect } from 'react'
+import { useNavigate } from 'react-router-dom'
 import api from '../../api/axios'
 import Layout from '../../components/Layout'
 import toast from 'react-hot-toast'
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from 'recharts'
+import './PropertyDashboard.css'
 
 const EntityDashboard = () => {
   const [data, setData] = useState(null)
   const [loading, setLoading] = useState(true)
+  const navigate = useNavigate()
 
   useEffect(() => {
-    api.get('/dashboard/property').then(r => setData(r.data.data)).catch(() => toast.error('Failed to load dashboard.')).finally(() => setLoading(false))
+    api.get('/dashboard/property')
+      .then(r => setData(r.data.data))
+      .catch(() => toast.error('Failed to load dashboard.'))
+      .finally(() => setLoading(false))
   }, [])
 
   if (loading) return <Layout><div className="loading-center"><div className="spinner" /></div></Layout>
   if (!data) return <Layout><div className="empty-state"><h3>Dashboard unavailable</h3></div></Layout>
 
-  const { stats, recent_bookings, guest_list, upcoming_events, revenue_chart } = data
-  const chartData = (revenue_chart || []).map(r => ({ month: new Date(r.month).toLocaleDateString('en',{month:'short',year:'2-digit'}), revenue: parseFloat(r.revenue || 0), bookings: parseInt(r.bookings || 0) }))
+  const { row1, row2, row3, recent_bookings, guest_list, upcoming_events, revenue_chart } = data
+  const chartData = (revenue_chart || []).map(r => ({ 
+    month: new Date(r.month).toLocaleDateString('en', { month: 'short', year: '2-digit' }), 
+    revenue: parseFloat(r.revenue || 0), 
+    bookings: parseInt(r.bookings || 0) 
+  }))
+
+  const Tile = ({ icon, label, value, color, onClick, subValue }) => (
+    <div className={`dashboard-tile ${onClick ? 'clickable' : ''}`} onClick={onClick} style={{ borderColor: color ? `${color}44` : '' }}>
+      <div className="tile-icon" style={{ backgroundColor: color ? `${color}15` : '', color: color }}>{icon}</div>
+      <div className="tile-content">
+        <div className="tile-label">{label}</div>
+        <div className="tile-value">{value}</div>
+        {subValue && <div className="tile-sub">{subValue}</div>}
+      </div>
+    </div>
+  )
+
+  const HealthTile = ({ icon, label, active, inactive, color, path, filter }) => (
+    <div className="health-tile">
+      <div className="health-header">
+        <span className="health-icon" style={{ backgroundColor: `${color}15`, color }}>{icon}</span>
+        <span className="health-label">{label}</span>
+      </div>
+      <div className="health-body">
+        <div className="health-stat active" onClick={() => navigate(`${path}?status=${filter || 'Active'}`)}>
+          <span className="dot"></span>
+          <span className="count">{active}</span>
+          <span className="txt">Active</span>
+        </div>
+        <div className="health-stat inactive" onClick={() => navigate(`${path}?status=${filter === 'is_available' ? 'false' : 'Inactive'}`)}>
+          <span className="dot"></span>
+          <span className="count">{inactive}</span>
+          <span className="txt">Inactive</span>
+        </div>
+      </div>
+    </div>
+  )
 
   return (
     <Layout>
-      <div className="page-header"><h1>📊 Entity Dashboard</h1><p>{data.entity?.name} — Performance Overview</p></div>
-
-      <div className="stats-grid">
-        {[
-          { icon: '🎟️', bg: 'rgba(108,99,255,0.15)', val: stats.total_bookings, label: 'Total Bookings' },
-          { icon: '📅', bg: 'rgba(34,197,94,0.15)', val: stats.this_month_bookings, label: 'This Month' },
-          { icon: '💰', bg: 'rgba(245,158,11,0.15)', val: `₹${stats.total_revenue}`, label: 'Total Revenue' },
-          { icon: '📈', bg: 'rgba(59,130,246,0.15)', val: `₹${stats.this_month_revenue}`, label: 'Month Revenue' },
-          { icon: '🏷️', bg: 'rgba(239,68,68,0.15)', val: `${stats.commission_percent}%`, label: 'Portal Commission' },
-          { icon: '💸', bg: 'rgba(168,85,247,0.15)', val: `₹${stats.commission_this_month}`, label: 'Commission (Month)' },
-        ].map((s, i) => (
-          <div key={i} className="stat-card">
-            <div className="stat-icon" style={{ background: s.bg }}>{s.icon}</div>
-            <div className="stat-value">{s.val}</div>
-            <div className="stat-label">{s.label}</div>
-          </div>
-        ))}
+      <div className="dashboard-header">
+        <div>
+          <h1>📊 Entity Dashboard</h1>
+          <p className="text-muted">{data.entity?.name} — Operational Intelligence</p>
+        </div>
+        <div className="header-actions">
+          <button className="btn btn-primary btn-sm" onClick={() => navigate('/entity/bookings')}>View All Bookings</button>
+        </div>
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: 20, marginBottom: 28 }}>
-        {/* Revenue Chart */}
-        <div className="card">
-          <h3 style={{ marginBottom: 16 }}>📈 Revenue Trend (6 Months)</h3>
-          {chartData.length > 0 ? (
-            <ResponsiveContainer width="100%" height={260}>
-              <BarChart data={chartData}>
-                <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.06)" />
-                <XAxis dataKey="month" stroke="#6060a0" fontSize={12} />
-                <YAxis stroke="#6060a0" fontSize={12} />
-                <Tooltip contentStyle={{ background: '#1e1f35', border: '1px solid rgba(108,99,255,0.3)', borderRadius: 8 }} />
-                <Bar dataKey="revenue" fill="#6c63ff" radius={[6,6,0,0]} name="Revenue (₹)" />
-              </BarChart>
-            </ResponsiveContainer>
-          ) : <div className="empty-state" style={{ padding: 40 }}><p>No data yet</p></div>}
+      {/* Row 1: Booking Status */}
+      <div className="tile-row row-4">
+        <Tile icon="✅" label="Booking Closed" value={row1.completed} color="#10b981" />
+        <Tile icon="🔔" label="Booking Open" value={row1.open} color="#3b82f6" />
+        <Tile icon="⏳" label="On Hold" value={row1.on_hold} color="#f59e0b" />
+        <Tile icon="❌" label="Cancelled" value={row1.cancelled} color="#ef4444" />
+      </div>
+
+      {/* Row 2: Financial / Usage */}
+      <div className="tile-row row-5 mt-3">
+        <Tile icon="👥" label="Total Guests" value={row2.total_guests} color="#6366f1" />
+        <Tile icon="💰" label="Total Revenue" value={`₹${row2.total_revenue}`} color="#8b5cf6" />
+        <Tile icon="📈" label="Monthly Revenue" value={`₹${row2.monthly_revenue}`} color="#ec4899" />
+        <Tile icon="🏷️" label="Platform Comm." value={`₹${row2.platform_commission}`} color="#f43f5e" subValue={`Rate: ${data.entity?.portal_commission_percent}%`} />
+        <Tile icon="💸" label="Monthly Comm." value={`₹${row2.monthly_commission}`} color="#f97316" />
+      </div>
+
+      {/* Row 3: Module Health */}
+      <div className="tile-row row-5 mt-3">
+        <HealthTile icon="🍽️" label="Menu" active={row3.menu.active} inactive={row3.menu.inactive} color="#10b981" path="/entity/menu" filter="is_available" />
+        <HealthTile icon="🎭" label="Events" active={row3.events.active} inactive={row3.events.inactive} color="#3b82f6" path="/entity/events" />
+        <HealthTile icon="📅" label="Slots" active={row3.slots.active} inactive={row3.slots.inactive} color="#8b5cf6" path="/entity/slots" />
+        <HealthTile icon="🏷️" label="Discounts" active={row3.discounts.active} inactive={row3.discounts.inactive} color="#f59e0b" path="/entity/discounts" />
+        <HealthTile icon="💬" label="Promotions" active={row3.promotions.active} inactive={row3.promotions.inactive} color="#ec4899" path="/entity/whatsapp" />
+      </div>
+
+      <div className="dashboard-grid mt-4">
+        {/* Revenue Trend */}
+        <div className="card compact">
+          <div className="card-header"><h3>📈 Revenue Trend (6 Months)</h3></div>
+          <div className="card-body">
+            {chartData.length > 0 ? (
+              <ResponsiveContainer width="100%" height={220}>
+                <BarChart data={chartData}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.06)" />
+                  <XAxis dataKey="month" stroke="#6060a0" fontSize={11} />
+                  <YAxis stroke="#6060a0" fontSize={11} />
+                  <Tooltip contentStyle={{ background: '#1e1f35', border: '1px solid rgba(108,99,255,0.3)', borderRadius: 8 }} />
+                  <Bar dataKey="revenue" fill="#6c63ff" radius={[4,4,0,0]} name="Revenue (₹)" />
+                </BarChart>
+              </ResponsiveContainer>
+            ) : <div className="empty-state-sm"><p>No data yet</p></div>}
+          </div>
         </div>
 
         {/* Upcoming Events */}
-        <div className="card">
-          <h3 style={{ marginBottom: 16 }}>🎭 Upcoming Events</h3>
-          {upcoming_events?.length > 0 ? upcoming_events.map(ev => (
-            <div key={ev.id} style={{ display: 'flex', gap: 12, padding: '10px 0', borderBottom: '1px solid var(--border-subtle)' }}>
-              <div style={{ fontSize: 24 }}>🎭</div>
-              <div>
-                <div style={{ fontWeight: 600, fontSize: 14 }}>{ev.name}</div>
-                <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>{ev.event_date} · {ev.total_capacity - ev.booked_count} seats left</div>
+        <div className="card compact">
+          <div className="card-header"><h3>🎭 Upcoming Events</h3></div>
+          <div className="card-body scroll-y" style={{ maxHeight: 220 }}>
+            {upcoming_events?.length > 0 ? upcoming_events.map(ev => (
+              <div key={ev.id} className="list-item">
+                <div className="item-icon">🎭</div>
+                <div className="item-details">
+                  <div className="item-title">{ev.name}</div>
+                  <div className="item-meta">{ev.event_date} · {ev.total_capacity - ev.booked_count} left</div>
+                </div>
               </div>
-            </div>
-          )) : <p style={{ color: 'var(--text-muted)', fontSize: 13 }}>No upcoming events</p>}
+            )) : <p className="text-muted text-xs">No upcoming events</p>}
+          </div>
         </div>
       </div>
 
       {/* Recent Bookings */}
-      <div className="card" style={{ marginBottom: 24 }}>
-        <h3 style={{ marginBottom: 16 }}>🎟️ Recent Bookings</h3>
-        {recent_bookings?.length > 0 ? (
-          <div className="table-wrap"><table>
-            <thead><tr><th>Ref</th><th>Guest</th><th>Type</th><th>Date</th><th>Guests</th><th>Amount</th><th>Status</th></tr></thead>
-            <tbody>{recent_bookings.map(b => (
-              <tr key={b.id}>
-                <td><span style={{ fontFamily: 'monospace', color: 'var(--brand-primary)', fontWeight: 600 }}>{b.booking_ref}</span></td>
-                <td>{b.user?.first_name || b.user?.username}</td>
-                <td><span className="badge badge-muted">{b.booking_type?.replace('_',' ')}</span></td>
-                <td>{b.booking_date}</td>
-                <td>{b.num_guests}</td>
-                <td style={{ fontWeight: 600 }}>₹{b.total_amount}</td>
-                <td><span className={`badge ${b.booking_status==='confirmed'?'badge-success':b.booking_status==='cancelled'?'badge-danger':'badge-muted'}`}>{b.booking_status}</span></td>
-              </tr>
-            ))}</tbody>
-          </table></div>
-        ) : <p style={{ color: 'var(--text-muted)' }}>No bookings yet</p>}
-      </div>
-
-      {/* Guest List */}
-      <div className="card">
-        <h3 style={{ marginBottom: 16 }}>👥 Upcoming Guest List</h3>
-        {guest_list?.length > 0 ? (
-          <div className="table-wrap"><table>
-            <thead><tr><th>Guest</th><th>Phone</th><th>Email</th><th>Date</th><th>Guests</th></tr></thead>
-            <tbody>{guest_list.map(b => (
-              <tr key={b.id}>
-                <td style={{ fontWeight: 600 }}>{b.user?.first_name} {b.user?.last_name}</td>
-                <td>{b.user?.phone || '—'}</td>
-                <td>{b.user?.email}</td>
-                <td>{b.booking_date}</td>
-                <td>{b.num_guests}</td>
-              </tr>
-            ))}</tbody>
-          </table></div>
-        ) : <p style={{ color: 'var(--text-muted)' }}>No upcoming guests</p>}
+      <div className="card compact mt-4">
+        <div className="card-header"><h3>🎟️ Recent Activity</h3></div>
+        <div className="card-body">
+          {recent_bookings?.length > 0 ? (
+            <div className="table-wrap">
+              <table className="table-sm">
+                <thead><tr><th>Ref</th><th>Guest</th><th>Type</th><th>Date</th><th>Amount</th><th>Status</th></tr></thead>
+                <tbody>{recent_bookings.map(b => (
+                  <tr key={b.id}>
+                    <td><code>{b.booking_ref}</code></td>
+                    <td>{b.user?.first_name || b.user?.username}</td>
+                    <td><span className="badge badge-muted">{b.booking_type?.replace('_',' ')}</span></td>
+                    <td>{b.booking_date}</td>
+                    <td className="fw-600">₹{b.total_amount}</td>
+                    <td><span className={`badge ${b.booking_status==='confirmed'?'badge-success':b.booking_status==='cancelled'?'badge-danger':'badge-muted'}`}>{b.booking_status}</span></td>
+                  </tr>
+                ))}</tbody>
+              </table>
+            </div>
+          ) : <p className="text-muted text-sm">No recent bookings</p>}
+        </div>
       </div>
     </Layout>
   )

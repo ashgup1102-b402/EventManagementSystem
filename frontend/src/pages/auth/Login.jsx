@@ -14,7 +14,7 @@ const Login = () => {
 
   const ROLE_HOME = {
     End_User: '/search',
-    Entity: '/property/dashboard',
+    Entity: '/entity/dashboard',
     Admin: '/admin/dashboard',
     'Super Admin': '/superadmin/dashboard'
   }

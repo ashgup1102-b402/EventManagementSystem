@@ -1,4 +1,4 @@
-const { Booking, Entity, Event, User, AuditLog, Discount, sequelize } = require('../models');
+const { Booking, Entity, Event, User, AuditLog, Discount, MenuItem, EntitySlot, WhatsappLog, ComboDeal, sequelize } = require('../models');
 const { fn, col, literal, Op } = require('sequelize');
 const moment = require('moment');
 
@@ -12,11 +12,59 @@ const propertyDashboard = async (req, res, next) => {
     const today = moment().format('YYYY-MM-DD');
     const monthStart = moment().startOf('month').format('YYYY-MM-DD');
 
-    const [totalBookings, thisMonthBookings, totalRevenue, thisMonthRevenue, recentBookings, guestList, upcomingEvents] = await Promise.all([
-      Booking.count({ where: { property_id: entityId, booking_status: { [Op.ne]: 'cancelled' } } }),
-      Booking.count({ where: { property_id: entityId, booking_status: { [Op.ne]: 'cancelled' }, booking_date: { [Op.gte]: monthStart } } }),
-      Booking.sum('total_amount', { where: { property_id: entityId, booking_status: { [Op.ne]: 'cancelled' } } }),
-      Booking.sum('total_amount', { where: { property_id: entityId, booking_status: { [Op.ne]: 'cancelled' }, booking_date: { [Op.gte]: monthStart } } }),
+    const [
+      bookingStatuses,
+      financialsTotal,
+      financialsMonth,
+      menuStats,
+      eventStats,
+      slotStats,
+      discountStats,
+      comboStats,
+      promoStats,
+      recentBookings,
+      guestList,
+      upcomingEvents
+    ] = await Promise.all([
+      // Row 1: Booking Status
+      Booking.findAll({
+        where: { property_id: entityId },
+        attributes: ['booking_status', [fn('COUNT', col('id')), 'count']],
+        group: ['booking_status'],
+        raw: true
+      }),
+      // Row 2: Financial/Usage (Totals)
+      Booking.findOne({
+        where: { property_id: entityId, booking_status: { [Op.ne]: 'cancelled' } },
+        attributes: [
+          [fn('SUM', col('num_guests')), 'total_guests'],
+          [fn('SUM', col('total_amount')), 'total_revenue'],
+          [fn('SUM', col('commission_amount')), 'total_commission']
+        ],
+        raw: true
+      }),
+      // Row 2: Financial/Usage (Monthly)
+      Booking.findOne({
+        where: { 
+          property_id: entityId, 
+          booking_status: { [Op.ne]: 'cancelled' },
+          booking_date: { [Op.gte]: monthStart }
+        },
+        attributes: [
+          [fn('SUM', col('total_amount')), 'monthly_revenue'],
+          [fn('SUM', col('commission_amount')), 'monthly_commission']
+        ],
+        raw: true
+      }),
+      // Row 3: Module Health
+      MenuItem.findAll({ where: { property_id: entityId }, attributes: ['is_available', [fn('COUNT', col('id')), 'count']], group: ['is_available'], raw: true }),
+      Event.findAll({ where: { property_id: entityId }, attributes: ['is_active', [fn('COUNT', col('id')), 'count']], group: ['is_active'], raw: true }),
+      EntitySlot.findAll({ where: { property_id: entityId }, attributes: ['is_active', [fn('COUNT', col('id')), 'count']], group: ['is_active'], raw: true }),
+      Discount.findAll({ where: { property_id: entityId }, attributes: ['is_active', [fn('COUNT', col('id')), 'count']], group: ['is_active'], raw: true }),
+      ComboDeal.findAll({ where: { property_id: entityId }, attributes: ['is_active', [fn('COUNT', col('id')), 'count']], group: ['is_active'], raw: true }),
+      WhatsappLog.findAll({ where: { property_id: entityId }, attributes: ['status', [fn('COUNT', col('id')), 'count']], group: ['status'], raw: true }),
+      
+      // Detailed Lists
       Booking.findAll({
         where: { property_id: entityId },
         include: [
@@ -35,6 +83,24 @@ const propertyDashboard = async (req, res, next) => {
         order: [['event_date', 'ASC']], limit: 5
       })
     ]);
+
+    // Format stats for frontend
+    const bookingCounts = { open: 0, completed: 0, on_hold: 0, cancelled: 0 };
+    bookingStatuses.forEach(s => {
+      if (['open', 'confirmed'].includes(s.booking_status)) bookingCounts.open += parseInt(s.count);
+      else if (s.booking_status === 'completed') bookingCounts.completed += parseInt(s.count);
+      else if (s.booking_status === 'on_hold') bookingCounts.on_hold += parseInt(s.count);
+      else if (s.booking_status === 'cancelled') bookingCounts.cancelled += parseInt(s.count);
+    });
+
+    const formatModule = (rows, key) => {
+      let active = 0, inactive = 0;
+      rows.forEach(r => {
+        if (r[key] === true || r[key] === 'sent' || r[key] === 'delivered') active += parseInt(r.count);
+        else inactive += parseInt(r.count);
+      });
+      return { active, inactive };
+    };
 
     // Revenue by month (last 6 months)
     const revenueByMonth = await Booking.findAll({
@@ -57,15 +123,21 @@ const propertyDashboard = async (req, res, next) => {
       success: true,
       data: {
         entity: ent,
-        stats: {
-          total_bookings: totalBookings,
-          this_month_bookings: thisMonthBookings,
-          total_revenue: parseFloat(totalRevenue || 0).toFixed(2),
-          this_month_revenue: parseFloat(thisMonthRevenue || 0).toFixed(2),
-          commission_percent: ent.portal_commission_percent,
-          commission_this_month: ((parseFloat(thisMonthRevenue || 0) * parseFloat(ent.portal_commission_percent)) / 100).toFixed(2)
+        row1: bookingCounts,
+        row2: {
+          total_guests: parseInt(financialsTotal.total_guests || 0),
+          total_revenue: parseFloat(financialsTotal.total_revenue || 0).toFixed(2),
+          monthly_revenue: parseFloat(financialsMonth.monthly_revenue || 0).toFixed(2),
+          platform_commission: parseFloat(financialsTotal.total_commission || 0).toFixed(2),
+          monthly_commission: parseFloat(financialsMonth.monthly_commission || 0).toFixed(2)
         },
-        recent_bookings: recentBookings,
+        row3: {
+          menu: formatModule(menuStats, 'is_available'),
+          events: formatModule(eventStats, 'is_active'),
+          slots: formatModule(slotStats, 'is_active'),
+          discounts: formatModule([...discountStats, ...comboStats], 'is_active'),
+          promotions: formatModule(promoStats, 'status')
+        },
         guest_list: guestList,
         upcoming_events: upcomingEvents,
         revenue_chart: revenueByMonth
