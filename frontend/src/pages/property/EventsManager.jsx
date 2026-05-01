@@ -9,10 +9,10 @@ const EventsManager = () => {
   const [modal, setModal] = useState(null) // null | 'add' | event obj
   const [form, setForm] = useState({})
   const [saving, setSaving] = useState(false)
-  const [propId, setPropId] = useState(null)
+  const [entityId, setEntityId] = useState(null)
 
   useEffect(() => {
-    api.get('/properties/my').then(r => { setPropId(r.data.data.id); return api.get('/events', { params: { property_id: r.data.data.id } }) })
+    api.get('/entities/my').then(r => { setEntityId(r.data.data.id); return api.get('/events', { params: { property_id: r.data.data.id } }) })
       .then(r => setEvents(r.data.data)).catch(() => toast.error('Failed.')).finally(() => setLoading(false))
   }, [])
 
@@ -22,11 +22,11 @@ const EventsManager = () => {
   const save = async () => {
     setSaving(true)
     try {
-      const payload = { ...form, property_id: propId }
+      const payload = { ...form, property_id: entityId }
       if (modal === 'add') { await api.post('/events', payload); toast.success('Event created!') }
       else { await api.put(`/events/${modal.id}`, payload); toast.success('Event updated!') }
       setModal(null)
-      const r = await api.get('/events', { params: { property_id: propId } })
+      const r = await api.get('/events', { params: { property_id: entityId } })
       setEvents(r.data.data)
     } catch (err) { toast.error(err.response?.data?.message || 'Failed.') }
     finally { setSaving(false) }

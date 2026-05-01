@@ -3,7 +3,7 @@ const { sequelize } = require('../config/database');
 
 const Event = sequelize.define('Event', {
   id: { type: DataTypes.UUID, defaultValue: DataTypes.UUIDV4, primaryKey: true },
-  property_id: { type: DataTypes.UUID, allowNull: false, references: { model: 'properties', key: 'id' } },
+  property_id: { type: DataTypes.UUID, allowNull: false, references: { model: 'entities', key: 'id' } },
   name:        { type: DataTypes.STRING(150), allowNull: false },
   type: {
     type: DataTypes.ENUM('singer','comedy','group_troup','dj','live_band','stand_up','dance','theatre','sports','other'),

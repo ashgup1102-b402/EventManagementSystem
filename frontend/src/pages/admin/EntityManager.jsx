@@ -23,6 +23,26 @@ const EntityManager = () => {
   const [search, setSearch] = useState(initialStatus)
   const [sortConfig, setSortConfig] = useState({ key: 'status', direction: 'asc' })
 
+  // History State
+  const [showHistory, setShowHistory] = useState(false)
+  const [history, setHistory] = useState([])
+  const [historyLoading, setHistoryLoading] = useState(false)
+  const [historyTarget, setHistoryTarget] = useState(null)
+
+  const loadHistory = async (ent) => {
+    setHistoryTarget(ent)
+    setHistoryLoading(true)
+    setShowHistory(true)
+    try {
+      const res = await api.get(`/entities/${ent.id}/history`)
+      setHistory(res.data.data)
+    } catch (err) {
+      toast.error('Failed to load history.')
+    } finally {
+      setHistoryLoading(false)
+    }
+  }
+
   const loadEntities = () => {
     setLoading(true)
     api.get('/entities', { params: { limit: 500 } })
@@ -225,6 +245,7 @@ const EntityManager = () => {
                   <td>
                     <div style={{ display: 'flex', gap: 6 }}>
                       <button className="btn btn-secondary btn-sm" onClick={() => openEdit(e)}>Edit</button>
+                      <button className="btn btn-ghost btn-sm" onClick={() => loadHistory(e)}>📜 History</button>
                       <button 
                         className={`btn ${e.status === 'Active' ? 'btn-danger' : 'btn-success'} btn-sm`} 
                         onClick={() => toggleStatus(e)}
@@ -365,6 +386,47 @@ const EntityManager = () => {
               <button className="btn btn-primary" onClick={save} disabled={saving}>
                 {saving ? 'Saving…' : 'Save Entity'}
               </button>
+            </div>
+          </div>
+        </div>
+      )}
+      {showHistory && (
+        <div className="modal-overlay" style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000 }}>
+          <div className="card" style={{ width: '90%', maxWidth: 900, maxHeight: '80vh', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
+              <h3>📜 Change History - {historyTarget?.name}</h3>
+              <button className="btn btn-ghost btn-xs" onClick={() => setShowHistory(false)}>✕ Close</button>
+            </div>
+            
+            <div className="table-wrap" style={{ flex: 1, overflowY: 'auto' }}>
+              {historyLoading ? (
+                <div style={{ textAlign: 'center', padding: 40 }}><div className="spinner" /></div>
+              ) : history.length === 0 ? (
+                <div style={{ textAlign: 'center', padding: 40, color: 'var(--text-muted)' }}>No changes tracked yet.</div>
+              ) : (
+                <table>
+                  <thead>
+                    <tr>
+                      <th>Login User</th>
+                      <th>Date & Time</th>
+                      <th>Field Name</th>
+                      <th>Old Value</th>
+                      <th>New Value</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {history.map((h, i) => (
+                      <tr key={i}>
+                        <td>{h.user}</td>
+                        <td>{new Date(h.timestamp).toLocaleString()}</td>
+                        <td><span className="badge badge-muted">{h.field}</span></td>
+                        <td style={{ color: 'var(--danger)', textDecoration: 'line-through', fontSize: '13px' }}>{h.old_value || 'Empty'}</td>
+                        <td style={{ color: 'var(--success)', fontWeight: 600, fontSize: '13px' }}>{h.new_value}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              )}
             </div>
           </div>
         </div>

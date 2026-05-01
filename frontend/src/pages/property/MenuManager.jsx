@@ -9,22 +9,22 @@ const MenuManager = () => {
   const [modal, setModal] = useState(null)
   const [form, setForm] = useState({})
   const [saving, setSaving] = useState(false)
-  const [propId, setPropId] = useState(null)
+  const [entityId, setEntityId] = useState(null)
 
   useEffect(() => {
-    api.get('/properties/my').then(r => { setPropId(r.data.data.id); return api.get('/menu', { params: { property_id: r.data.data.id, is_available: '' } }) })
+    api.get('/entities/my').then(r => { setEntityId(r.data.data.id); return api.get('/menu', { params: { property_id: r.data.data.id, is_available: '' } }) })
       .then(r => setItems(r.data.data)).catch(() => toast.error('Failed.')).finally(() => setLoading(false))
   }, [])
 
   const openAdd = () => { setForm({ name:'', category:'main_course', price:'', description:'', is_veg:true, cuisine_type:'', is_available:true }); setModal('add') }
   const openEdit = item => { setForm({ ...item }); setModal(item) }
 
-  const reload = () => api.get('/menu', { params: { property_id: propId, is_available: '' } }).then(r => setItems(r.data.data))
+  const reload = () => api.get('/menu', { params: { property_id: entityId, is_available: '' } }).then(r => setItems(r.data.data))
 
   const save = async () => {
     setSaving(true)
     try {
-      const payload = { ...form, property_id: propId }
+      const payload = { ...form, property_id: entityId }
       if (modal === 'add') await api.post('/menu', payload)
       else await api.put(`/menu/${modal.id}`, payload)
       toast.success('Menu item saved!')

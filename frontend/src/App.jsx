@@ -12,13 +12,14 @@ import PropertyDetail from './pages/enduser/PropertyDetail'
 import MyBookings from './pages/enduser/MyBookings'
 import Profile from './pages/enduser/Profile'
 
-// Property Pages
-import PropertyDashboard from './pages/property/PropertyDashboard'
+// Entity Pages
+import EntityDashboard from './pages/property/PropertyDashboard'
 import EventsManager from './pages/property/EventsManager'
 import MenuManager from './pages/property/MenuManager'
 import SlotManager from './pages/property/SlotManager'
 import DiscountManager from './pages/property/DiscountManager'
 import WhatsappPromo from './pages/property/WhatsappPromo'
+import EntitySettings from './pages/property/EntitySettings'
 
 // Admin & Super Admin Pages
 import AdminDashboard from './pages/admin/AdminDashboard'
@@ -44,22 +45,22 @@ const App = () => {
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
           <Route path="/search" element={<SearchPage />} />
-          <Route path="/property/:id" element={<PropertyDetail />} />
+          <Route path="/entity/:id" element={<PropertyDetail />} />
 
           {/* End User Protected */}
           <Route path="/dashboard" element={<Navigate to="/bookings" replace />} />
           <Route path="/profile" element={<ProtectedRoute roles={['End_User', 'Admin', 'Super Admin', 'Entity']}><Profile /></ProtectedRoute>} />
           <Route path="/bookings" element={<ProtectedRoute roles={['End_User', 'Admin', 'Super Admin']}><MyBookings /></ProtectedRoute>} />
 
-          {/* Property Routes */}
-          <Route path="/property/dashboard" element={<ProtectedRoute roles={['Entity']}><PropertyDashboard /></ProtectedRoute>} />
-          <Route path="/property/events" element={<ProtectedRoute roles={['Entity']}><EventsManager /></ProtectedRoute>} />
-          <Route path="/property/menu" element={<ProtectedRoute roles={['Entity']}><MenuManager /></ProtectedRoute>} />
-          <Route path="/property/slots" element={<ProtectedRoute roles={['Entity']}><SlotManager /></ProtectedRoute>} />
-          <Route path="/property/discounts" element={<ProtectedRoute roles={['Entity']}><DiscountManager /></ProtectedRoute>} />
-          <Route path="/property/guests" element={<ProtectedRoute roles={['Entity']}><Placeholder title="Guest List" /></ProtectedRoute>} />
-          <Route path="/property/whatsapp" element={<ProtectedRoute roles={['Entity']}><WhatsappPromo /></ProtectedRoute>} />
-          <Route path="/property/settings" element={<ProtectedRoute roles={['Entity']}><Placeholder title="Property Settings" /></ProtectedRoute>} />
+          {/* Entity Routes */}
+          <Route path="/entity/dashboard" element={<ProtectedRoute roles={['Entity']}><EntityDashboard /></ProtectedRoute>} />
+          <Route path="/entity/events" element={<ProtectedRoute roles={['Entity']}><EventsManager /></ProtectedRoute>} />
+          <Route path="/entity/menu" element={<ProtectedRoute roles={['Entity']}><MenuManager /></ProtectedRoute>} />
+          <Route path="/entity/slots" element={<ProtectedRoute roles={['Entity']}><SlotManager /></ProtectedRoute>} />
+          <Route path="/entity/discounts" element={<ProtectedRoute roles={['Entity']}><DiscountManager /></ProtectedRoute>} />
+          <Route path="/entity/guests" element={<ProtectedRoute roles={['Entity']}><Placeholder title="Guest List" /></ProtectedRoute>} />
+          <Route path="/entity/whatsapp" element={<ProtectedRoute roles={['Entity']}><WhatsappPromo /></ProtectedRoute>} />
+          <Route path="/entity/settings" element={<ProtectedRoute roles={['Entity']}><EntitySettings /></ProtectedRoute>} />
 
           {/* Admin Routes */}
           <Route path="/admin/dashboard" element={<ProtectedRoute roles={['Admin', 'Super Admin']}><AdminDashboard /></ProtectedRoute>} />

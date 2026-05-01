@@ -3,7 +3,7 @@ const { sequelize } = require('../config/database');
 
 const PropertySlot = sequelize.define('PropertySlot', {
   id:          { type: DataTypes.UUID, defaultValue: DataTypes.UUIDV4, primaryKey: true },
-  property_id: { type: DataTypes.UUID, allowNull: false, references: { model: 'properties', key: 'id' } },
+  property_id: { type: DataTypes.UUID, allowNull: false, references: { model: 'entities', key: 'id' } },
   slot_name:   { type: DataTypes.STRING(100), allowNull: false },
   slot_date:   { type: DataTypes.DATEONLY, allowNull: false },
   start_time:  { type: DataTypes.TIME, allowNull: false },

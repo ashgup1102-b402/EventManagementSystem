@@ -11,11 +11,11 @@ const DiscountManager = () => {
   const [modal, setModal] = useState(null)
   const [form, setForm] = useState({})
   const [saving, setSaving] = useState(false)
-  const [propId, setPropId] = useState(null)
+  const [entityId, setEntityId] = useState(null)
 
   useEffect(() => {
-    api.get('/properties/my').then(r => {
-      setPropId(r.data.data.id)
+    api.get('/entities/my').then(r => {
+      setEntityId(r.data.data.id)
       return Promise.all([
         api.get('/discounts/discounts', { params: { property_id: r.data.data.id } }),
         api.get('/discounts/combos', { params: { property_id: r.data.data.id } })
@@ -26,8 +26,8 @@ const DiscountManager = () => {
 
   const reload = async () => {
     const [d, c] = await Promise.all([
-      api.get('/discounts/discounts', { params: { property_id: propId } }),
-      api.get('/discounts/combos', { params: { property_id: propId } })
+      api.get('/discounts/discounts', { params: { property_id: entityId } }),
+      api.get('/discounts/combos', { params: { property_id: entityId } })
     ])
     setDiscounts(d.data.data); setCombos(c.data.data)
   }
@@ -45,7 +45,7 @@ const DiscountManager = () => {
   const save = async () => {
     setSaving(true)
     try {
-      const payload = { ...form, property_id: propId }
+      const payload = { ...form, property_id: entityId }
       if (modal.type === 'discount') {
         if (modal.item) await api.put(`/discounts/discounts/${modal.item.id}`, payload)
         else await api.post('/discounts/discounts', payload)

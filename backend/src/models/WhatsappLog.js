@@ -3,7 +3,7 @@ const { sequelize } = require('../config/database');
 
 const WhatsappLog = sequelize.define('WhatsappLog', {
   id:           { type: DataTypes.UUID, defaultValue: DataTypes.UUIDV4, primaryKey: true },
-  property_id:  { type: DataTypes.UUID, allowNull: true, references: { model: 'properties', key: 'id' } },
+  property_id:  { type: DataTypes.UUID, allowNull: true, references: { model: 'entities', key: 'id' } },
   sender_type:  { type: DataTypes.ENUM('property','portal'), defaultValue: 'property' },
   message:      { type: DataTypes.TEXT, allowNull: false },
   recipient_count: { type: DataTypes.INTEGER, defaultValue: 0 },

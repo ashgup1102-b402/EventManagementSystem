@@ -33,7 +33,7 @@ const Navbar = () => {
   const dashboardLink = 
     user?.role === 'Super Admin' ? '/superadmin/dashboard' :
     user?.role === 'Admin' ? '/admin/dashboard' :
-    user?.role === 'Entity' ? '/property/dashboard' : null
+    user?.role === 'Entity' ? '/entity/dashboard' : null
 
   return (
     <nav className={`site-navbar ${scrolled ? 'scrolled' : ''}`}>

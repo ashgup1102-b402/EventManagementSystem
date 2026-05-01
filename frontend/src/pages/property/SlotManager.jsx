@@ -9,16 +9,16 @@ const SlotManager = () => {
   const [modal, setModal] = useState(null)
   const [form, setForm] = useState({})
   const [saving, setSaving] = useState(false)
-  const [propId, setPropId] = useState(null)
+  const [entityId, setEntityId] = useState(null)
 
   useEffect(() => {
-    api.get('/properties/my').then(r => {
-      setPropId(r.data.data.id)
+    api.get('/entities/my').then(r => {
+      setEntityId(r.data.data.id)
       return api.get('/slots', { params: { property_id: r.data.data.id } })
     }).then(r => setSlots(r.data.data)).catch(() => toast.error('Failed to load slots.')).finally(() => setLoading(false))
   }, [])
 
-  const reload = () => api.get('/slots', { params: { property_id: propId } }).then(r => setSlots(r.data.data))
+  const reload = () => api.get('/slots', { params: { property_id: entityId } }).then(r => setSlots(r.data.data))
 
   const openAdd = () => { setForm({ slot_name:'', slot_date:'', start_time:'', end_time:'', slot_type:'hall', total_capacity:'', price_per_head:0, min_guests:1, max_guests:'' }); setModal('add') }
   const openEdit = slot => { setForm({ ...slot }); setModal(slot) }
@@ -26,7 +26,7 @@ const SlotManager = () => {
   const save = async () => {
     setSaving(true)
     try {
-      const payload = { ...form, property_id: propId }
+      const payload = { ...form, property_id: entityId }
       if (modal === 'add') await api.post('/slots', payload)
       else await api.put(`/slots/${modal.id}`, payload)
       toast.success('Slot saved!')

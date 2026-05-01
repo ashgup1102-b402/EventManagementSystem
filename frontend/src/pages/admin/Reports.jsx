@@ -20,10 +20,10 @@ const Reports = () => {
   if (loading) return <Layout><div className="loading-center"><div className="spinner" /></div></Layout>
   if (!data) return <Layout><div className="empty-state"><h3>Reports unavailable</h3></div></Layout>
 
-  const { stats, top_properties } = data
+  const { stats, top_entities } = data
 
-  const propertyData = top_properties?.map(p => ({
-    name: p.property?.name || 'Unknown',
+  const entityData = top_entities?.map(p => ({
+    name: p.entity?.name || 'Unknown',
     revenue: parseFloat(p.revenue) || 0,
     bookings: parseInt(p.bookings) || 0
   })) || []
@@ -37,10 +37,10 @@ const Reports = () => {
 
       <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: 24, marginBottom: 24 }}>
         <div className="card">
-          <h3 style={{ marginBottom: 16 }}>Property Revenue Comparison</h3>
-          {propertyData.length > 0 ? (
+          <h3 style={{ marginBottom: 16 }}>Entity Revenue Comparison</h3>
+          {entityData.length > 0 ? (
             <ResponsiveContainer width="100%" height={300}>
-              <BarChart data={propertyData}>
+              <BarChart data={entityData}>
                 <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.06)" />
                 <XAxis dataKey="name" stroke="#6060a0" fontSize={12} tickFormatter={(val) => val.substring(0, 10) + '...'} />
                 <YAxis stroke="#6060a0" fontSize={12} />
@@ -53,11 +53,11 @@ const Reports = () => {
 
         <div className="card">
           <h3 style={{ marginBottom: 16 }}>Bookings Share</h3>
-          {propertyData.length > 0 ? (
+          {entityData.length > 0 ? (
             <ResponsiveContainer width="100%" height={300}>
               <PieChart>
                 <Pie
-                  data={propertyData}
+                  data={entityData}
                   cx="50%"
                   cy="50%"
                   innerRadius={60}
@@ -65,7 +65,7 @@ const Reports = () => {
                   paddingAngle={5}
                   dataKey="bookings"
                 >
-                  {propertyData.map((entry, index) => (
+                  {entityData.map((entry, index) => (
                     <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                   ))}
                 </Pie>
@@ -74,7 +74,7 @@ const Reports = () => {
             </ResponsiveContainer>
           ) : <p style={{ color: 'var(--text-muted)' }}>No data available</p>}
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginTop: 16, justifyContent: 'center' }}>
-            {propertyData.map((p, i) => (
+            {entityData.map((p, i) => (
               <div key={p.name} style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 12 }}>
                 <div style={{ width: 10, height: 10, borderRadius: '50%', background: COLORS[i % COLORS.length] }} />
                 <span>{p.name.substring(0, 10)}</span>
@@ -85,23 +85,23 @@ const Reports = () => {
       </div>
 
       <div className="card">
-        <h3 style={{ marginBottom: 16 }}>🏆 Top Performing Properties</h3>
-        {top_properties?.length > 0 ? (
+        <h3 style={{ marginBottom: 16 }}>🏆 Top Performing Entities</h3>
+        {top_entities?.length > 0 ? (
           <div className="table-wrap">
             <table>
               <thead>
                 <tr>
                   <th>Rank</th>
-                  <th>Property Name</th>
+                  <th>Entity Name</th>
                   <th>Total Bookings</th>
                   <th>Total Revenue</th>
                 </tr>
               </thead>
               <tbody>
-                {top_properties.map((p, i) => (
+                {top_entities.map((p, i) => (
                   <tr key={p.property_id}>
                     <td style={{ fontWeight: 800, color: 'var(--text-muted)' }}>#{i + 1}</td>
-                    <td style={{ fontWeight: 600 }}>{p.property?.name}</td>
+                    <td style={{ fontWeight: 600 }}>{p.entity?.name}</td>
                     <td>{p.bookings}</td>
                     <td style={{ fontWeight: 700, color: 'var(--brand-primary)' }}>₹{p.revenue}</td>
                   </tr>

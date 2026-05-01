@@ -4,7 +4,7 @@ import Layout from '../../components/Layout'
 import toast from 'react-hot-toast'
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from 'recharts'
 
-const PropertyDashboard = () => {
+const EntityDashboard = () => {
   const [data, setData] = useState(null)
   const [loading, setLoading] = useState(true)
 
@@ -20,7 +20,7 @@ const PropertyDashboard = () => {
 
   return (
     <Layout>
-      <div className="page-header"><h1>📊 Property Dashboard</h1><p>{data.property?.name} — Performance Overview</p></div>
+      <div className="page-header"><h1>📊 Entity Dashboard</h1><p>{data.entity?.name} — Performance Overview</p></div>
 
       <div className="stats-grid">
         {[
@@ -114,4 +114,4 @@ const PropertyDashboard = () => {
   )
 }
 
-export default PropertyDashboard
+export default EntityDashboard

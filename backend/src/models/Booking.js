@@ -8,7 +8,7 @@ const Booking = sequelize.define('Booking', {
   guest_name:   { type: DataTypes.STRING(100), allowNull: true },
   guest_email:  { type: DataTypes.STRING(100), allowNull: true },
   guest_phone:  { type: DataTypes.STRING(20), allowNull: true },
-  property_id:  { type: DataTypes.UUID, allowNull: false, references: { model: 'properties', key: 'id' } },
+  property_id:  { type: DataTypes.UUID, allowNull: false, references: { model: 'entities', key: 'id' } },
   booking_type: { type: DataTypes.ENUM('event_ticket','table_reservation','combo'), allowNull: false },
   event_id:     { type: DataTypes.UUID, allowNull: true, references: { model: 'events', key: 'id' } },
   slot_id:      { type: DataTypes.UUID, allowNull: true, references: { model: 'property_slots', key: 'id' } },

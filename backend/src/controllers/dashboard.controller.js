@@ -23,7 +23,7 @@ const propertyDashboard = async (req, res, next) => {
           { model: User, as: 'user', attributes: ['id','username','first_name','last_name','phone','email'] },
           { model: Event, as: 'event', attributes: ['id','name','type'], required: false }
         ],
-        order: [['created_at', 'DESC']], limit: 10
+        order: [['createdAt', 'DESC']], limit: 10
       }),
       Booking.findAll({
         where: { property_id: entityId, booking_status: 'confirmed', booking_date: { [Op.gte]: today } },
@@ -226,7 +226,7 @@ const userDashboard = async (req, res, next) => {
           { model: Entity, as: 'entity', attributes: ['id','name','city','cover_image'] },
           { model: Event, as: 'event', attributes: ['id','name','type','event_date'], required: false }
         ],
-        order: [['created_at', 'DESC']], limit: 10
+        order: [['createdAt', 'DESC']], limit: 10
       }),
       Booking.findAll({
         where: { user_id: req.user.id, booking_status: 'confirmed', booking_date: { [Op.gte]: moment().format('YYYY-MM-DD') } },
@@ -253,7 +253,7 @@ const purgeAuditLogs = async (req, res, next) => {
     if (!from_date || !to_date) return res.status(400).json({ success: false, message: 'Please provide from_date and to_date.' });
 
     const where = {
-      created_at: {
+      createdAt: {
         [Op.between]: [moment(from_date).startOf('day').toDate(), moment(to_date).endOf('day').toDate()]
       }
     };
@@ -273,7 +273,7 @@ const purgeAuditLogs = async (req, res, next) => {
       
       const data = logs.map(l => ({
         ID: l.id,
-        Date: moment(l.created_at).format('YYYY-MM-DD HH:mm:ss'),
+        Date: moment(l.createdAt).format('YYYY-MM-DD HH:mm:ss'),
         User: l.user?.username || 'System',
         Role: l.user?.role || 'N/A',
         Action: l.action,

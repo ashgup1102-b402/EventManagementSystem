@@ -206,4 +206,75 @@ const getMyEntity = async (req, res, next) => {
   } catch (err) { next(err); }
 };
 
-module.exports = { getAll, getOne, create, update, remove, getMyEntity };
+const updateMyEntity = async (req, res, next) => {
+  try {
+    const entity = await Entity.findOne({ where: { entity_user_id: req.user.id } });
+    if (!entity) return res.status(404).json({ success: false, message: 'Entity not found.' });
+
+    // Restricted fields allowed for self-service update
+    const allowed = ['mobile_1', 'email', 'pan_number', 'aadhar_number', 'gst_number', 'address', 'city', 'state', 'country'];
+    const updateData = {};
+    allowed.forEach(key => {
+      if (req.body[key] !== undefined) updateData[key] = req.body[key];
+    });
+
+    const oldValues = {};
+    allowed.forEach(key => { oldValues[key] = entity[key]; });
+
+    await entity.update(updateData);
+
+    // Create Audit Log
+    await AuditLog.create({
+      user_id: req.user.id, action: 'UPDATE_ENTITY_SELF', entity_type: 'Entity',
+      entity_id: entity.id, old_values: oldValues, new_values: updateData,
+      ip_address: req.ip, user_agent: req.headers['user-agent']
+    });
+
+    res.json({ success: true, message: 'Entity details updated.', data: entity });
+  } catch (err) { next(err); }
+};
+
+const getEntityHistory = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const { page = 1, limit = 10 } = req.query;
+    
+    console.log('Fetching history for entity ID:', id);
+    // Fetch audit logs for this specific entity
+    const { rows, count } = await AuditLog.findAndCountAll({
+      where: { entity_type: 'Entity', entity_id: id },
+      include: [{ model: User, as: 'user', attributes: ['id', 'username', 'first_name'] }],
+      order: [['createdAt', 'DESC']],
+      limit: parseInt(limit),
+      offset: (page - 1) * limit
+    });
+
+    // Format logs into field-wise entries
+    const history = [];
+    rows.forEach(log => {
+      const oldVal = log.old_values || {};
+      const newVal = log.new_values || {};
+      const fields = newVal ? Object.keys(newVal) : [];
+
+      fields.forEach(f => {
+        // Only include if value actually changed
+        if (JSON.stringify(oldVal[f]) !== JSON.stringify(newVal[f])) {
+          history.push({
+            user: log.user?.first_name || log.user?.username || 'System',
+            timestamp: log.createdAt,
+            field: f.replace(/_/g, ' ').toUpperCase(),
+            old_value: oldVal[f] !== undefined ? String(oldVal[f]) : 'N/A',
+            new_value: String(newVal[f])
+          });
+        }
+      });
+    });
+
+    res.json({ success: true, data: history, meta: { total: count, page, limit } });
+  } catch (err) { 
+    console.error('FETCH HISTORY ERROR:', err);
+    next(err); 
+  }
+};
+
+module.exports = { getAll, getOne, create, update, remove, getMyEntity, updateMyEntity, getEntityHistory };

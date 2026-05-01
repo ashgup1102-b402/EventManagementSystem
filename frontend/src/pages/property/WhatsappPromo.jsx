@@ -4,7 +4,7 @@ import Layout from '../../components/Layout'
 import toast from 'react-hot-toast'
 
 const WhatsappPromo = () => {
-  const [propId, setPropId] = useState(null)
+  const [entityId, setEntityId] = useState(null)
   const [qr, setQr] = useState(null)
   const [status, setStatus] = useState('NOT_LOGGED_IN')
   const [loadingSession, setLoadingSession] = useState(false)
@@ -13,11 +13,11 @@ const WhatsappPromo = () => {
   const [logs, setLogs] = useState([])
   const [events, setEvents] = useState([])
 
-  const sessionId = propId ? `prop_${propId}` : null
+  const sessionId = entityId ? `prop_${entityId}` : null
 
   useEffect(() => {
-    api.get('/properties/my').then(r => {
-      setPropId(r.data.data.id)
+    api.get('/entities/my').then(r => {
+      setEntityId(r.data.data.id)
       return Promise.all([
         api.get('/whatsapp/logs', { params: { property_id: r.data.data.id } }),
         api.get('/events', { params: { property_id: r.data.data.id } })
@@ -57,7 +57,7 @@ const WhatsappPromo = () => {
     
     setSending(true)
     try {
-      const { data } = await api.post('/whatsapp/send-promotion', { property_id: propId, ...form })
+      const { data } = await api.post('/whatsapp/send-promotion', { property_id: entityId, ...form })
       toast.success(data.message)
       setTimeout(() => api.get('/whatsapp/logs').then(r => setLogs(r.data.data)), 2000)
       setForm({ message: '', recipient_type: 'all_guests', event_id: '', send_email: false, email_subject: '' })
