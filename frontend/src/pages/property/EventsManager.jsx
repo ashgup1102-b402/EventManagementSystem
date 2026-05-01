@@ -2,32 +2,85 @@ import { useState, useEffect } from 'react'
 import api from '../../api/axios'
 import Layout from '../../components/Layout'
 import toast from 'react-hot-toast'
+import moment from 'moment'
 
 const EventsManager = () => {
   const [events, setEvents] = useState([])
+  const [eventTypes, setEventTypes] = useState([])
+  const [performers, setPerformers] = useState([])
   const [loading, setLoading] = useState(true)
   const [modal, setModal] = useState(null) // null | 'add' | event obj
+  const [historyModal, setHistoryModal] = useState(null) // event id
+  const [history, setHistory] = useState([])
   const [form, setForm] = useState({})
   const [saving, setSaving] = useState(false)
   const [entityId, setEntityId] = useState(null)
 
   useEffect(() => {
-    api.get('/entities/my').then(r => { setEntityId(r.data.data.id); return api.get('/events', { params: { property_id: r.data.data.id } }) })
-      .then(r => setEvents(r.data.data)).catch(() => toast.error('Failed.')).finally(() => setLoading(false))
+    fetchInit()
   }, [])
 
-  const openAdd = () => { setForm({ name:'', type:'singer', description:'', event_date:'', start_time:'20:00', end_time:'23:00', ticket_price:500, total_capacity:100, performer_name:'' }); setModal('add') }
-  const openEdit = ev => { setForm({ ...ev }); setModal(ev) }
+  const fetchInit = async () => {
+    try {
+      const [entRes, typesRes, perfRes] = await Promise.all([
+        api.get('/entities/my'),
+        api.get('/masters/event-types?status=Active'),
+        api.get('/masters/performers?status=Active')
+      ])
+      setEntityId(entRes.data.data.id)
+      setEventTypes(typesRes.data.data)
+      setPerformers(perfRes.data.data)
+      fetchEvents(entRes.data.data.id)
+    } catch (err) { toast.error('Failed to load initial data.') }
+    finally { setLoading(false) }
+  }
+
+  const fetchEvents = async (id) => {
+    try {
+      const res = await api.get('/events', { params: { property_id: id } })
+      setEvents(res.data.data)
+    } catch (err) { toast.error('Failed to load events.') }
+  }
+
+  const fetchHistory = async (id) => {
+    try {
+      const res = await api.get(`/events/${id}/history`)
+      setHistory(res.data.data)
+      setHistoryModal(id)
+    } catch (err) { toast.error('Failed to load history.') }
+  }
+
+  const validate = () => {
+    if (!form.name || !form.event_date || !form.start_time || !form.event_type_id) {
+      toast.error('Please fill required fields.')
+      return false
+    }
+    if (moment(form.event_date).isBefore(moment(), 'day')) {
+      toast.error('Event date cannot be in the past.')
+      return false
+    }
+    if (form.end_time && form.start_time && (!form.end_date || form.end_date === form.event_date)) {
+      if (form.end_time <= form.start_time) {
+        toast.error('End time must be after start time.')
+        return false
+      }
+    }
+    if (form.ticket_price < 0 || form.total_capacity < 0) {
+      toast.error('Price and capacity cannot be negative.')
+      return false
+    }
+    return true
+  }
 
   const save = async () => {
+    if (!validate()) return
     setSaving(true)
     try {
       const payload = { ...form, property_id: entityId }
       if (modal === 'add') { await api.post('/events', payload); toast.success('Event created!') }
       else { await api.put(`/events/${modal.id}`, payload); toast.success('Event updated!') }
       setModal(null)
-      const r = await api.get('/events', { params: { property_id: entityId } })
-      setEvents(r.data.data)
+      fetchEvents(entityId)
     } catch (err) { toast.error(err.response?.data?.message || 'Failed.') }
     finally { setSaving(false) }
   }
@@ -36,57 +89,183 @@ const EventsManager = () => {
     if (!window.confirm('Deactivate this event?')) return
     await api.delete(`/events/${id}`)
     toast.success('Event deactivated.')
-    setEvents(events.filter(e => e.id !== id))
+    fetchEvents(entityId)
   }
 
   const set = k => e => setForm(f => ({ ...f, [k]: e.target.value }))
 
+  const filteredPerformers = performers.filter(p => !form.event_type_id || p.event_type_id === form.event_type_id)
+
   return (
     <Layout>
-      <div className="page-header"><div className="page-header-row"><div><h1>🎭 Events Manager</h1><p>Create and manage your events</p></div><button className="btn btn-primary" onClick={openAdd}>+ New Event</button></div></div>
+      <div className="page-header">
+        <div className="page-header-row">
+          <div>
+            <h1>🎭 Events Manager</h1>
+            <p>Manage performance-based events and performer mapping.</p>
+          </div>
+          <button className="btn btn-primary" onClick={() => { setForm({ ticket_price:0, total_capacity:100, status:'Active' }); setModal('add'); }}>
+            + New Event
+          </button>
+        </div>
+      </div>
 
       {loading ? <div className="loading-center"><div className="spinner" /></div> : events.length === 0 ?
-        <div className="empty-state"><div className="empty-icon">🎭</div><h3>No events yet</h3><button className="btn btn-primary mt-3" onClick={openAdd}>Create First Event</button></div> :
-        <div className="table-wrap"><table>
-          <thead><tr><th>Event</th><th>Type</th><th>Date</th><th>Time</th><th>Price</th><th>Capacity</th><th>Booked</th><th>Actions</th></tr></thead>
-          <tbody>{events.map(ev => {
-            const avail = ev.total_capacity - ev.booked_count
-            return <tr key={ev.id}>
-              <td style={{ fontWeight: 600 }}>{ev.name}</td>
-              <td><span className="badge badge-primary">{ev.type?.replace('_',' ')}</span></td>
-              <td>{ev.event_date}</td>
-              <td>{ev.start_time}</td>
-              <td style={{ fontWeight: 600 }}>₹{ev.ticket_price}</td>
-              <td>{ev.total_capacity}</td>
-              <td><span className={`badge ${avail<10?'badge-danger':avail<50?'badge-warning':'badge-success'}`}>{ev.booked_count}/{ev.total_capacity}</span></td>
-              <td><div style={{ display:'flex', gap:6 }}><button className="btn btn-secondary btn-sm" onClick={() => openEdit(ev)}>Edit</button><button className="btn btn-danger btn-sm" onClick={() => remove(ev.id)}>✕</button></div></td>
-            </tr>
-          })}</tbody>
-        </table></div>
+        <div className="empty-state"><div className="empty-icon">🎭</div><h3>No events found</h3><button className="btn btn-primary mt-3" onClick={() => setModal('add')}>Create First Event</button></div> :
+        <div className="table-wrap">
+          <table className="matrix-table">
+            <thead>
+              <tr>
+                <th>Event Name</th>
+                <th>Type</th>
+                <th>Performer</th>
+                <th>Date / Time</th>
+                <th>Pricing</th>
+                <th>Capacity</th>
+                <th>Status</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {events.map(ev => (
+                <tr key={ev.id}>
+                  <td><strong>{ev.name}</strong></td>
+                  <td>{ev.event_type_ref?.name || '-'}</td>
+                  <td>{ev.performer_ref?.name || ev.performer_name || '-'}</td>
+                  <td>
+                    <div>{ev.event_date}</div>
+                    <div className="text-muted text-xs">{ev.start_time} - {ev.end_time || 'TBD'}</div>
+                  </td>
+                  <td><span className="fw-600">₹{ev.ticket_price}</span></td>
+                  <td><span className="badge badge-light">{ev.booked_count}/{ev.total_capacity}</span></td>
+                  <td>
+                    <span className={`badge ${ev.status === 'Active' ? 'badge-success' : 'badge-danger'}`}>
+                      {ev.status}
+                    </span>
+                  </td>
+                  <td>
+                    <div className="table-actions">
+                      <button className="btn btn-sm btn-light" onClick={() => setForm({...ev}); setModal(ev)}>Edit</button>
+                      <button className="btn btn-sm btn-light" onClick={() => fetchHistory(ev.id)}>📜 History</button>
+                      {ev.status === 'Active' && <button className="btn btn-sm btn-danger" onClick={() => remove(ev.id)}>✕</button>}
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       }
 
       {modal && (
-        <div className="modal-overlay" onClick={e => e.target===e.currentTarget && setModal(null)}>
-          <div className="modal">
-            <div className="modal-header"><h2>{modal === 'add' ? 'Create Event' : 'Edit Event'}</h2><button className="modal-close" onClick={() => setModal(null)}>✕</button></div>
-            <div className="form-grid" style={{ gap: 14 }}>
-              <div className="input-group"><label>Event Name *</label><input className="input" value={form.name||''} onChange={set('name')} /></div>
-              <div className="form-grid form-grid-2">
-                <div className="input-group"><label>Type *</label><select className="input" value={form.type||''} onChange={set('type')}>{['singer','comedy','group_troup','dj','live_band','stand_up','dance','theatre','sports','other'].map(t => <option key={t} value={t}>{t.replace('_',' ')}</option>)}</select></div>
-                <div className="input-group"><label>Performer</label><input className="input" value={form.performer_name||''} onChange={set('performer_name')} /></div>
+        <div className="modal-overlay">
+          <div className="modal card" style={{ maxWidth: 600 }}>
+            <div className="modal-header">
+              <h2>{modal === 'add' ? 'Create Event' : 'Edit Event'}</h2>
+              <button className="modal-close" onClick={() => setModal(null)}>✕</button>
+            </div>
+            <div className="form-grid" style={{ gap: 16 }}>
+              <div className="input-group">
+                <label>Event Name *</label>
+                <input className="input" value={form.name||''} onChange={set('name')} placeholder="e.g. Rock Night 2024" />
               </div>
-              <div className="input-group"><label>Description</label><textarea className="input" value={form.description||''} onChange={set('description')} rows={2} /></div>
-              <div className="form-grid form-grid-3">
-                <div className="input-group"><label>Date *</label><input className="input" type="date" value={form.event_date||''} onChange={set('event_date')} /></div>
-                <div className="input-group"><label>Start *</label><input className="input" type="time" value={form.start_time||''} onChange={set('start_time')} /></div>
-                <div className="input-group"><label>End</label><input className="input" type="time" value={form.end_time||''} onChange={set('end_time')} /></div>
+
+              <div className="form-grid-2">
+                <div className="input-group">
+                  <label>Event Type *</label>
+                  <select className="input" value={form.event_type_id||''} onChange={e => setForm({...form, event_type_id: e.target.value, performer_id: ''})}>
+                    <option value="">Select Type</option>
+                    {eventTypes.map(t => <option key={t.id} value={t.id}>{t.name}</option>)}
+                  </select>
+                </div>
+                <div className="input-group">
+                  <label>Performer</label>
+                  <select className="input" value={form.performer_id||''} onChange={set('performer_id')}>
+                    <option value="">Select Performer</option>
+                    {filteredPerformers.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
+                  </select>
+                </div>
               </div>
-              <div className="form-grid form-grid-2">
-                <div className="input-group"><label>Ticket Price (₹) *</label><input className="input" type="number" value={form.ticket_price||''} onChange={set('ticket_price')} /></div>
-                <div className="input-group"><label>Total Capacity *</label><input className="input" type="number" value={form.total_capacity||''} onChange={set('total_capacity')} /></div>
+
+              <div className="input-group">
+                <label>Description</label>
+                <textarea className="input" value={form.description||''} onChange={set('description')} rows={2} />
+              </div>
+
+              <div className="form-grid-3">
+                <div className="input-group">
+                  <label>Start Date *</label>
+                  <input className="input" type="date" value={form.event_date||''} onChange={set('event_date')} />
+                </div>
+                <div className="input-group">
+                  <label>End Date</label>
+                  <input className="input" type="date" value={form.end_date||''} onChange={set('end_date')} min={form.event_date} />
+                </div>
+                <div className="input-group">
+                  <label>Status</label>
+                  <select className="input" value={form.status||'Active'} onChange={set('status')}>
+                    <option value="Active">Active</option>
+                    <option value="Inactive">Inactive</option>
+                  </select>
+                </div>
+              </div>
+
+              <div className="form-grid-2">
+                <div className="input-group">
+                  <label>Start Time *</label>
+                  <input className="input" type="time" value={form.start_time||''} onChange={set('start_time')} />
+                </div>
+                <div className="input-group">
+                  <label>End Time</label>
+                  <input className="input" type="time" value={form.end_time||''} onChange={set('end_time')} />
+                </div>
+              </div>
+
+              <div className="form-grid-2">
+                <div className="input-group">
+                  <label>Ticket Price (₹) *</label>
+                  <input className="input" type="number" min="0" value={form.ticket_price||0} onChange={set('ticket_price')} />
+                </div>
+                <div className="input-group">
+                  <label>Total Capacity *</label>
+                  <input className="input" type="number" min="1" value={form.total_capacity||100} onChange={set('total_capacity')} />
+                </div>
               </div>
             </div>
-            <div className="modal-footer"><button className="btn btn-secondary" onClick={() => setModal(null)}>Cancel</button><button className="btn btn-primary" onClick={save} disabled={saving}>{saving ? 'Saving…' : 'Save Event'}</button></div>
+            <div className="modal-footer">
+              <button className="btn btn-secondary" onClick={() => setModal(null)}>Cancel</button>
+              <button className="btn btn-primary" onClick={save} disabled={saving}>{saving ? 'Saving…' : 'Save Event'}</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {historyModal && (
+        <div className="modal-overlay">
+          <div className="modal card" style={{ maxWidth: 700 }}>
+            <div className="modal-header">
+              <h2>📜 Change History</h2>
+              <button className="modal-close" onClick={() => setHistoryModal(null)}>✕</button>
+            </div>
+            <div className="history-list" style={{ maxHeight: 400, overflowY: 'auto' }}>
+              {history.length === 0 ? <p className="text-muted p-4">No changes recorded.</p> : (
+                <table className="matrix-table">
+                  <thead><tr><th>Who</th><th>When</th><th>Field</th><th>Old</th><th>New</th></tr></thead>
+                  <tbody>{history.map((h, i) => (
+                    <tr key={i}>
+                      <td>{h.user}</td>
+                      <td>{moment(h.timestamp).format('DD MMM YY HH:mm')}</td>
+                      <td><strong>{h.field}</strong></td>
+                      <td className="text-danger strike">{h.old_value}</td>
+                      <td className="text-success">{h.new_value}</td>
+                    </tr>
+                  ))}</tbody>
+                </table>
+              )}
+            </div>
+            <div className="modal-footer">
+              <button className="btn btn-secondary" onClick={() => setHistoryModal(null)}>Close</button>
+            </div>
           </div>
         </div>
       )}

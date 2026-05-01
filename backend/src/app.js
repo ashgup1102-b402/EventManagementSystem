@@ -23,6 +23,7 @@ const searchRoutes = require('./routes/search.routes');
 const configRoutes = require('./routes/config.routes');
 const slotRoutes = require('./routes/slot.routes');
 const categoryRoutes = require('./routes/category.routes');
+const masterRoutes = require('./routes/master.routes');
 
 const app = express();
 
@@ -78,6 +79,7 @@ app.use('/api/search', searchRoutes);
 app.use('/api/config', configRoutes);
 app.use('/api/slots', slotRoutes);
 app.use('/api/categories', categoryRoutes);
+app.use('/api/masters', masterRoutes);
 
 // Health check
 app.get('/api/health', (req, res) => {

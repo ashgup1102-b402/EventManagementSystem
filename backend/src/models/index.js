@@ -14,6 +14,10 @@ const SystemConfig = require('./SystemConfig');
 const Role = require('./Role');
 const Authorization = require('./Authorization');
 const Category = require('./Category');
+const EventType = require('./EventType');
+const Performer = require('./Performer');
+const MenuCategory = require('./MenuCategory');
+const CuisineType = require('./CuisineType');
 
 // ─── Associations ──────────────────────────────────────────────
 
@@ -81,9 +85,26 @@ AuditLog.belongsTo(User, { foreignKey: 'user_id', as: 'user' });
 Category.hasMany(Entity, { foreignKey: 'category_id', as: 'entities' });
 Entity.belongsTo(Category, { foreignKey: 'category_id', as: 'entity_category' });
 
+// Master Associations
+EventType.hasMany(Performer, { foreignKey: 'event_type_id', as: 'performers' });
+Performer.belongsTo(EventType, { foreignKey: 'event_type_id', as: 'event_type' });
+
+EventType.hasMany(Event, { foreignKey: 'event_type_id', as: 'events' });
+Event.belongsTo(EventType, { foreignKey: 'event_type_id', as: 'event_type_ref' });
+
+Performer.hasMany(Event, { foreignKey: 'performer_id', as: 'events' });
+Event.belongsTo(Performer, { foreignKey: 'performer_id', as: 'performer_ref' });
+
+MenuCategory.hasMany(MenuItem, { foreignKey: 'menu_category_id', as: 'menu_items' });
+MenuItem.belongsTo(MenuCategory, { foreignKey: 'menu_category_id', as: 'menu_category' });
+
+CuisineType.hasMany(MenuItem, { foreignKey: 'cuisine_type_id', as: 'menu_items' });
+MenuItem.belongsTo(CuisineType, { foreignKey: 'cuisine_type_id', as: 'cuisine_type' });
+
 module.exports = {
   sequelize,
   User, Entity, EntitySlot, Event, MenuItem,
   ComboDeal, Discount, Booking, BookingItem,
-  WhatsappLog, AuditLog, SystemConfig, Role, Authorization, Category
+  WhatsappLog, AuditLog, SystemConfig, Role, Authorization, Category,
+  EventType, Performer, MenuCategory, CuisineType
 };
