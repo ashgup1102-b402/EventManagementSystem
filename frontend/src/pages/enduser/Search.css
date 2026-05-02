@@ -3,10 +3,10 @@
   background: 
     linear-gradient(to right, rgba(13, 14, 26, 0.98), rgba(13, 14, 26, 0.7)),
     url('https://images.unsplash.com/photo-1492684223066-81342ee5ff30?auto=format&fit=crop&w=1920&q=80') center/cover no-repeat;
-  padding: 16px 32px 0; /* Tight top and bottom */
+  padding: 50px 32px 0; /* Top padding increased to 50px */
   text-align: center;
   border-bottom: 1px solid var(--border-subtle);
-  min-height: 100px;
+  min-height: 120px;
   display: flex;
   align-items: flex-end;
   justify-content: center;
@@ -21,69 +21,107 @@
 }
 
 .search-hero-title {
-  font-size: 22px;
+  font-size: 32px; /* Increased from 22px */
   font-weight: 800;
-  margin-bottom: 0;
+  margin-bottom: 4px;
   display: block;
   color: #fff;
 }
 
 .search-hero-sub {
-  font-size: 12px;
+  font-size: 16px; /* Increased from 12px */
   display: block;
-  opacity: 0.6;
-  margin-bottom: 6px;
+  opacity: 0.7;
+  margin-bottom: 12px;
   color: var(--text-secondary);
 }
 
-/* Equalized Controls */
+/* Premium Subtle Search Bar - Overhauled Input Only */
 .search-hero-form {
   display: flex;
   align-items: center;
   gap: 0;
-  background: rgba(255, 255, 255, 0.08);
+  background: rgba(13, 14, 26, 0.6); /* Deeper, more integrated dark background */
   backdrop-filter: blur(20px);
   padding: 2px 4px;
-  border-radius: 10px;
+  border-radius: 12px; /* Slightly smoother radius */
   margin-top: 0;
-  box-shadow: 0 4px 20px rgba(0,0,0,0.3);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 
+    0 10px 40px rgba(0,0,0,0.4),
+    inset 0 0 0 1px rgba(255,255,255,0.05);
+  border: 1px solid rgba(255, 255, 255, 0.08);
   width: 100%;
 }
 
 .search-hero-input {
-  flex: 1; /* Equal weight */
-  padding: 0 12px;
+  flex: 1;
+  padding: 0 16px;
   display: flex;
   align-items: center;
   border-right: 1px solid rgba(255,255,255,0.1);
+  background: rgba(255, 255, 255, 0.03); /* Extremely subtle inner layer */
+  border-radius: 8px 0 0 8px;
+  height: 38px;
 }
 
 .search-hero-input input { 
-  font-size: 13px; 
+  font-size: 14px; 
   color: #fff;
+  background: transparent;
+  border: none;
+  width: 100%;
+}
+
+.search-hero-input input::placeholder {
+  color: rgba(255, 255, 255, 0.4);
 }
 
 .search-city-select {
-  flex: 1; /* Equal weight */
+  flex: 1;
   background: transparent !important;
   border: none !important;
-  color: #fff !important;
-  padding: 0 12px !important;
+  color: #ffffff !important;
+  padding: 0 16px !important;
   font-size: 13px !important;
   border-right: 1px solid rgba(255,255,255,0.1) !important;
-  appearance: auto !important;
-  height: 36px;
+  cursor: pointer;
+  height: 38px;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='white' viewBox='0 0 16 16'%3E%3Cpath d='M7.247 11.14 2.451 5.658C1.885 5.013 2.345 4 3.204 4h9.592a1 1 0 0 1 .753 1.659l-4.796 5.48a1 1 0 0 1-1.506 0z'/%3E%3C/svg%3E") !important;
+  background-repeat: no-repeat !important;
+  background-position: right 12px center !important;
+}
+
+.search-city-select option {
+  background: #1e1f35 !important;
+  color: #ffffff !important;
+  padding: 12px;
 }
 
 .search-hero-form .input[type="date"] {
-  flex: 1; /* Equal weight */
+  flex: 1;
   background: transparent;
   border: none;
-  color: #fff;
+  color: #ffffff;
   font-size: 13px;
-  padding: 0 12px;
+  padding: 0 16px;
   border-right: 1px solid rgba(255,255,255,0.1);
+  cursor: pointer;
+  filter: invert(0); /* Default */
+}
+
+/* Make date picker icon white and prominent */
+.search-hero-form .input[type="date"]::-webkit-calendar-picker-indicator {
+  filter: invert(1); /* Flip to white */
+  opacity: 0.8;
+  cursor: pointer;
+  transition: opacity 0.2s;
+}
+
+.search-hero-form .input[type="date"]::-webkit-calendar-picker-indicator:hover {
+  opacity: 1;
 }
 
 .search-hero-form .btn-primary {
