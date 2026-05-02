@@ -43,11 +43,7 @@
   letter-spacing: -0.5px;
 }
 
-.site-navbar-links {
-  display: flex;
-  align-items: center;
-  gap: 32px;
-}
+/* site-navbar-links removed as it moved to actions */
 
 .nav-link {
   color: var(--text-secondary);

@@ -2,19 +2,30 @@ import { useState, useEffect, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
 import api from '../../api/axios'
 import SiteLayout from '../../components/SiteLayout'
+import MultiSelect from '../../components/MultiSelect'
 import toast from 'react-hot-toast'
 import './Search.css'
-
-const EVENT_TYPES = ['All','singer','comedy','dj','group_troup','live_band','stand_up','dance','theatre']
-const FOOD_CATS  = ['All','starter','main_course','dessert','beverage','cocktail','mocktail']
 
 const SearchPage = () => {
   const [query, setQuery]       = useState('')
   const [city, setCity]         = useState('')
-  const [eventType, setEventType] = useState('All')
-  const [foodCat, setFoodCat]   = useState('All')
-  const [isVeg, setIsVeg]       = useState('')
   const [date, setDate]         = useState('')
+  const [isVeg, setIsVeg]       = useState('')
+  
+  // Master Data Filters
+  const [masterFilters, setMasterFilters] = useState({
+    event_types: [],
+    performers: [],
+    menu_categories: [],
+    cuisine_types: []
+  })
+
+  // Selected Filter IDs
+  const [selectedEventTypes, setSelectedEventTypes]   = useState([])
+  const [selectedPerformers, setSelectedPerformers]   = useState([])
+  const [selectedMenuCats, setSelectedMenuCats]       = useState([])
+  const [selectedCuisineTypes, setSelectedCuisineTypes] = useState([])
+
   const [results, setResults]   = useState(null)
   const [loading, setLoading]   = useState(false)
   const [cities, setCities]     = useState([])
@@ -22,24 +33,50 @@ const SearchPage = () => {
   const navigate = useNavigate()
 
   useEffect(() => {
-    api.get('/search/cities').then(r => setCities(r.data.data)).catch(() => {})
-    doSearch()
+    // Fetch Cities and Master Filters
+    api.get('/search/filters').then(r => {
+      setMasterFilters({
+        event_types: r.data.data.event_types,
+        performers: r.data.data.performers,
+        menu_categories: r.data.data.menu_categories,
+        cuisine_types: r.data.data.cuisine_types
+      })
+      setCities(r.data.data.cities)
+    }).catch(() => toast.error('Failed to load filters'))
   }, [])
 
-  const doSearch = useCallback(async (params = {}) => {
+  // Centralized search logic
+  const doSearch = useCallback(async (currentFilters) => {
     setLoading(true)
     try {
-      const p = { q: query, city, date, ...params }
-      if (eventType !== 'All') p.event_type = eventType
-      if (foodCat !== 'All') p.food_category = foodCat
-      if (isVeg) p.is_veg = isVeg
+      const p = { ...currentFilters }
+      // Clean up empty filters
+      if (p.is_veg === '') delete p.is_veg
+      
       const { data } = await api.get('/search', { params: p })
       setResults(data.data)
     } catch { toast.error('Search failed.') }
     finally { setLoading(false) }
-  }, [query, city, eventType, foodCat, isVeg, date])
+  }, [])
 
-  const handleSearch = e => { e.preventDefault(); doSearch() }
+  // Reactive Effect: Trigger search whenever filters change (with debounce for query)
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      doSearch({ 
+        q: query, 
+        city, 
+        date, 
+        event_type_ids: selectedEventTypes,
+        performer_ids: selectedPerformers,
+        menu_category_ids: selectedMenuCats,
+        cuisine_type_ids: selectedCuisineTypes,
+        is_veg: isVeg 
+      })
+    }, 400)
+    return () => clearTimeout(timer)
+  }, [query, city, date, selectedEventTypes, selectedPerformers, selectedMenuCats, selectedCuisineTypes, isVeg, doSearch])
+
+  const handleSearch = e => { e.preventDefault() }
 
   const totalResults = results
     ? (results.properties?.total || 0) + (results.events?.total || 0) + (results.menu_items?.total || 0)
@@ -47,187 +84,198 @@ const SearchPage = () => {
 
   return (
     <SiteLayout>
-      {/* Premium Hero Section */}
+      {/* Ultra-Compact Hero Section */}
       <div className="search-hero">
         <div className="search-hero-content">
-          <h1 className="search-hero-title">Discover Amazing <span className="text-gradient">Experiences</span></h1>
-          <p className="search-hero-sub">Search by place, event type, or food — book in seconds</p>
+          <h1 className="search-hero-title">Discover <span className="text-gradient">Experiences</span></h1>
+          <p className="search-hero-sub">Search place, event, performer or food</p>
           <form onSubmit={handleSearch} className="search-hero-form">
             <div className="search-hero-input">
-              <span style={{ fontSize: 18 }}>🔍</span>
-              <input type="text" placeholder="Search events, venues, food…" value={query} onChange={e => setQuery(e.target.value)} />
+              <span>🔍</span>
+              <input type="text" placeholder="Search..." value={query} onChange={e => setQuery(e.target.value)} />
             </div>
             <select className="input search-city-select" value={city} onChange={e => setCity(e.target.value)}>
               <option value="">All Cities</option>
-              {cities.map(c => <option key={c.city} value={c.city}>{c.city}, {c.state}</option>)}
+              {cities.map(c => <option key={c.city} value={c.city}>{c.city}</option>)}
             </select>
-            <input type="date" className="input" value={date} onChange={e => setDate(e.target.value)} style={{ maxWidth: 160 }} />
-            <button type="submit" className="btn btn-primary btn-lg">Search</button>
+            <input type="date" className="input" value={date} onChange={e => setDate(e.target.value)} />
+            <button type="submit" className="btn btn-primary btn-sm">Search</button>
           </form>
         </div>
       </div>
 
       <div className="site-container">
-        {/* Filters */}
-      <div className="search-filters">
-        <div className="filter-section">
-          <span className="filter-label">🎭 Event Type</span>
-          <div className="chips-row">
-            {EVENT_TYPES.map(t => (
-              <button key={t} className={`chip ${eventType === t ? 'active' : ''}`} onClick={() => { setEventType(t); doSearch({ event_type: t === 'All' ? '' : t }) }}>
-                {t === 'All' ? 'All' : t.replace('_', ' ')}
-              </button>
-            ))}
-          </div>
-        </div>
-        <div className="filter-section">
-          <span className="filter-label">🍽️ Food</span>
-          <div className="chips-row">
-            {FOOD_CATS.map(c => (
-              <button key={c} className={`chip ${foodCat === c ? 'active' : ''}`} onClick={() => { setFoodCat(c); doSearch({ food_category: c === 'All' ? '' : c }) }}>
-                {c === 'All' ? 'All' : c.replace('_', ' ')}
-              </button>
-            ))}
-            <button className={`chip ${isVeg === 'true' ? 'active' : ''}`} style={{ background: isVeg === 'true' ? '#22c55e' : '' }} onClick={() => { const v = isVeg === 'true' ? '' : 'true'; setIsVeg(v); doSearch({ is_veg: v }) }}>
-              🥦 Veg Only
+        {/* Compact Advanced Filters */}
+        <div className="search-filters">
+          <div className="filter-row">
+            <MultiSelect 
+              options={masterFilters.event_types} 
+              selected={selectedEventTypes} 
+              onChange={setSelectedEventTypes} 
+              placeholder="Event Types"
+            />
+            <MultiSelect 
+              options={masterFilters.performers} 
+              selected={selectedPerformers} 
+              onChange={setSelectedPerformers} 
+              placeholder="Performers"
+            />
+            <MultiSelect 
+              options={masterFilters.menu_categories} 
+              selected={selectedMenuCats} 
+              onChange={setSelectedMenuCats} 
+              placeholder="Categories"
+            />
+            <MultiSelect 
+              options={masterFilters.cuisine_types} 
+              selected={selectedCuisineTypes} 
+              onChange={setSelectedCuisineTypes} 
+              placeholder="Cuisines"
+            />
+            <button 
+              className={`veg-chip-compact ${isVeg === 'true' ? 'active' : ''}`} 
+              onClick={() => setIsVeg(isVeg === 'true' ? '' : 'true')}
+            >
+              🥦 Veg
             </button>
           </div>
         </div>
-      </div>
 
-      {/* Tabs */}
-      <div style={{ marginBottom: 24, display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12 }}>
-        <div className="tabs" style={{ maxWidth: 480 }}>
+        {/* Full Width Tabs */}
+        <div className="tabs-full">
           {[
             { key: 'all', label: `All (${totalResults})` },
             { key: 'venues', label: `Venues (${results?.properties?.total || 0})` },
             { key: 'events', label: `Events (${results?.events?.total || 0})` },
             { key: 'food', label: `Food (${results?.menu_items?.total || 0})` },
           ].map(t => (
-            <button key={t.key} className={`tab-btn ${activeTab === t.key ? 'active' : ''}`} onClick={() => setActiveTab(t.key)}>{t.label}</button>
+            <button key={t.key} className={`tab-btn-full ${activeTab === t.key ? 'active' : ''}`} onClick={() => setActiveTab(t.key)}>{t.label}</button>
           ))}
+          {loading && <div className="spinner" style={{ width: 16, height: 16, margin: 'auto 8px' }} />}
         </div>
-        {loading && <div className="spinner" style={{ width: 24, height: 24 }} />}
-      </div>
 
-      {/* Results */}
-      {loading && !results && (
-        <div className="grid-auto">{[1,2,3,4,5,6].map(i => <div key={i} className="skeleton" style={{ height: 280, borderRadius: 16 }} />)}</div>
-      )}
+        {/* Results */}
+        {loading && !results && (
+          <div className="grid-auto">{[1,2,3,4].map(i => <div key={i} className="skeleton" style={{ height: 240, borderRadius: 12 }} />)}</div>
+        )}
 
-      {results && (
-        <>
-          {/* Venues */}
-          {(activeTab === 'all' || activeTab === 'venues') && results.properties?.rows?.length > 0 && (
-            <section style={{ marginBottom: 36 }}>
-              <div className="section-title">🏢 Venues</div>
-              <div className="grid-auto">
-                {results.properties.rows.map(p => (
-                  <div key={p.id} className="property-card" onClick={() => navigate(`/entity/${p.id}`)}>
-                    <div className="property-card-img-wrap">
-                      {p.cover_image
-                        ? <img src={p.cover_image} alt={p.name} className="property-card-img" />
-                        : <div className="property-card-img-placeholder">🏢</div>}
-                    </div>
-                    <div className="property-card-body">
-                      <div className="property-card-name">{p.name}</div>
-                      <div className="property-card-location">📍 {p.city}, {p.state}</div>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10 }}>
-                        <span style={{ color: '#f59e0b', fontSize: 13 }}>{'★'.repeat(Math.round(p.rating || 0))}{'☆'.repeat(5 - Math.round(p.rating || 0))}</span>
-                        <span style={{ fontSize: 12, color: 'var(--text-muted)' }}>({p.total_reviews})</span>
+
+        {results && (
+          <>
+            {/* Venues */}
+            {(activeTab === 'all' || activeTab === 'venues') && results.properties?.rows?.length > 0 && (
+              <section style={{ marginBottom: 36 }}>
+                <div className="section-title">🏢 Venues</div>
+                <div className="grid-auto">
+                  {results.properties.rows.map(p => (
+                    <div key={p.id} className="property-card" onClick={() => navigate(`/entity/${p.id}`)}>
+                      <div className="property-card-img-wrap">
+                        {p.cover_image
+                          ? <img src={p.cover_image} alt={p.name} className="property-card-img" />
+                          : <div className="property-card-img-placeholder">🏢</div>}
                       </div>
-                      <div className="property-card-tags">
-                        <span className="badge badge-primary">{p.category?.replace('_', ' ')}</span>
-                        {p.tags?.slice(0,2).map(t => <span key={t} className="badge badge-muted">{t}</span>)}
+                      <div className="property-card-body">
+                        <div className="property-card-name">{p.name}</div>
+                        <div className="property-card-location">📍 {p.city}, {p.state}</div>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10 }}>
+                          <span style={{ color: '#f59e0b', fontSize: 13 }}>{'★'.repeat(Math.round(p.rating || 0))}{'☆'.repeat(5 - Math.round(p.rating || 0))}</span>
+                          <span style={{ fontSize: 12, color: 'var(--text-muted)' }}>({p.total_reviews})</span>
+                        </div>
+                        <div className="property-card-tags">
+                          <span className="badge badge-primary">{p.category?.replace('_', ' ')}</span>
+                          {p.tags?.slice(0,2).map(t => <span key={t} className="badge badge-muted">{t}</span>)}
+                        </div>
                       </div>
                     </div>
-                  </div>
-                ))}
-              </div>
-            </section>
-          )}
+                  ))}
+                </div>
+              </section>
+            )}
 
-          {/* Events */}
-          {(activeTab === 'all' || activeTab === 'events') && results.events?.rows?.length > 0 && (
-            <section style={{ marginBottom: 36 }}>
-              <div className="section-title">🎭 Events</div>
-              <div className="grid-auto">
-                {results.events.rows.map(ev => {
-                  const avail = ev.total_capacity - ev.booked_count
-                  const pct = Math.round((ev.booked_count / ev.total_capacity) * 100)
-                  return (
-                    <div key={ev.id} className="event-card" onClick={() => navigate(`/entity/${ev.property_id}`, { state: { openEvent: ev.id } })}>
+            {/* Events */}
+            {(activeTab === 'all' || activeTab === 'events') && results.events?.rows?.length > 0 && (
+              <section style={{ marginBottom: 36 }}>
+                <div className="section-title">🎭 Events</div>
+                <div className="grid-auto">
+                  {results.events.rows.map(ev => {
+                    const avail = ev.total_capacity - ev.booked_count
+                    const pct = Math.round((ev.booked_count / ev.total_capacity) * 100)
+                    return (
+                      <div key={ev.id} className="event-card" onClick={() => navigate(`/entity/${ev.property_id}`, { state: { openEvent: ev.id } })}>
+                        <div className="event-card-img-wrap">
+                          {ev.image ? <img src={ev.image} alt={ev.name} className="event-card-img" /> : <div className="event-card-img-placeholder">🎭</div>}
+                        </div>
+                        <div className="event-card-body">
+                          <div className="flex items-center gap-2 mb-2" style={{ marginBottom: 8 }}>
+                            <span className="badge badge-primary">{ev.type?.replace('_', ' ')}</span>
+                            {ev.is_featured && <span className="badge badge-warning">⭐ Featured</span>}
+                          </div>
+                          <div className="event-card-title">{ev.name}</div>
+                          {ev.performer_name && <div className="event-card-meta">🎤 {ev.performer_name}</div>}
+                          <div className="event-card-meta">📅 {ev.event_date} &nbsp;🕐 {ev.start_time}</div>
+                          <div className="event-card-meta">📍 {ev.entity?.name}, {ev.entity?.city}</div>
+                          <div className="capacity-bar-wrap mt-2">
+                            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 11, color: 'var(--text-muted)' }}>
+                              <span>{avail} seats left</span><span>{pct}% booked</span>
+                            </div>
+                            <div className="capacity-bar-track"><div className={`capacity-bar-fill ${pct > 80 ? 'high' : pct > 50 ? 'medium' : 'low'}`} style={{ width: `${pct}%` }} /></div>
+                          </div>
+                          <div className="event-card-price">₹{ev.ticket_price} <span style={{ fontSize: 13, color: 'var(--text-muted)', fontWeight: 400 }}>/ person</span></div>
+                        </div>
+                        <div className="event-card-footer">
+                          <span style={{ fontSize: 12, color: 'var(--text-muted)' }}>{avail > 0 ? `${avail} available` : '🔴 Sold Out'}</span>
+                          <button className="btn btn-primary btn-sm" disabled={avail === 0}>Book Now</button>
+                        </div>
+                      </div>
+                    )
+                  })}
+                </div>
+              </section>
+            )}
+
+            {/* Food */}
+            {(activeTab === 'all' || activeTab === 'food') && results.menu_items?.rows?.length > 0 && (
+              <section style={{ marginBottom: 36 }}>
+                <div className="section-title">🍽️ Food & Drinks</div>
+                <div className="grid-auto">
+                  {results.menu_items.rows.map(item => (
+                    <div key={item.id} className="event-card" onClick={() => navigate(`/entity/${item.property_id}`)}>
                       <div className="event-card-img-wrap">
-                        {ev.image ? <img src={ev.image} alt={ev.name} className="event-card-img" /> : <div className="event-card-img-placeholder">🎭</div>}
+                        {item.image ? <img src={item.image} alt={item.name} className="event-card-img" /> : <div className="event-card-img-placeholder" style={{ height: 140 }}>🍽️</div>}
                       </div>
                       <div className="event-card-body">
-                        <div className="flex items-center gap-2 mb-2" style={{ marginBottom: 8 }}>
-                          <span className="badge badge-primary">{ev.type?.replace('_', ' ')}</span>
-                          {ev.is_featured && <span className="badge badge-warning">⭐ Featured</span>}
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
+                          <span style={{ fontSize: 16 }}>{item.is_veg ? '🟢' : '🔴'}</span>
+                          <span className="badge badge-muted">{item.category?.replace('_', ' ')}</span>
                         </div>
-                        <div className="event-card-title">{ev.name}</div>
-                        {ev.performer_name && <div className="event-card-meta">🎤 {ev.performer_name}</div>}
-                        <div className="event-card-meta">📅 {ev.event_date} &nbsp;🕐 {ev.start_time}</div>
-                        <div className="event-card-meta">📍 {ev.property?.name}, {ev.property?.city}</div>
-                        <div className="capacity-bar-wrap mt-2">
-                          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 11, color: 'var(--text-muted)' }}>
-                            <span>{avail} seats left</span><span>{pct}% booked</span>
-                          </div>
-                          <div className="capacity-bar-track"><div className={`capacity-bar-fill ${pct > 80 ? 'high' : pct > 50 ? 'medium' : 'low'}`} style={{ width: `${pct}%` }} /></div>
-                        </div>
-                        <div className="event-card-price">₹{ev.ticket_price} <span style={{ fontSize: 13, color: 'var(--text-muted)', fontWeight: 400 }}>/ person</span></div>
+                        <div className="event-card-title">{item.name}</div>
+                        {item.cuisine_type && <div className="event-card-meta">🌍 {item.cuisine_type}</div>}
+                        <div className="event-card-meta">📍 {item.entity?.name}, {item.entity?.city}</div>
+                        <div className="event-card-price">₹{item.price}</div>
                       </div>
                       <div className="event-card-footer">
-                        <span style={{ fontSize: 12, color: 'var(--text-muted)' }}>{avail > 0 ? `${avail} available` : '🔴 Sold Out'}</span>
-                        <button className="btn btn-primary btn-sm" disabled={avail === 0}>Book Now</button>
+                        <span style={{ fontSize: 12, color: 'var(--text-muted)' }}>{item.entity?.name}</span>
+                        <button className="btn btn-secondary btn-sm" onClick={e => { e.stopPropagation(); navigate(`/entity/${item.property_id}`) }}>View Venue</button>
                       </div>
                     </div>
-                  )
-                })}
-              </div>
-            </section>
-          )}
+                  ))}
+                </div>
+              </section>
+            )}
 
-          {/* Food */}
-          {(activeTab === 'all' || activeTab === 'food') && results.menu_items?.rows?.length > 0 && (
-            <section style={{ marginBottom: 36 }}>
-              <div className="section-title">🍽️ Food & Drinks</div>
-              <div className="grid-auto">
-                {results.menu_items.rows.map(item => (
-                  <div key={item.id} className="event-card" onClick={() => navigate(`/entity/${item.property_id}`)}>
-                    <div className="event-card-img-wrap">
-                      {item.image ? <img src={item.image} alt={item.name} className="event-card-img" /> : <div className="event-card-img-placeholder" style={{ height: 140 }}>🍽️</div>}
-                    </div>
-                    <div className="event-card-body">
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
-                        <span style={{ fontSize: 16 }}>{item.is_veg ? '🟢' : '🔴'}</span>
-                        <span className="badge badge-muted">{item.category?.replace('_', ' ')}</span>
-                      </div>
-                      <div className="event-card-title">{item.name}</div>
-                      {item.cuisine_type && <div className="event-card-meta">🌍 {item.cuisine_type}</div>}
-                      <div className="event-card-meta">📍 {item.property?.name}, {item.property?.city}</div>
-                      <div className="event-card-price">₹{item.price}</div>
-                    </div>
-                    <div className="event-card-footer">
-                      <span style={{ fontSize: 12, color: 'var(--text-muted)' }}>{item.property?.name}</span>
-                      <button className="btn btn-secondary btn-sm" onClick={e => { e.stopPropagation(); navigate(`/entity/${item.property_id}`) }}>View Venue</button>
-                    </div>
-                  </div>
-                ))}
+            {totalResults === 0 && !loading && (
+              <div className="empty-state">
+                <div className="empty-icon">🔍</div>
+                <h3>No results found</h3>
+                <p>Try different search terms or remove some filters</p>
+                <button className="btn btn-primary mt-3" onClick={() => { 
+                  setQuery(''); setCity(''); setDate(''); setIsVeg('');
+                  setSelectedEventTypes([]); setSelectedPerformers([]); setSelectedMenuCats([]); setSelectedCuisineTypes([]);
+                }}>Clear Filters</button>
               </div>
-            </section>
-          )}
-
-          {totalResults === 0 && !loading && (
-            <div className="empty-state">
-              <div className="empty-icon">🔍</div>
-              <h3>No results found</h3>
-              <p>Try different search terms or remove some filters</p>
-              <button className="btn btn-primary mt-3" onClick={() => { setQuery(''); setCity(''); setEventType('All'); setFoodCat('All'); doSearch({ q: '', city: '', event_type: '', food_category: '' }) }}>Clear Filters</button>
-            </div>
-          )}
-        </>
-      )}
+            )}
+          </>
+        )}
       </div>
     </SiteLayout>
   )

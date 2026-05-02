@@ -47,17 +47,20 @@ const Navbar = () => {
           {user?.role === 'Entity' && <span className="badge badge-muted ml-2" style={{ fontSize: '10px' }}>Entity</span>}
         </Link>
 
-        <div className="site-navbar-links desktop-only">
-          <Link to="/search" className="nav-link">Discover</Link>
-          {user?.role === 'End_User' && endUserLinks.slice(1).map(l => (
-            <Link key={l.to} to={l.to} className="nav-link">{l.label}</Link>
-          ))}
-          {dashboardLink && (
-            <Link to={dashboardLink} className="nav-link">Dashboard</Link>
-          )}
-        </div>
-
         <div className="site-navbar-actions">
+          <div className="desktop-only" style={{ display: 'flex', alignItems: 'center', gap: '24px', marginRight: '8px' }}>
+            <Link to="/search" className="nav-link">Discover</Link>
+            {user?.role === 'End_User' && (
+              <>
+                <Link to="/bookings" className="nav-link">My Bookings</Link>
+                <Link to="/profile" className="nav-link">Profile</Link>
+              </>
+            )}
+            {dashboardLink && (
+              <Link to={dashboardLink} className="nav-link">Dashboard</Link>
+            )}
+          </div>
+
           {user ? (
             <div className="user-dropdown-wrapper">
               <button className="user-avatar-btn" onClick={() => setMenuOpen(!menuOpen)}>
