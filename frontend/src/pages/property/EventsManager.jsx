@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { useLocation } from 'react-router-dom'
 import api from '../../api/axios'
 import Layout from '../../components/Layout'
 import toast from 'react-hot-toast'
@@ -16,6 +17,10 @@ const EventsManager = () => {
   const [saving, setSaving] = useState(false)
   const [entityId, setEntityId] = useState(null)
 
+  const { search: urlSearch } = useLocation()
+  const queryParams = new URLSearchParams(urlSearch)
+  const initialStatus = queryParams.get('status')
+
   useEffect(() => {
     fetchInit()
   }, [])
@@ -30,14 +35,16 @@ const EventsManager = () => {
       setEntityId(entRes.data.data.id)
       setEventTypes(typesRes.data.data)
       setPerformers(perfRes.data.data)
-      fetchEvents(entRes.data.data.id)
+      fetchEvents(entRes.data.data.id, initialStatus)
     } catch (err) { toast.error('Failed to load initial data.') }
     finally { setLoading(false) }
   }
 
-  const fetchEvents = async (id) => {
+  const fetchEvents = async (id, statusFilter) => {
     try {
-      const res = await api.get('/events', { params: { property_id: id } })
+      const params = { property_id: id }
+      if (statusFilter) params.status = statusFilter
+      const res = await api.get('/events', { params })
       setEvents(res.data.data)
     } catch (err) { toast.error('Failed to load events.') }
   }
@@ -85,11 +92,22 @@ const EventsManager = () => {
     finally { setSaving(false) }
   }
 
-  const remove = async id => {
+  const deactivate = async id => {
     if (!window.confirm('Deactivate this event?')) return
-    await api.delete(`/events/${id}`)
-    toast.success('Event deactivated.')
-    fetchEvents(entityId)
+    try {
+      await api.delete(`/events/${id}`)
+      toast.success('Event deactivated.')
+      fetchEvents(entityId)
+    } catch (err) { toast.error('Failed to deactivate.') }
+  }
+
+  const activate = async id => {
+    if (!window.confirm('Activate this event?')) return
+    try {
+      await api.put(`/events/${id}`, { status: 'Active' })
+      toast.success('Event activated.')
+      fetchEvents(entityId)
+    } catch (err) { toast.error('Failed to activate.') }
   }
 
   const set = k => e => setForm(f => ({ ...f, [k]: e.target.value }))
@@ -147,7 +165,11 @@ const EventsManager = () => {
                     <div className="table-actions">
                       <button className="btn btn-sm btn-light" onClick={() => { setForm({...ev}); setModal(ev); }}>Edit</button>
                       <button className="btn btn-sm btn-light" onClick={() => fetchHistory(ev.id)}>📜 History</button>
-                      {ev.status === 'Active' && <button className="btn btn-sm btn-danger" onClick={() => remove(ev.id)}>✕</button>}
+                      {ev.status === 'Active' ? (
+                        <button className="btn btn-sm btn-danger" onClick={() => deactivate(ev.id)}>Deactivate</button>
+                      ) : (
+                        <button className="btn btn-sm btn-success" onClick={() => activate(ev.id)}>Activate</button>
+                      )}
                     </div>
                   </td>
                 </tr>

@@ -101,13 +101,19 @@ const create = async (req, res, next) => {
 
     if (booking_type === 'event_ticket' && event_id) {
       const event = await Event.findByPk(event_id, { transaction: t });
-      if (event) {
-        const lineTotal = parseFloat(event.ticket_price) * parseInt(num_guests);
-        subtotal += lineTotal;
-        bookingItems.push({ item_type: 'event_ticket', item_id: event.id, item_name: event.name, quantity: parseInt(num_guests), unit_price: event.ticket_price, total_price: lineTotal });
+      if (!event || event.status !== 'Active') {
+        await t.rollback();
+        return res.status(400).json({ success: false, message: 'This event is no longer active for booking.' });
       }
+      const lineTotal = parseFloat(event.ticket_price) * parseInt(num_guests);
+      subtotal += lineTotal;
+      bookingItems.push({ item_type: 'event_ticket', item_id: event.id, item_name: event.name, quantity: parseInt(num_guests), unit_price: event.ticket_price, total_price: lineTotal });
     } else if (booking_type === 'table_reservation' && slot_id) {
       const slot = await EntitySlot.findByPk(slot_id, { transaction: t });
+      if (!slot || !slot.is_active) {
+        await t.rollback();
+        return res.status(400).json({ success: false, message: 'This slot is no longer active for booking.' });
+      }
       if (slot && slot.price_per_head > 0) {
         const lineTotal = parseFloat(slot.price_per_head) * parseInt(num_guests);
         subtotal += lineTotal;
@@ -115,7 +121,23 @@ const create = async (req, res, next) => {
       }
     }
 
+    const { MenuItem, ComboDeal } = require('../models');
     for (const item of items) {
+      // Check if item is active (Menu Item or Combo)
+      if (item.item_type === 'menu_item') {
+        const mItem = await MenuItem.findByPk(item.item_id, { transaction: t });
+        if (!mItem || mItem.status !== 'Active') {
+          await t.rollback();
+          return res.status(400).json({ success: false, message: `Menu item "${item.item_name}" is no longer active.` });
+        }
+      } else if (item.item_type === 'combo_deal') {
+        const combo = await ComboDeal.findByPk(item.item_id, { transaction: t });
+        if (!combo || !combo.is_active) {
+          await t.rollback();
+          return res.status(400).json({ success: false, message: `Combo deal "${item.item_name}" is no longer active.` });
+        }
+      }
+
       const lineTotal = parseFloat(item.unit_price) * parseInt(item.quantity);
       subtotal += lineTotal;
       bookingItems.push({ ...item, total_price: lineTotal });

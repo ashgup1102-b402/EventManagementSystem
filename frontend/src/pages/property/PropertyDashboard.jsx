@@ -39,19 +39,19 @@ const EntityDashboard = () => {
     </div>
   )
 
-  const HealthTile = ({ icon, label, active, inactive, color, path, filter }) => (
+  const HealthTile = ({ icon, label, active, inactive, color, path, filterType = 'status' }) => (
     <div className="health-tile">
       <div className="health-header">
         <span className="health-icon" style={{ backgroundColor: `${color}15`, color }}>{icon}</span>
         <span className="health-label">{label}</span>
       </div>
       <div className="health-body">
-        <div className="health-stat active" onClick={() => navigate(`${path}?status=${filter || 'Active'}`)}>
+        <div className="health-stat active" onClick={() => navigate(`${path}?${filterType}=${filterType === 'is_active' ? 'true' : 'Active'}`)}>
           <span className="dot"></span>
           <span className="count">{active}</span>
           <span className="txt">Active</span>
         </div>
-        <div className="health-stat inactive" onClick={() => navigate(`${path}?status=${filter === 'is_available' ? 'false' : 'Inactive'}`)}>
+        <div className="health-stat inactive" onClick={() => navigate(`${path}?${filterType}=${filterType === 'is_active' ? 'false' : 'Inactive'}`)}>
           <span className="dot"></span>
           <span className="count">{inactive}</span>
           <span className="txt">Inactive</span>
@@ -91,11 +91,11 @@ const EntityDashboard = () => {
 
       {/* Row 3: Module Health */}
       <div className="tile-row row-5 mt-3">
-        <HealthTile icon="🍽️" label="Menu" active={row3.menu.active} inactive={row3.menu.inactive} color="#10b981" path="/entity/menu" filter="is_available" />
+        <HealthTile icon="🍽️" label="Menu" active={row3.menu.active} inactive={row3.menu.inactive} color="#10b981" path="/entity/menu" />
         <HealthTile icon="🎭" label="Events" active={row3.events.active} inactive={row3.events.inactive} color="#3b82f6" path="/entity/events" />
-        <HealthTile icon="📅" label="Slots" active={row3.slots.active} inactive={row3.slots.inactive} color="#8b5cf6" path="/entity/slots" />
-        <HealthTile icon="🏷️" label="Discounts" active={row3.discounts.active} inactive={row3.discounts.inactive} color="#f59e0b" path="/entity/discounts" />
-        <HealthTile icon="💬" label="Promotions" active={row3.promotions.active} inactive={row3.promotions.inactive} color="#ec4899" path="/entity/whatsapp" />
+        <HealthTile icon="📅" label="Slots" active={row3.slots.active} inactive={row3.slots.inactive} color="#8b5cf6" path="/entity/slots" filterType="is_active" />
+        <HealthTile icon="🏷️" label="Discounts" active={row3.discounts.active} inactive={row3.discounts.inactive} color="#f59e0b" path="/entity/discounts" filterType="is_active" />
+        <HealthTile icon="🎁" label="Promotions" active={row3.promotions.active} inactive={row3.promotions.inactive} color="#ec4899" path="/entity/discounts" filterType="is_active" />
       </div>
 
       <div className="dashboard-grid mt-4">

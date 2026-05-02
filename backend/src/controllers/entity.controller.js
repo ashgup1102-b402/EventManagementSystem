@@ -234,14 +234,14 @@ const updateMyEntity = async (req, res, next) => {
   } catch (err) { next(err); }
 };
 
+const { getFormattedHistory } = require('../utils/historyHelper');
+
 const getEntityHistory = async (req, res, next) => {
   try {
     const { id } = req.params;
-    const { page = 1, limit = 10 } = req.query;
+    const { page = 1, limit = 50 } = req.query; // Increase limit for history
     
-    console.log('Fetching history for entity ID:', id);
-    // Fetch audit logs for this specific entity
-    const { rows, count } = await AuditLog.findAndCountAll({
+    const logs = await AuditLog.findAll({
       where: { entity_type: 'Entity', entity_id: id },
       include: [{ model: User, as: 'user', attributes: ['id', 'username', 'first_name'] }],
       order: [['createdAt', 'DESC']],
@@ -249,30 +249,9 @@ const getEntityHistory = async (req, res, next) => {
       offset: (page - 1) * limit
     });
 
-    // Format logs into field-wise entries
-    const history = [];
-    rows.forEach(log => {
-      const oldVal = log.old_values || {};
-      const newVal = log.new_values || {};
-      const fields = newVal ? Object.keys(newVal) : [];
-
-      fields.forEach(f => {
-        // Only include if value actually changed
-        if (JSON.stringify(oldVal[f]) !== JSON.stringify(newVal[f])) {
-          history.push({
-            user: log.user?.first_name || log.user?.username || 'System',
-            timestamp: log.createdAt,
-            field: f.replace(/_/g, ' ').toUpperCase(),
-            old_value: oldVal[f] !== undefined ? String(oldVal[f]) : 'N/A',
-            new_value: String(newVal[f])
-          });
-        }
-      });
-    });
-
-    res.json({ success: true, data: history, meta: { total: count, page, limit } });
+    const history = await getFormattedHistory(logs);
+    res.json({ success: true, data: history, meta: { page, limit } });
   } catch (err) { 
-    console.error('FETCH HISTORY ERROR:', err);
     next(err); 
   }
 };

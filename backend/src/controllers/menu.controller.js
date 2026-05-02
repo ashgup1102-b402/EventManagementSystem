@@ -134,6 +134,8 @@ const remove = async (req, res, next) => {
   } catch (err) { next(err); }
 };
 
+const { getFormattedHistory } = require('../utils/historyHelper');
+
 const getHistory = async (req, res, next) => {
   try {
     const { id } = req.params;
@@ -143,25 +145,7 @@ const getHistory = async (req, res, next) => {
       order: [['createdAt', 'DESC']]
     });
 
-    const history = [];
-    logs.forEach(log => {
-      const oldVal = log.old_values || {};
-      const newVal = log.new_values || {};
-      const fields = Object.keys(newVal).filter(f => f !== 'updatedAt' && f !== 'image');
-
-      fields.forEach(f => {
-        if (JSON.stringify(oldVal[f]) !== JSON.stringify(newVal[f])) {
-          history.push({
-            user: log.user?.first_name || log.user?.username || 'System',
-            timestamp: log.createdAt,
-            field: f.replace(/_/g, ' ').toUpperCase(),
-            old_value: oldVal[f] !== undefined ? String(oldVal[f]) : 'N/A',
-            new_value: String(newVal[f])
-          });
-        }
-      });
-    });
-
+    const history = await getFormattedHistory(logs);
     res.json({ success: true, data: history });
   } catch (err) { next(err); }
 };

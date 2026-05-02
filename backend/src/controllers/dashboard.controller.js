@@ -57,8 +57,8 @@ const propertyDashboard = async (req, res, next) => {
         raw: true
       }),
       // Row 3: Module Health
-      MenuItem.findAll({ where: { property_id: entityId }, attributes: ['is_available', [fn('COUNT', col('id')), 'count']], group: ['is_available'], raw: true }),
-      Event.findAll({ where: { property_id: entityId }, attributes: ['is_active', [fn('COUNT', col('id')), 'count']], group: ['is_active'], raw: true }),
+      MenuItem.findAll({ where: { property_id: entityId }, attributes: ['status', [fn('COUNT', col('id')), 'count']], group: ['status'], raw: true }),
+      Event.findAll({ where: { property_id: entityId }, attributes: ['status', [fn('COUNT', col('id')), 'count']], group: ['status'], raw: true }),
       EntitySlot.findAll({ where: { property_id: entityId }, attributes: ['is_active', [fn('COUNT', col('id')), 'count']], group: ['is_active'], raw: true }),
       Discount.findAll({ where: { property_id: entityId }, attributes: ['is_active', [fn('COUNT', col('id')), 'count']], group: ['is_active'], raw: true }),
       ComboDeal.findAll({ where: { property_id: entityId }, attributes: ['is_active', [fn('COUNT', col('id')), 'count']], group: ['is_active'], raw: true }),
@@ -96,7 +96,7 @@ const propertyDashboard = async (req, res, next) => {
     const formatModule = (rows, key) => {
       let active = 0, inactive = 0;
       rows.forEach(r => {
-        if (r[key] === true || r[key] === 'sent' || r[key] === 'delivered') active += parseInt(r.count);
+        if (r[key] === true || r[key] === 'Active' || r[key] === 'sent' || r[key] === 'delivered') active += parseInt(r.count);
         else inactive += parseInt(r.count);
       });
       return { active, inactive };
@@ -132,11 +132,11 @@ const propertyDashboard = async (req, res, next) => {
           monthly_commission: parseFloat(financialsMonth.monthly_commission || 0).toFixed(2)
         },
         row3: {
-          menu: formatModule(menuStats, 'is_available'),
-          events: formatModule(eventStats, 'is_active'),
+          menu: formatModule(menuStats, 'status'),
+          events: formatModule(eventStats, 'status'),
           slots: formatModule(slotStats, 'is_active'),
-          discounts: formatModule([...discountStats, ...comboStats], 'is_active'),
-          promotions: formatModule(promoStats, 'status')
+          discounts: formatModule(discountStats, 'is_active'),
+          promotions: formatModule(comboStats, 'is_active')
         },
         guest_list: guestList,
         upcoming_events: upcomingEvents,

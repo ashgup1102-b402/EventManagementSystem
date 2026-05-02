@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { useLocation } from 'react-router-dom'
 import api from '../../api/axios'
 import Layout from '../../components/Layout'
 import toast from 'react-hot-toast'
@@ -16,6 +17,10 @@ const MenuManager = () => {
   const [saving, setSaving] = useState(false)
   const [entityId, setEntityId] = useState(null)
 
+  const { search: urlSearch } = useLocation()
+  const queryParams = new URLSearchParams(urlSearch)
+  const initialStatus = queryParams.get('status')
+
   useEffect(() => {
     fetchInit()
   }, [])
@@ -30,14 +35,16 @@ const MenuManager = () => {
       setEntityId(entRes.data.data.id)
       setCategories(catRes.data.data)
       setCuisines(cuisRes.data.data)
-      fetchMenu(entRes.data.data.id)
+      fetchMenu(entRes.data.data.id, initialStatus)
     } catch (err) { toast.error('Failed to load initial data.') }
     finally { setLoading(false) }
   }
 
-  const fetchMenu = async (id) => {
+  const fetchMenu = async (id, statusFilter) => {
     try {
-      const res = await api.get('/menu', { params: { property_id: id, status: 'Active' } })
+      const params = { property_id: id }
+      if (statusFilter) params.status = statusFilter
+      const res = await api.get('/menu', { params })
       setItems(res.data.data)
     } catch (err) { toast.error('Failed to load menu.') }
   }
@@ -76,11 +83,22 @@ const MenuManager = () => {
     finally { setSaving(false) }
   }
 
-  const remove = async id => {
+  const deactivate = async id => {
     if (!window.confirm('Deactivate this menu item?')) return
-    await api.delete(`/menu/${id}`)
-    toast.success('Item deactivated.')
-    fetchMenu(entityId)
+    try {
+      await api.delete(`/menu/${id}`)
+      toast.success('Item deactivated.')
+      fetchMenu(entityId)
+    } catch (err) { toast.error('Failed to deactivate.') }
+  }
+
+  const activate = async id => {
+    if (!window.confirm('Activate this menu item?')) return
+    try {
+      await api.put(`/menu/${id}`, { status: 'Active' })
+      toast.success('Item activated.')
+      fetchMenu(entityId)
+    } catch (err) { toast.error('Failed to activate.') }
   }
 
   const set = k => e => setForm(f => ({ ...f, [k]: e.target.type === 'checkbox' ? e.target.checked : e.target.value }))
@@ -132,7 +150,11 @@ const MenuManager = () => {
                     <div className="table-actions">
                       <button className="btn btn-sm btn-light" onClick={() => { setForm({...item}); setModal(item); }}>Edit</button>
                       <button className="btn btn-sm btn-light" onClick={() => fetchHistory(item.id)}>📜 History</button>
-                      {item.status === 'Active' && <button className="btn btn-sm btn-danger" onClick={() => remove(item.id)}>✕</button>}
+                      {item.status === 'Active' ? (
+                        <button className="btn btn-sm btn-danger" onClick={() => deactivate(item.id)}>Deactivate</button>
+                      ) : (
+                        <button className="btn btn-sm btn-success" onClick={() => activate(item.id)}>Activate</button>
+                      )}
                     </div>
                   </td>
                 </tr>

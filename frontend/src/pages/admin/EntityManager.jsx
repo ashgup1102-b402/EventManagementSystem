@@ -420,7 +420,7 @@ const EntityManager = () => {
                         <td>{h.user}</td>
                         <td>{new Date(h.timestamp).toLocaleString()}</td>
                         <td><span className="badge badge-muted">{h.field}</span></td>
-                        <td style={{ color: 'var(--danger)', textDecoration: 'line-through', fontSize: '13px' }}>{h.old_value || 'Empty'}</td>
+                        <td style={{ color: 'var(--danger)', textDecoration: 'line-through', fontSize: '13px' }}>{h.old_value}</td>
                         <td style={{ color: 'var(--success)', fontWeight: 600, fontSize: '13px' }}>{h.new_value}</td>
                       </tr>
                     ))}
