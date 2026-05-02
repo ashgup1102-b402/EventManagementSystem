@@ -265,4 +265,51 @@ const cancel = async (req, res, next) => {
   }
 };
 
-module.exports = { getAll, getOne, create, changeStatus, cancel };
+const getGuestList = async (req, res, next) => {
+  try {
+    const entity = await Entity.findOne({ where: { entity_user_id: req.user.id } });
+    if (!entity) return res.status(404).json({ success: false, message: 'Entity not found.' });
+
+    // Grouping by user_id OR guest_email for unauthenticated bookings
+    // Using a raw query for complex aggregation or manual grouping
+    const bookings = await Booking.findAll({
+      where: { property_id: entity.id },
+      include: [
+        { model: User, as: 'user', attributes: ['id', 'first_name', 'last_name', 'email', 'phone', 'username'] },
+        { model: Event, as: 'event', attributes: ['name'] },
+        { model: EntitySlot, as: 'slot', attributes: ['slot_name'] }
+      ],
+      order: [['booking_date', 'DESC']]
+    });
+
+    // Manual aggregation to handle both registered users and guest bookings
+    const guestsMap = {};
+
+    bookings.forEach(b => {
+      const key = b.user_id ? `u_${b.user_id}` : `g_${b.guest_email}`;
+      if (!guestsMap[key]) {
+        guestsMap[key] = {
+          id: key,
+          name: b.user ? `${b.user.first_name} ${b.user.last_name}`.trim() || b.user.username : b.guest_name,
+          email: b.user ? b.user.email : b.guest_email,
+          phone: b.user ? b.user.phone : b.guest_phone,
+          is_registered: !!b.user_id,
+          total_bookings: 0,
+          total_spend: 0,
+          last_booking_date: b.booking_date,
+          last_booking_type: b.booking_type,
+          last_booking_ref: b.booking_ref,
+          last_booking_target: b.event?.name || b.slot?.slot_name || 'General'
+        };
+      }
+      guestsMap[key].total_bookings += 1;
+      guestsMap[key].total_spend += parseFloat(b.total_amount || 0);
+    });
+
+    const guestList = Object.values(guestsMap).sort((a, b) => b.total_spend - a.total_spend);
+
+    res.json({ success: true, data: guestList });
+  } catch (err) { next(err); }
+};
+
+module.exports = { getAll, getOne, create, changeStatus, cancel, getGuestList };

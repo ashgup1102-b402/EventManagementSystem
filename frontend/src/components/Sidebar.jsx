@@ -17,6 +17,7 @@ const NAV = {
     { to: '/entity/menu', icon: '🍽️', label: 'Menu' },
     { to: '/entity/slots', icon: '📅', label: 'Slots' },
     { to: '/entity/discounts', icon: '🏷️', label: 'Discounts & Combos' },
+    { to: '/entity/bookings', icon: '🎟️', label: 'Bookings' },
     { to: '/entity/guests', icon: '👥', label: 'Guest List' },
     { to: '/entity/whatsapp', icon: '💬', label: 'Promotions' },
     { to: '/entity/settings', icon: '⚙️', label: 'Entity Settings' },

@@ -82,7 +82,7 @@ const EntityDashboard = () => {
 
       {/* Row 2: Financial / Usage */}
       <div className="tile-row row-5 mt-3">
-        <Tile icon="👥" label="Total Guests" value={row2.total_guests} color="#6366f1" />
+        <Tile icon="👥" label="Total Guests" value={row2.total_guests} color="#6366f1" onClick={() => navigate('/entity/guests')} />
         <Tile icon="💰" label="Total Revenue" value={`₹${row2.total_revenue}`} color="#8b5cf6" />
         <Tile icon="📈" label="Monthly Revenue" value={`₹${row2.monthly_revenue}`} color="#ec4899" />
         <Tile icon="🏷️" label="Platform Comm." value={`₹${row2.platform_commission}`} color="#f43f5e" subValue={`Rate: ${data.entity?.portal_commission_percent}%`} />
@@ -130,6 +130,25 @@ const EntityDashboard = () => {
                 </div>
               </div>
             )) : <p className="text-muted text-xs">No upcoming events</p>}
+          </div>
+        </div>
+
+        {/* Top Guests */}
+        <div className="card compact">
+          <div className="card-header" style={{ display:'flex', justifyContent:'space-between' }}>
+            <h3>👥 Top Guests</h3>
+            <button className="btn-link" onClick={() => navigate('/entity/guests')}>View All</button>
+          </div>
+          <div className="card-body scroll-y" style={{ maxHeight: 220 }}>
+            {guest_list?.length > 0 ? guest_list.map((g, i) => (
+              <div key={i} className="list-item">
+                <div className="item-icon">👤</div>
+                <div className="item-details">
+                  <div className="item-title">{g.name}</div>
+                  <div className="item-meta">{g.bookings} Bookings · ₹{parseFloat(g.spend).toLocaleString()}</div>
+                </div>
+              </div>
+            )) : <p className="text-muted text-xs">No guest history yet</p>}
           </div>
         </div>
       </div>

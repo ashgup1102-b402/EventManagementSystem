@@ -20,6 +20,8 @@ import SlotManager from './pages/property/SlotManager'
 import DiscountManager from './pages/property/DiscountManager'
 import WhatsappPromo from './pages/property/WhatsappPromo'
 import EntitySettings from './pages/property/EntitySettings'
+import GuestList from './pages/property/GuestList'
+import EntityBookings from './pages/property/EntityBookings'
 
 // Admin & Super Admin Pages
 import AdminDashboard from './pages/admin/AdminDashboard'
@@ -59,7 +61,8 @@ const App = () => {
           <Route path="/entity/menu" element={<ProtectedRoute roles={['Entity']}><MenuManager /></ProtectedRoute>} />
           <Route path="/entity/slots" element={<ProtectedRoute roles={['Entity']}><SlotManager /></ProtectedRoute>} />
           <Route path="/entity/discounts" element={<ProtectedRoute roles={['Entity']}><DiscountManager /></ProtectedRoute>} />
-          <Route path="/entity/guests" element={<ProtectedRoute roles={['Entity']}><Placeholder title="Guest List" /></ProtectedRoute>} />
+          <Route path="/entity/guests" element={<ProtectedRoute roles={['Entity']}><GuestList /></ProtectedRoute>} />
+          <Route path="/entity/bookings" element={<ProtectedRoute roles={['Entity']}><EntityBookings /></ProtectedRoute>} />
           <Route path="/entity/whatsapp" element={<ProtectedRoute roles={['Entity']}><WhatsappPromo /></ProtectedRoute>} />
           <Route path="/entity/settings" element={<ProtectedRoute roles={['Entity']}><EntitySettings /></ProtectedRoute>} />
 

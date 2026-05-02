@@ -119,6 +119,26 @@ const propertyDashboard = async (req, res, next) => {
       raw: true
     });
 
+    // Summarize unique guests for dashboard
+    const allBookings = await Booking.findAll({ 
+      where: { property_id: entityId },
+      include: [{ model: User, as: 'user', attributes: ['id', 'first_name', 'last_name', 'username'] }]
+    });
+    const guestsMap = {};
+    allBookings.forEach(b => {
+      const key = b.user_id ? `u_${b.user_id}` : `g_${b.guest_email}`;
+      if (!guestsMap[key]) {
+        guestsMap[key] = { 
+          name: b.user ? `${b.user.first_name || ''} ${b.user.last_name || ''}`.trim() || b.user.username : b.guest_name,
+          bookings: 0, 
+          spend: 0 
+        };
+      }
+      guestsMap[key].bookings += 1;
+      guestsMap[key].spend += parseFloat(b.total_amount || 0);
+    });
+    const topGuests = Object.values(guestsMap).sort((a, b) => b.spend - a.spend).slice(0, 5);
+
     res.json({
       success: true,
       data: {
@@ -138,7 +158,8 @@ const propertyDashboard = async (req, res, next) => {
           discounts: formatModule(discountStats, 'is_active'),
           promotions: formatModule(comboStats, 'is_active')
         },
-        guest_list: guestList,
+        guest_list: topGuests,
+        recent_bookings: recentBookings,
         upcoming_events: upcomingEvents,
         revenue_chart: revenueByMonth
       }
