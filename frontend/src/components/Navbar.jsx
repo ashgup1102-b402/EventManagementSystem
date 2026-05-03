@@ -35,12 +35,27 @@ const Navbar = () => {
     user?.role === 'Admin' ? '/admin/dashboard' :
     user?.role === 'Entity' ? '/entity/dashboard' : null
 
+  const getImgUrl = (path) => {
+    if (!path) return null;
+    if (path.startsWith('http')) return path;
+    const BASE_URL = 'http://localhost:5000';
+    return `${BASE_URL}${path}`;
+  }
+
   return (
     <nav className={`site-navbar ${scrolled ? 'scrolled' : ''}`}>
       <div className="site-navbar-container">
         
         <Link to="/search" className="site-navbar-brand">
-          <span className="brand-icon">🎪</span>
+          {siteConfig.site_logo ? (
+            <img 
+              src={getImgUrl(siteConfig.site_logo)} 
+              alt="Logo" 
+              style={{ height: '32px', objectFit: 'contain' }} 
+            />
+          ) : (
+            <span className="brand-icon">🎪</span>
+          )}
           <span className="brand-name">{siteConfig.site_name}</span>
           {user?.role === 'Super Admin' && <span className="badge badge-primary ml-2" style={{ fontSize: '10px' }}>Super Admin</span>}
           {user?.role === 'Admin' && <span className="badge badge-secondary ml-2" style={{ fontSize: '10px' }}>Admin</span>}
@@ -64,8 +79,16 @@ const Navbar = () => {
           {user ? (
             <div className="user-dropdown-wrapper">
               <button className="user-avatar-btn" onClick={() => setMenuOpen(!menuOpen)}>
-                <div className="avatar avatar-sm">
-                  {(user?.first_name?.[0] || user?.username?.[0] || 'U').toUpperCase()}
+                <div className="avatar avatar-sm overflow-hidden">
+                  {user.profile_photo || user.avatar ? (
+                    <img 
+                      src={getImgUrl(user.profile_photo || user.avatar)} 
+                      alt="Profile" 
+                      style={{ width: '100%', height: '100%', objectFit: 'cover' }} 
+                    />
+                  ) : (
+                    (user?.first_name?.[0] || user?.username?.[0] || 'U').toUpperCase()
+                  )}
                 </div>
               </button>
               {menuOpen && (

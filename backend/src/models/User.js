@@ -43,6 +43,11 @@ const User = sequelize.define('User', {
   website:    { type: DataTypes.STRING, allowNull: true },
   avatar:     { type: DataTypes.STRING, allowNull: true },
   profile_photo: { type: DataTypes.STRING, allowNull: true },
+  preferences: { 
+    type: DataTypes.JSON, 
+    allowNull: true, 
+    defaultValue: { event_types: [], menu_types: [], cuisine_types: [] } 
+  },
   status: {
     type: DataTypes.ENUM('Active', 'Inactive'),
     defaultValue: 'Active'

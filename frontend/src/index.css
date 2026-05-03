@@ -491,6 +491,7 @@ tbody td { padding: 12px 16px; color: var(--text-primary); vertical-align: middl
 .pointer { cursor: pointer; }
 .rounded { border-radius: var(--radius-md); }
 .rounded-full { border-radius: var(--radius-full); }
+.overflow-hidden { overflow: hidden; }
 
 /* ─── Responsive ────────────────────────────────── */
 @media (max-width: 1024px) {

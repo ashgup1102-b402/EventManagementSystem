@@ -216,12 +216,20 @@ const updateMe = async (req, res, next) => {
     const user = await User.findByPk(req.user.id);
     if (!user) return res.status(404).json({ success: false, message: 'User not found.' });
 
-    const { first_name, last_name, email, mobile_1 } = req.body;
+    const { first_name, last_name, email, mobile_1, preferences } = req.body;
     const updateData = {};
     if (first_name !== undefined) updateData.first_name = first_name;
     if (last_name !== undefined) updateData.last_name = last_name;
     if (email !== undefined) updateData.email = email;
     if (mobile_1 !== undefined) updateData.mobile_1 = mobile_1;
+
+    if (preferences) {
+      try {
+        updateData.preferences = typeof preferences === 'string' ? JSON.parse(preferences) : preferences;
+      } catch (e) {
+        console.error('Error parsing preferences:', e);
+      }
+    }
 
     if (req.file) {
       updateData.profile_photo = `/uploads/users/${req.file.filename}`;

@@ -1,9 +1,6 @@
 .search-hero {
   position: relative;
-  background: 
-    linear-gradient(to right, rgba(13, 14, 26, 0.98), rgba(13, 14, 26, 0.7)),
-    url('https://images.unsplash.com/photo-1492684223066-81342ee5ff30?auto=format&fit=crop&w=1920&q=80') center/cover no-repeat;
-  padding: 50px 32px 0; /* Top padding increased to 50px */
+  padding: 50px 32px 0;
   text-align: center;
   border-bottom: 1px solid var(--border-subtle);
   min-height: 120px;
@@ -11,6 +8,19 @@
   align-items: flex-end;
   justify-content: center;
   margin-top: calc(-1 * var(--navbar-height, 72px));
+  overflow: hidden;
+}
+
+.search-hero::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: #fff url('../../assets/hero-bg.png') center/cover no-repeat;
+  filter: brightness(2.2) contrast(1.8);
+  z-index: -1;
 }
 
 .search-hero-content {
@@ -26,14 +36,16 @@
   margin-bottom: 4px;
   display: block;
   color: #fff;
+  text-shadow: 0 2px 10px rgba(0,0,0,0.8);
 }
 
 .search-hero-sub {
   font-size: 16px; /* Increased from 12px */
   display: block;
-  opacity: 0.7;
+  opacity: 0.9;
   margin-bottom: 12px;
-  color: var(--text-secondary);
+  color: #fff;
+  text-shadow: 0 1px 5px rgba(0,0,0,0.8);
 }
 
 /* Premium Subtle Search Bar - Overhauled Input Only */

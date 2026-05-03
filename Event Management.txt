@@ -1,15 +1,16 @@
+powershell -Command "Set-Location 'D:\ASHISH\CANVA\AI\AntiGravity\Event Management\backend' ; npm.cmd run dev"
+powershell -Command "Set-Location 'D:\ASHISH\CANVA\AI\AntiGravity\Event Management\frontend'; npm.cmd run dev"
+
 Role			Username			Password
 Super Admin		superadmin			Admin@1234
 Admin			admin				Admin@1234
 Entity			thegrandvenue			Prop@1234
 End User		john_doe			User@1234
-
 	
 The Grand Destination	TheGD				Entity123
 New Entity A		20260430INMH-ARG		Entity123
 New Entity B		20260430INMN-NNY		Entity123
 New Entity C		20260430INPB-PAT		Entity1234
-
 
 How to start application:
 Here are the step-by-step instructions to fix it:
@@ -21,11 +22,10 @@ npm run dev
 npm run dev
 
 At backend >
-cmd /c npm run dev
+cmd /c npm.cmd run dev
 
 At Frontend >
-cmd /c npm run dev
-
+cmd /c npm.cmd run dev
 
 Step 1: Start the Backend Server
 
@@ -37,6 +37,7 @@ Start the backend development server:
 bash
 npm run dev
 (You should see a message indicating the server is running on a port, like port 5000, and connected to the database)
+
 Step 2: Start the Frontend Server
 
 Open a second, separate terminal window (leave the backend running in the first one).
@@ -47,13 +48,12 @@ Start the frontend development server:
 bash
 npm run dev
 (This will typically start Vite on http://localhost:5173/ or a similar port)
+
 Step 3: Open in Browser Look at the output in your frontend terminal. It will give you a local URL (usually http://localhost:5173/). Ctrl + Click (or Cmd + Click) that link, or paste it into your browser.
 
 If you've run both commands successfully, your site should now load without the connection error! Let me know if you run into any other errors in the terminal after running these commands.
 
 =======================
-
-
 …\Event Management > winget install --id PostgreSQL.PostgreSQL.16 -e --silent --override "--unattendedmodeui none --mode unattended --superpassword your_password --serverport 5432"
 
 …\backend > node -e "const { Client } = require('pg'); const client = new Client({ user: 'postgres', password: 'your_password', host: 'localhost', port: 5432, database: 'postgres' }); client.connect().then(() => client.query('CREATE DATABASE event_management')).then(() => { console.log('DB created'); client.end(); }).catch(e => { console.error(e); client.end(); });"
@@ -63,8 +63,6 @@ If you've run both commands successfully, your site should now load without the 
   Admin       → admin / Admin@1234
   Property    → thegrandvenue / Prop@1234
   End User    → john_doe / User@1234
-
-
 
 Basic requirements:
 This should be a persistent application with multiuser and data should be stored in backend. Ensure all freeware/opensource should be used for integration.
@@ -76,7 +74,6 @@ Admin should be able to access majority of the modules except system configurati
 Properties should be able to access their property data where they should be allowed to update property details, Events (Singer, Comedy show, Group Troup etc.), Food type (Menu with price) etc..
 There should be a login module where user should be able to login using user name and password, no g-mail integration etc.. Property should be able to set prices for their menu items, combo deals.
 Property should be allowed to set discount for their any item with mix of combinations like menu, event or place etc...There should be a dashboard configured for each user to view their data like property should be able to track property specific details, booking, revenue, % shared for portal, Guest lists who booked, Promotions to guests through this portal on click of button Whatsapp message should go.
-
 
 Last Action pending:
 Logged in as Super Admin " Recent System Audit Logs" , Time is no showing correct , it should be date time . There should be an option to purge data. Add From and to Range and the  new button purge on top on clicking this data will be purged from Audit Log. Before deleting , it should prompt do you really want to purge data , these many records wil be delete from this date till this date.  Can we add more meaning data like what action on tool tip, old data and new data on the action tool tips.
@@ -156,21 +153,239 @@ Instead of calling Property, rename it to Entity Management.
 For Entity Management:
 Categories under Entity should come from system configuration, so add module for super admin to add categories. Only active once should be visible in drop down.
 
-
-
 For Event Manager Screen:
 Event Type under event Management drop down, should come from system configuration, so add module for super admin to add Event Types. Only active once should be visible in drop down.
 Performer should also get populated from in dropdown from master performer. 
 Super Admin and Admin should be able to add Event Type, Performer and map them. Based on Event type selected performer should auto populate in drop down based on event type. 
 Add performer in the grid for event manager. 
 There should be an option to mark status as Inactive by default status is Active. 
-There should not be an option to delete event once created, it can only be deactivated. If there is an end date , by deg=fault event status should set to inactive. Event Name has to be unique for all active events. Same name can be picked if other event with same name status is inactive.
+There should not be an option to delete event once created, it can only be deactivated. If there is an end date , by default event status should set to inactive. 
+Event Name has to be unique for all active events. Same name can be picked if other event with same name status is inactive.
 Capacity, Price cannot be negative. 
 End times should always be greater than From time. 
 Date has to be either today's date or any future date, it cannot be past date. 
-
-
-
 Show change History of any changes to the event, with all details like Who, when , Field, old value and new value. 
 
- 
+For Menu Manager Screen:
+Menu Category and Cuisine Type should be drop down , they should get populated from Super Admin or Admin module. Only Active one should be visible.
+Cannot delete once create, it can only be inactivate
+Show change History, Show change History of any changes to the event, with all details like Who, when , Field, old value and new value. 
+Price cannot be negative. 
+Menu Name has to be unique for all active events. Same name can be picked if other menu with same name status is inactive.
+
+Event Type, Performer, Menu Category and Cuisine type should follow same structure as Category management. Ensure for Performer type first Admin/Super admin must select Event Type.  
+
+You are an Expert SaaS Product Architect, Full-Stack Engineer, and UX Designer.
+
+Your task is to analyze, redesign, and enhance the Event Manager and Menu Manager modules of an existing Event Management System with:
+
+Strong validation rules
+Master data-driven architecture
+Role-based control
+Auditability
+Scalable design
+🎯 OBJECTIVE
+
+Transform the Event & Menu modules into:
+
+Fully configurable via System Configuration (Master Data)
+Data-consistent, validation-driven
+Non-destructive (no delete, only deactivate)
+Audit-compliant (full change tracking)
+Dynamic and role-controlled
+⚙️ EXECUTION FRAMEWORK (MANDATORY)
+
+🧩 STEP 1 — MODULE DECOMPOSITION
+Break into:
+1. Event Manager Module
+2. Menu Manager Module
+3. Master Data Configuration Module
+Event Types
+Performers
+Menu Categories
+Cuisine Types
+
+🏗️ STEP 2 — MASTER DATA ARCHITECTURE (CRITICAL)
+Design centralized configuration tables:
+Event Type Master
+id
+name
+status (Active/Inactive)
+created_by
+timestamps
+Performer Master
+id
+name
+event_type_id (FK)
+status
+created_by
+
+👉 Constraint:
+Performer MUST be mapped to Event Type
+While creating performer, Event Type selection is mandatory
+Menu Category Master
+Cuisine Type Master
+
+👉 All masters:
+Follow Category Management structure
+Only Active records visible in dropdowns
+No deletion → only Inactive
+🎭 STEP 3 — EVENT MANAGER ENHANCEMENTS
+🔹 DATA MODEL
+
+Event Table must include:
+event_id
+event_name (UNIQUE for active records)
+event_type_id
+performer_id
+capacity
+price
+start_datetime
+end_datetime
+status (Active/Inactive)
+created_by
+updated_by
+
+🔹 BUSINESS LOGIC
+1. Dynamic Dropdowns
+Event Type → from Master (Active only)
+Performer → auto-filtered based on selected Event Type
+2. Mapping Logic
+Super Admin / Admin can:
+Add Event Type
+Add Performer
+Map Performer ↔ Event Type
+3. Auto Population
+When Event Type selected → Performer dropdown auto filters
+4. Grid Enhancement
+Add Performer column in Event Grid
+5. Status Rules
+Default = Active
+Manual option to mark Inactive
+If End Date < Current Date → auto set to Inactive
+6. Deletion Rules
+❌ No delete allowed
+✅ Only deactivate
+7. Validation Rules
+Event Name:
+Must be UNIQUE among Active events
+Duplicate allowed only if previous is Inactive
+Capacity:
+Must be ≥ 0
+Price:
+Must be ≥ 0
+Date Rules:
+Event date ≥ Today
+No past date allowed
+Time Rules:
+End Time > Start Time
+8. Audit Trail (MANDATORY)
+Track:
+Who made change
+When
+Field changed
+Old value
+New value
+
+🍽️ STEP 4 — MENU MANAGER ENHANCEMENTS
+🔹 DATA MODEL
+Menu Table:
+menu_id
+menu_name (UNIQUE for active records)
+category_id
+cuisine_type_id
+price
+status
+created_by
+🔹 BUSINESS RULES
+1. Dropdowns
+Menu Category → from Master
+Cuisine Type → from Master
+Only Active records visible
+2. Validation Rules
+Menu Name:
+Unique among Active menus
+Reusable if Inactive
+Price:
+Cannot be negative
+3. Deletion Rules
+❌ No delete
+✅ Only deactivate
+4. Audit Trail
+Same as Event module:
+Who
+When
+Field
+Old Value
+New Value
+
+🔄 STEP 5 — STANDARDIZATION ACROSS MODULES
+Ensure ALL master-driven entities follow SAME structure:
+Module	Must Follow
+Event Type	Category Structure
+Performer	Must map to Event Type
+Menu Category	Category Structure
+Cuisine Type	Category Structure
+
+🔐 STEP 6 — ROLE-BASED ACCESS
+Role	Permissions
+Super Admin	Full Access
+Admin	Create + Manage
+User	View Only
+
+🎨 STEP 7 — UI/UX ENHANCEMENTS
+Event Manager Screen
+Smart dependent dropdowns
+Inline validations
+Performer visible in grid
+Status toggle
+Audit history button
+Menu Manager Screen
+Clean dropdown UX
+Status toggle
+Validation alerts
+Audit history panel
+
+🔌 STEP 8 — API DESIGN
+Event APIs
+POST /events
+GET /events
+PUT /events/{id}
+PATCH /events/status
+Menu APIs
+POST /menus
+GET /menus
+PUT /menus/{id}
+Master APIs
+/event-types
+/performers
+/menu-categories
+/cuisine-types
+
+📊 STEP 9 — AUDIT LOG SYSTEM
+
+Enhance audit logs:
+Store field-level changes
+Export capability
+Immutable logs
+
+⚡ STEP 10 — PERFORMANCE OPTIMIZATION
+Indexed lookup tables
+Cached master data
+Lazy loading dropdowns
+Pagination in grids
+📦 OUTPUT FORMAT (MANDATORY)
+1. FINAL ARCHITECTURE SUMMARY
+2. DATABASE SCHEMA
+3. VALIDATION RULE ENGINE
+4. UI FLOW
+5. API STRUCTURE
+6. AUDIT DESIGN
+7. IMPROVEMENTS OVER CURRENT SYSTEM
+8. SCALABILITY STRATEGY
+🚨 STRICT RULES
+Do NOT allow delete anywhere
+Everything must be config-driven
+Maintain data integrity first
+Ensure future scalability
+Avoid redundancy

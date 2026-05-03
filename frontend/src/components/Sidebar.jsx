@@ -98,9 +98,9 @@ const Sidebar = () => {
       </div>
 
       <Link to="/profile" className="sidebar-user" style={{ textDecoration: 'none', color: 'inherit', display: 'flex', alignItems: 'center' }}>
-        <div className="avatar avatar-md" style={{ overflow: 'hidden' }}>
-          {user?.profile_photo ? (
-            <img src={getImgUrl(user.profile_photo)} alt="P" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+        <div className="avatar avatar-md overflow-hidden">
+          {user?.profile_photo || user?.avatar ? (
+            <img src={getImgUrl(user.profile_photo || user.avatar)} alt="P" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
           ) : (
             user ? (user?.first_name?.[0] || user?.username?.[0] || 'U').toUpperCase() : 'G'
           )}

@@ -8,7 +8,8 @@ import toast from 'react-hot-toast'
 const Profile = () => {
   const { user, updateUser } = useAuth()
   const [bookings, setBookings] = useState([])
-  const [preferences, setPreferences] = useState(['Live Music', 'Comedy Shows', 'Food Festivals'])
+  const [preferences, setPreferences] = useState({ event_types: [], menu_types: [], cuisine_types: [] })
+  const [masterData, setMasterData] = useState({ event_types: [], menu_types: [], cuisine_types: [] })
   const [discounts, setDiscounts] = useState([])
   const [loading, setLoading] = useState(true)
   
@@ -20,17 +21,37 @@ const Profile = () => {
   const BASE_URL = 'http://localhost:5000';
 
   useEffect(() => {
-    if (user) setForm(user)
+    if (user) {
+      setForm(user)
+      if (user.preferences) {
+        setPreferences({
+          event_types: user.preferences.event_types || [],
+          menu_types: user.preferences.menu_types || [],
+          cuisine_types: user.preferences.cuisine_types || []
+        })
+      }
+    }
+
     const fetchData = async () => {
       try {
-        const [bRes, dRes] = await Promise.all([
+        const [bRes, dRes, evRes, menuRes, cuisRes] = await Promise.allSettled([
           api.get('/bookings?limit=3'),
-          api.get('/discounts?status=active')
+          api.get('/discounts?status=active'),
+          api.get('/masters/event-types'),
+          api.get('/masters/menu-categories'),
+          api.get('/masters/cuisine-types')
         ])
-        setBookings(bRes.data.data || [])
-        setDiscounts(dRes.data.data?.slice(0, 2) || [])
+
+        if (bRes.status === 'fulfilled') setBookings(bRes.value.data.data || [])
+        if (dRes.status === 'fulfilled') setDiscounts(dRes.value.data.data?.slice(0, 2) || [])
+        
+        setMasterData({
+          event_types: evRes.status === 'fulfilled' ? evRes.value.data.data : [],
+          menu_types: menuRes.status === 'fulfilled' ? menuRes.value.data.data : [],
+          cuisine_types: cuisRes.status === 'fulfilled' ? cuisRes.value.data.data : []
+        })
       } catch (err) {
-        // Silently fail if not an end-user (bookings might not exist)
+        console.error('Fetch error:', err)
       } finally {
         setLoading(false)
       }
@@ -72,6 +93,7 @@ const Profile = () => {
       formData.append('last_name', form.last_name || '')
       formData.append('email', form.email || '')
       formData.append('mobile_1', form.mobile_1 || form.phone || '')
+      formData.append('preferences', JSON.stringify(preferences))
       if (photoFile) formData.append('profile_photo', photoFile)
 
       const res = await api.put('/users/profile', formData, {
@@ -79,7 +101,6 @@ const Profile = () => {
       })
       toast.success('Profile updated!')
       
-      // Update context state
       updateUser(res.data.data)
       setPhotoFile(null)
     } catch (err) {
@@ -89,8 +110,14 @@ const Profile = () => {
     }
   }
 
-  const togglePreference = (pref) => {
-    setPreferences(prev => prev.includes(pref) ? prev.filter(p => p !== pref) : [...prev, pref])
+  const togglePreference = (category, value) => {
+    setPreferences(prev => {
+      const current = prev[category] || []
+      const updated = current.includes(value) 
+        ? current.filter(item => item !== value)
+        : [...current, value]
+      return { ...prev, [category]: updated }
+    })
   }
 
   if (loading) return <Layout><div className="loading-center"><div className="spinner" /></div></Layout>
@@ -122,7 +149,7 @@ const Profile = () => {
                    <img src={getImgUrl(user.profile_photo)} alt="P" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                  ) : (
                    <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 32, fontWeight: 700 }}>
-                     {(user?.first_name?.[0] || user?.username?.[0] || 'U').toUpperCase()}
+                     {(form.first_name?.[0] || user?.username?.[0] || 'U').toUpperCase()}
                    </div>
                  )}
                  <label style={{ position: 'absolute', bottom: 0, right: 0, left: 0, background: 'rgba(0,0,0,0.5)', color: 'white', fontSize: 10, textAlign: 'center', cursor: 'pointer', padding: '2px 0' }}>
@@ -131,7 +158,9 @@ const Profile = () => {
                  </label>
                </div>
                <div>
-                 <div style={{ fontWeight: 700, fontSize: 18 }}>{user?.username}</div>
+                 <div style={{ fontWeight: 700, fontSize: 18 }}>
+                   {form.first_name || form.last_name ? `${form.first_name || ''} ${form.last_name || ''}`.trim() : user?.username}
+                 </div>
                  <div className="badge badge-primary">{user?.role}</div>
                </div>
             </div>
@@ -161,19 +190,93 @@ const Profile = () => {
               {/* Preferences */}
               <div className="card">
                 <h3 style={{ marginBottom: 16 }}>Interests & Preferences</h3>
-                <p className="text-muted" style={{ marginBottom: 16 }}>Select what you're interested in so we can personalize your Discover feed.</p>
-                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 12 }}>
-                  {['Live Music', 'Comedy Shows', 'Food Festivals', 'Art Exhibitions', 'Nightlife', 'Workshops'].map(pref => (
-                    <button 
-                      key={pref} 
-                      className={`btn ${preferences.includes(pref) ? 'btn-primary' : 'btn-secondary'}`} 
-                      style={{ borderRadius: 20 }}
-                      onClick={() => togglePreference(pref)}
-                    >
-                      {preferences.includes(pref) ? '✓ ' : '+ '}{pref}
-                    </button>
-                  ))}
+                <p className="text-muted" style={{ marginBottom: 20 }}>Tailor your feed by selecting your favorite event types, menus, and cuisines.</p>
+                
+                {/* Consolidated Selection Summary */}
+                <div style={{ background: 'var(--bg-tertiary)', padding: '14px 18px', borderRadius: 'var(--radius-md)', marginBottom: 24, border: '1px solid var(--border-subtle)' }}>
+                  <div style={{ fontSize: 11, fontWeight: 800, textTransform: 'uppercase', color: 'var(--text-muted)', marginBottom: 10, letterSpacing: '0.05em' }}>Your Interests</div>
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px 8px', alignItems: 'center', minHeight: 20 }}>
+                    {preferences.event_types.map((v, i) => (
+                      <span key={v} style={{ color: 'var(--brand-primary)', fontSize: 14, fontWeight: 700 }}>
+                        {v}{i < preferences.event_types.length - 1 || preferences.menu_types.length > 0 || preferences.cuisine_types.length > 0 ? ',' : ''}
+                      </span>
+                    ))}
+                    {preferences.menu_types.map((v, i) => (
+                      <span key={v} style={{ color: 'var(--brand-secondary)', fontSize: 14, fontWeight: 700 }}>
+                        {v}{i < preferences.menu_types.length - 1 || preferences.cuisine_types.length > 0 ? ',' : ''}
+                      </span>
+                    ))}
+                    {preferences.cuisine_types.map((v, i) => (
+                      <span key={v} style={{ color: 'var(--brand-accent)', fontSize: 14, fontWeight: 700 }}>
+                        {v}{i < preferences.cuisine_types.length - 1 ? ',' : ''}
+                      </span>
+                    ))}
+                    {preferences.event_types.length === 0 && preferences.menu_types.length === 0 && preferences.cuisine_types.length === 0 && (
+                      <span style={{ fontSize: 14, color: 'var(--text-muted)', fontStyle: 'italic' }}>No preferences selected yet...</span>
+                    )}
+                  </div>
                 </div>
+
+                {/* Dropdowns in a single row */}
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 20 }}>
+                  {/* Event Types */}
+                  <div>
+                    <h4 style={{ fontSize: 13, color: 'var(--brand-primary)', marginBottom: 8, fontWeight: 700 }}>🎭 Event Types</h4>
+                    <select 
+                      multiple 
+                      className="input" 
+                      style={{ height: 160, fontSize: 13, background: 'var(--bg-tertiary)', border: '1px solid var(--border-subtle)', padding: '8px' }}
+                      value={preferences.event_types}
+                      onChange={(e) => {
+                        const values = Array.from(e.target.selectedOptions, option => option.value);
+                        setPreferences(prev => ({ ...prev, event_types: values }));
+                      }}
+                    >
+                      {masterData.event_types.map(ev => (
+                        <option key={ev.id} value={ev.name} style={{ padding: '6px 10px', borderRadius: 4, marginBottom: 2 }}>{ev.name}</option>
+                      ))}
+                    </select>
+                  </div>
+
+                  {/* Menu Types */}
+                  <div>
+                    <h4 style={{ fontSize: 13, color: 'var(--brand-secondary)', marginBottom: 8, fontWeight: 700 }}>🍽️ Menu Categories</h4>
+                    <select 
+                      multiple 
+                      className="input" 
+                      style={{ height: 160, fontSize: 13, background: 'var(--bg-tertiary)', border: '1px solid var(--border-subtle)', padding: '8px' }}
+                      value={preferences.menu_types}
+                      onChange={(e) => {
+                        const values = Array.from(e.target.selectedOptions, option => option.value);
+                        setPreferences(prev => ({ ...prev, menu_types: values }));
+                      }}
+                    >
+                      {masterData.menu_types.map(m => (
+                        <option key={m.id} value={m.name} style={{ padding: '6px 10px', borderRadius: 4, marginBottom: 2 }}>{m.name}</option>
+                      ))}
+                    </select>
+                  </div>
+
+                  {/* Cuisine Types */}
+                  <div>
+                    <h4 style={{ fontSize: 13, color: 'var(--brand-accent)', marginBottom: 8, fontWeight: 700 }}>🍜 Cuisine Types</h4>
+                    <select 
+                      multiple 
+                      className="input" 
+                      style={{ height: 160, fontSize: 13, background: 'var(--bg-tertiary)', border: '1px solid var(--border-subtle)', padding: '8px' }}
+                      value={preferences.cuisine_types}
+                      onChange={(e) => {
+                        const values = Array.from(e.target.selectedOptions, option => option.value);
+                        setPreferences(prev => ({ ...prev, cuisine_types: values }));
+                      }}
+                    >
+                      {masterData.cuisine_types.map(c => (
+                        <option key={c.id} value={c.name} style={{ padding: '6px 10px', borderRadius: 4, marginBottom: 2 }}>{c.name}</option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+                <p style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 12 }}>Tip: Hold Ctrl (Cmd) to select multiple interests in each category.</p>
               </div>
 
               {/* Recent Bookings */}
