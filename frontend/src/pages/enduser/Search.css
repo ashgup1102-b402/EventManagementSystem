@@ -28,6 +28,8 @@
   margin: 0 auto;
   width: 100%;
   padding-bottom: 0;
+  position: relative;
+  z-index: 100; /* Ensure it stays above Category Explorer and Results */
 }
 
 .search-hero-title {
@@ -63,6 +65,9 @@
     inset 0 0 0 1px rgba(255,255,255,0.05);
   border: 1px solid rgba(255, 255, 255, 0.08);
   width: 100%;
+  position: relative;
+  z-index: 101;
+  pointer-events: auto; /* Ensure events are active */
 }
 
 .search-hero-input {
@@ -277,6 +282,21 @@
 
 .text-btn:hover {
   color: var(--error);
+}
+
+.clear-all-btn {
+  margin-left: auto;
+  white-space: nowrap;
+  opacity: 0.8;
+  transition: all 0.2s;
+  padding: 8px 12px;
+  border-radius: 8px;
+}
+
+.clear-all-btn:hover {
+  opacity: 1;
+  background: rgba(239, 68, 68, 0.1);
+  color: #ef4444 !important;
 }
 
 .checkbox-custom {

@@ -33,7 +33,7 @@ const search = async (req, res, next) => {
         { name: { [Op.iLike]: `%${q}%` } },
         { description: { [Op.iLike]: `%${q}%` } },
         { city: { [Op.iLike]: `%${q}%` } },
-        literal(`"entities"."tags"::text ILIKE '%${q}%'`)
+        literal(`"Entity"."tags"::text ILIKE '%${q}%'`)
       ];
     }
 

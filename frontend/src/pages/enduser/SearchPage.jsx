@@ -66,28 +66,44 @@ const SearchPage = () => {
     finally { setLoading(false) }
   }, [])
 
-  // Reactive Effect: Trigger search whenever filters change (with debounce for query)
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      doSearch({ 
-        q: query, 
-        city, 
-        date, 
-        event_type_ids: selectedEventTypes,
-        performer_ids: selectedPerformers,
-        menu_category_ids: selectedMenuCats,
-        cuisine_type_ids: selectedCuisineTypes,
-        is_veg: isVeg 
-      })
-    }, 400)
-    return () => clearTimeout(timer)
+  const triggerSearch = useCallback(() => {
+    doSearch({ 
+      q: query, 
+      city, 
+      date, 
+      event_type_ids: selectedEventTypes,
+      performer_ids: selectedPerformers,
+      menu_category_ids: selectedMenuCats,
+      cuisine_type_ids: selectedCuisineTypes,
+      is_veg: isVeg 
+    })
   }, [query, city, date, selectedEventTypes, selectedPerformers, selectedMenuCats, selectedCuisineTypes, isVeg, doSearch])
 
-  const handleSearch = e => { e.preventDefault() }
+  // Reactive Effect: Trigger search whenever filters change (with debounce for query)
+  useEffect(() => {
+    const timer = setTimeout(triggerSearch, 400)
+    return () => clearTimeout(timer)
+  }, [triggerSearch])
+
+  const handleSearch = e => { 
+    e.preventDefault()
+    triggerSearch()
+  }
 
   const totalResults = results
     ? (results.properties?.total || 0) + (results.events?.total || 0) + (results.menu_items?.total || 0)
     : 0
+
+  const resetFilters = () => {
+    setQuery('');
+    setCity('');
+    setDate('');
+    setIsVeg('');
+    setSelectedEventTypes([]);
+    setSelectedPerformers([]);
+    setSelectedMenuCats([]);
+    setSelectedCuisineTypes([]);
+  }
 
   return (
     <SiteLayout>
@@ -113,7 +129,7 @@ const SearchPage = () => {
 
       <div className="site-container">
         {/* Category Explorer */}
-        <div className="category-explorer" style={{ marginTop: -30, marginBottom: 30, position: 'relative', zIndex: 10 }}>
+        <div className="category-explorer" style={{ marginTop: -10, marginBottom: 30, position: 'relative', zIndex: 10 }}>
            <div style={{ display: 'flex', gap: 16, overflowX: 'auto', padding: '10px 4px', scrollbarWidth: 'none' }}>
               {masterFilters.event_types?.filter(et => et.status === 'Active').map(et => (
                 <div 
@@ -185,6 +201,9 @@ const SearchPage = () => {
               onClick={() => setIsVeg(isVeg === 'true' ? '' : 'true')}
             >
               🥦 Veg
+            </button>
+            <button className="text-btn clear-all-btn" onClick={resetFilters}>
+              ✕ Clear All
             </button>
           </div>
         </div>
@@ -316,10 +335,7 @@ const SearchPage = () => {
                 <div className="empty-icon">🔍</div>
                 <h3>No results found</h3>
                 <p>Try different search terms or remove some filters</p>
-                <button className="btn btn-primary mt-3" onClick={() => { 
-                  setQuery(''); setCity(''); setDate(''); setIsVeg('');
-                  setSelectedEventTypes([]); setSelectedPerformers([]); setSelectedMenuCats([]); setSelectedCuisineTypes([]);
-                }}>Clear Filters</button>
+                <button className="btn btn-primary mt-3" onClick={resetFilters}>Clear Filters</button>
               </div>
             )}
           </>
