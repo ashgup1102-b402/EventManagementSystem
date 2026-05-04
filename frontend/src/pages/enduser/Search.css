@@ -360,6 +360,106 @@
   color: #fff;
 }
 
+/* Premium Grid & Card Overrides */
+.grid-auto {
+  grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
+  gap: 16px;
+}
+
+/* Property Card Refinement */
+.property-card {
+  border-radius: 12px;
+  background: rgba(26, 27, 46, 0.4);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+}
+
+.property-card-img-wrap {
+  height: 120px;
+  border-radius: 12px 12px 0 0;
+}
+
+.property-card-body {
+  padding: 10px 12px;
+}
+
+.property-card-name {
+  font-size: 14px;
+  font-weight: 700;
+  margin-bottom: 2px;
+}
+
+.property-card-location {
+  font-size: 11px;
+  margin-bottom: 6px;
+}
+
+.property-card-tags .badge {
+  padding: 2px 6px;
+  font-size: 9px;
+}
+
+/* Event & Food Card Refinement */
+.event-card {
+  border-radius: 12px;
+  background: rgba(26, 27, 46, 0.4);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.event-card-img-wrap {
+  height: 110px;
+}
+
+.event-card-body {
+  padding: 10px 12px;
+}
+
+.event-card-title {
+  font-size: 13px;
+  margin-bottom: 2px;
+}
+
+.event-card-meta {
+  font-size: 10px;
+  gap: 4px;
+}
+
+.event-card-price {
+  font-size: 14px;
+  margin-top: 6px;
+}
+
+.event-card-footer {
+  padding: 8px 12px;
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.event-card-footer .btn-sm {
+  padding: 4px 10px;
+  font-size: 10px;
+}
+
+/* Section Title Refinement */
+.section-title {
+  font-size: 15px;
+  margin-bottom: 16px;
+  opacity: 0.8;
+  letter-spacing: 0.5px;
+}
+
+/* Skeleton Adjustment */
+.skeleton {
+  height: 200px !important;
+}
+
+@media (min-width: 1600px) {
+  .grid-auto {
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  }
+}
+
 @media (max-width: 1024px) {
   .search-hero { padding: 80px 20px 20px; }
   .filter-row { flex-wrap: wrap; }

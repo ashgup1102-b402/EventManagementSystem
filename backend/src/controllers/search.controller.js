@@ -38,7 +38,7 @@ const search = async (req, res, next) => {
     }
 
     // Search events
-    const eventWhere = { is_active: true };
+    const eventWhere = { is_active: true, status: 'Active' };
     if (etIds.length > 0) eventWhere.event_type_id = { [Op.in]: etIds };
     if (pIds.length > 0) eventWhere.performer_id = { [Op.in]: pIds };
     if (date) eventWhere.event_date = date;
@@ -59,7 +59,7 @@ const search = async (req, res, next) => {
     if (city) entityIncludeWhere.city = { [Op.iLike]: `%${city}%` };
 
     // Search menu items
-    const menuWhere = { is_available: true };
+    const menuWhere = { is_available: true, status: 'Active' };
     if (mcIds.length > 0) menuWhere.menu_category_id = { [Op.in]: mcIds };
     if (ctIds.length > 0) menuWhere.cuisine_type_id = { [Op.in]: ctIds };
     if (is_veg !== undefined && is_veg !== '') menuWhere.is_veg = is_veg === 'true';
@@ -73,27 +73,75 @@ const search = async (req, res, next) => {
       }),
       Event.findAndCountAll({
         where: eventWhere, limit: parseInt(limit), offset,
-        include: [{ 
-          model: Entity, 
-          as: 'entity', 
-          attributes: ['id','name','city','cover_image'],
-          where: city ? entityIncludeWhere : undefined,
-          required: city ? true : false
-        }],
+        include: [
+          { 
+            model: Entity, 
+            as: 'entity', 
+            attributes: ['id','name','city','cover_image'],
+            where: { status: 'Active', ...(city ? { city: { [Op.iLike]: `%${city}%` } } : {}) },
+            required: true
+          },
+          {
+            model: EventType,
+            as: 'event_type_ref',
+            attributes: ['id', 'name', 'status'],
+            required: false
+          },
+          {
+            model: Performer,
+            as: 'performer_ref',
+            attributes: ['id', 'name', 'status'],
+            required: false
+          }
+        ],
+        // Manual filter for association status to allow NULLs but block Inactive
+        where: {
+          [Op.and]: [
+            eventWhere,
+            literal(`("event_type_ref"."status" IS NULL OR "event_type_ref"."status" = 'Active')`),
+            literal(`("performer_ref"."status" IS NULL OR "performer_ref"."status" = 'Active')`)
+          ]
+        },
         order: [['event_date','ASC']]
       }),
       MenuItem.findAndCountAll({
         where: menuWhere, limit: parseInt(limit), offset,
-        include: [{ 
-          model: Entity, 
-          as: 'entity', 
-          attributes: ['id','name','city','cover_image'],
-          where: city ? entityIncludeWhere : undefined,
-          required: city ? true : false
-        }],
+        include: [
+          { 
+            model: Entity, 
+            as: 'entity', 
+            attributes: ['id','name','city','cover_image'],
+            where: { status: 'Active', ...(city ? { city: { [Op.iLike]: `%${city}%` } } : {}) },
+            required: true
+          },
+          {
+            model: MenuCategory,
+            as: 'menu_category_ref',
+            attributes: ['id', 'name', 'status'],
+            required: false
+          },
+          {
+            model: CuisineType,
+            as: 'cuisine_type_ref',
+            attributes: ['id', 'name', 'status'],
+            required: false
+          }
+        ],
+        where: {
+          [Op.and]: [
+            menuWhere,
+            literal(`("menu_category_ref"."status" IS NULL OR "menu_category_ref"."status" = 'Active')`),
+            literal(`("cuisine_type_ref"."status" IS NULL OR "cuisine_type_ref"."status" = 'Active')`)
+          ]
+        },
         order: [['is_featured','DESC'],['name','ASC']]
       })
     ]);
+
+    // Post-filtering for the (ref is null OR ref.status = 'Active') logic if needed, 
+    // or use Op.or in include. Actually, the above include will filter out rows where ref.status != 'Active' 
+    // BUT only if they have a ref. If they don't have a ref, they will still show up (because required: false).
+    // This is exactly what we want: Master data only blocks if it EXISTS and is Inactive.
 
     res.json({
       success: true,
@@ -111,10 +159,10 @@ const search = async (req, res, next) => {
 const getFilters = async (req, res, next) => {
   try {
     const [eventTypes, performers, menuCategories, cuisineTypes, cities] = await Promise.all([
-      EventType.findAll({ where: { status: 'Active' }, attributes: ['id', 'name'], order: [['name', 'ASC']] }),
-      Performer.findAll({ where: { status: 'Active' }, attributes: ['id', 'name'], order: [['name', 'ASC']] }),
-      MenuCategory.findAll({ where: { status: 'Active' }, attributes: ['id', 'name'], order: [['name', 'ASC']] }),
-      CuisineType.findAll({ where: { status: 'Active' }, attributes: ['id', 'name'], order: [['name', 'ASC']] }),
+      EventType.findAll({ where: { status: 'Active' }, attributes: ['id', 'name', 'status', 'image'], order: [['name', 'ASC']] }),
+      Performer.findAll({ where: { status: 'Active' }, attributes: ['id', 'name', 'status'], order: [['name', 'ASC']] }),
+      MenuCategory.findAll({ where: { status: 'Active' }, attributes: ['id', 'name', 'status', 'image'], order: [['name', 'ASC']] }),
+      CuisineType.findAll({ where: { status: 'Active' }, attributes: ['id', 'name', 'status'], order: [['name', 'ASC']] }),
       Entity.findAll({ where: { status: 'Active' }, attributes: ['city', 'state'], group: ['city', 'state'], order: [['city', 'ASC']] })
     ]);
 

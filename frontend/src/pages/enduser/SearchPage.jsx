@@ -128,47 +128,6 @@ const SearchPage = () => {
       </div>
 
       <div className="site-container">
-        {/* Category Explorer */}
-        <div className="category-explorer" style={{ marginTop: -10, marginBottom: 30, position: 'relative', zIndex: 10 }}>
-           <div style={{ display: 'flex', gap: 16, overflowX: 'auto', padding: '10px 4px', scrollbarWidth: 'none' }}>
-              {masterFilters.event_types?.filter(et => et.status === 'Active').map(et => (
-                <div 
-                  key={et.id} 
-                  className={`category-item ${selectedEventTypes.includes(et.id) ? 'active' : ''}`}
-                  onClick={() => setSelectedEventTypes(prev => prev.includes(et.id) ? prev.filter(x => x !== et.id) : [...prev, et.id])}
-                  style={{ 
-                    flex: '0 0 auto', textAlign: 'center', cursor: 'pointer', 
-                    background: 'var(--bg-secondary)', padding: '12px 16px', borderRadius: 16,
-                    border: `1px solid ${selectedEventTypes.includes(et.id) ? 'var(--brand-primary)' : 'var(--border-subtle)'}`,
-                    boxShadow: 'var(--shadow-sm)', transition: 'all 0.2s ease', minWidth: 100
-                  }}
-                >
-                  <div style={{ width: 48, height: 48, borderRadius: '50%', background: 'var(--bg-tertiary)', margin: '0 auto 8px', overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                    {et.image ? <img src={getImgUrl(et.image)} style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : <span style={{ fontSize: 24 }}>🎭</span>}
-                  </div>
-                  <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--text-primary)' }}>{et.name}</div>
-                </div>
-              ))}
-              {masterFilters.menu_categories?.filter(m => m.status === 'Active').map(m => (
-                <div 
-                  key={m.id} 
-                  className={`category-item ${selectedMenuCats.includes(m.id) ? 'active' : ''}`}
-                  onClick={() => setSelectedMenuCats(prev => prev.includes(m.id) ? prev.filter(x => x !== m.id) : [...prev, m.id])}
-                  style={{ 
-                    flex: '0 0 auto', textAlign: 'center', cursor: 'pointer', 
-                    background: 'var(--bg-secondary)', padding: '12px 16px', borderRadius: 16,
-                    border: `1px solid ${selectedMenuCats.includes(m.id) ? 'var(--brand-secondary)' : 'var(--border-subtle)'}`,
-                    boxShadow: 'var(--shadow-sm)', transition: 'all 0.2s ease', minWidth: 100
-                  }}
-                >
-                  <div style={{ width: 48, height: 48, borderRadius: '50%', background: 'var(--bg-tertiary)', margin: '0 auto 8px', overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                    {m.image ? <img src={getImgUrl(m.image)} style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : <span style={{ fontSize: 24 }}>🍽️</span>}
-                  </div>
-                  <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--text-primary)' }}>{m.name}</div>
-                </div>
-              ))}
-           </div>
-        </div>
         {/* Compact Advanced Filters */}
         <div className="search-filters">
           <div className="filter-row">
