@@ -19,6 +19,10 @@ const EventType = sequelize.define('EventType', {
   status: {
     type: DataTypes.ENUM('Active', 'Inactive'),
     defaultValue: 'Active'
+  },
+  image: {
+    type: DataTypes.STRING(255),
+    allowNull: true
   }
 }, {
   tableName: 'event_types',

@@ -73,12 +73,12 @@ const getFormattedHistory = async (logs) => {
     const fields = Array.from(allFields).filter(f => 
       f !== 'updatedAt' && 
       f !== 'createdAt' && 
-      f !== 'image' && 
       f !== 'gallery' && 
       f !== 'id' && 
       f !== 'password_hash' &&
       typeof oldVal[f] !== 'object' && 
-      typeof newVal[f] !== 'object'
+      typeof newVal[f] !== 'object' &&
+      newVal[f] !== undefined // ONLY track if field is in new values
     );
 
     fields.forEach(f => {

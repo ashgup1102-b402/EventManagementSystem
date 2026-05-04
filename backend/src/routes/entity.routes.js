@@ -12,7 +12,7 @@ router.get('/:id/history', authenticate, ctrl.getEntityHistory);
 
 // Protected
 router.post('/', authenticate, isAdmin, (req, res, next) => { req.uploadFolder = 'properties'; next(); }, upload.single('cover_image'), ctrl.create);
-router.put('/:id', authenticate, (req, res, next) => { req.uploadFolder = 'properties'; next(); }, upload.single('cover_image'), upload.single('profile_photo'), ctrl.update);
+router.put('/:id', authenticate, (req, res, next) => { req.uploadFolder = 'properties'; next(); }, upload.any(), ctrl.update);
 router.delete('/:id', authenticate, isAdmin, ctrl.remove);
 
 module.exports = router;

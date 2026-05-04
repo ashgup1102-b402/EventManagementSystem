@@ -56,7 +56,11 @@ const authLimiter = rateLimit({
 // Body parsers
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
-
+app.use((req, res, next) => {
+  const fs = require('fs');
+  fs.appendFileSync('debug_log.txt', `[REQ] ${req.method} ${req.url}\n`);
+  next();
+});
 // Logger
 if (process.env.NODE_ENV !== 'test') {
   app.use(morgan('dev'));
@@ -102,7 +106,7 @@ const startServer = async () => {
     await sequelize.authenticate();
     console.log('✅ Database connection established.');
     
-    await sequelize.sync({ alter: true });
+    await sequelize.sync({ alter: false });
     console.log('✅ Database models synchronized.');
     
     // Seed Roles & Auth

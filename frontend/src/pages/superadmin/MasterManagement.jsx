@@ -12,12 +12,21 @@ const MasterManagement = () => {
   const [showModal, setShowModal] = useState(false)
   const [editingItem, setEditingItem] = useState(null)
   const [formData, setFormData] = useState({ name: '', description: '', status: 'Active', event_type_id: '' })
+  const [photoFile, setPhotoFile] = useState(null)
+  const BASE_URL = 'http://localhost:5000';
 
   const titles = {
     'event-types': '🎭 Event Types',
     'performers': '🎤 Performers',
     'menu-categories': '🍽️ Menu Categories',
     'cuisine-types': '🍜 Cuisine Types'
+  }
+
+  const getImgUrl = (path) => {
+    if (!path) return null;
+    if (path.startsWith('http')) return path;
+    const cleanPath = path.startsWith('/') ? path : `/${path}`;
+    return `http://localhost:5000${cleanPath}`;
   }
 
   useEffect(() => {
@@ -44,22 +53,36 @@ const MasterManagement = () => {
   const handleSubmit = async (e) => {
     e.preventDefault()
     try {
+      const fd = new FormData()
+      fd.append('name', formData.name)
+      fd.append('description', formData.description)
+      fd.append('status', formData.status)
+      if (type === 'performers') fd.append('event_type_id', formData.event_type_id)
+      if (photoFile) fd.append('image', photoFile)
+
       if (editingItem) {
-        await api.put(`/masters/${type}/${editingItem.id}`, formData)
+        await api.put(`/masters/${type}/${editingItem.id}`, fd)
         toast.success('Updated successfully')
       } else {
-        await api.post(`/masters/${type}`, formData)
+        await api.post(`/masters/${type}`, fd)
         toast.success('Created successfully')
       }
       setShowModal(false)
       setEditingItem(null)
+      setPhotoFile(null)
       setFormData({ name: '', description: '', status: 'Active', event_type_id: '' })
       fetchData()
-    } catch (err) { toast.error(err.response?.data?.message || 'Error saving') }
+    } catch (err) { 
+      const msg = err.response?.data?.errors 
+        ? err.response.data.errors.map(e => `${e.field}: ${e.message}`).join(', ')
+        : err.response?.data?.message || 'Error saving'
+      toast.error(msg)
+    }
   }
 
   const edit = (item) => {
     setEditingItem(item)
+    setPhotoFile(null)
     setFormData({ 
       name: item.name, 
       description: item.description || '', 
@@ -109,7 +132,14 @@ const MasterManagement = () => {
             <tbody>
               {data.map(item => (
                 <tr key={item.id}>
-                  <td><strong>{item.name}</strong></td>
+                  <td style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                    {item.image ? (
+                      <img src={getImgUrl(item.image)} alt="Img" crossOrigin="anonymous" style={{ width: 36, height: 36, borderRadius: 6, objectFit: 'cover' }} />
+                    ) : (
+                      <div style={{ width: 36, height: 36, background: 'var(--bg-tertiary)', borderRadius: 6, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12 }}>🖼️</div>
+                    )}
+                    <span style={{ fontWeight: 600 }}>{item.name}</span>
+                  </td>
                   {type === 'performers' && <td>{item.event_type?.name || '-'}</td>}
                   <td>{item.description || '-'}</td>
                   <td>
@@ -139,6 +169,22 @@ const MasterManagement = () => {
                 <label>Name</label>
                 <input className="input" required value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})} placeholder="Enter name" />
               </div>
+
+              {type !== 'performers' && (
+                <div className="input-group">
+                  <label>Image</label>
+                  <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
+                    {(photoFile || editingItem?.image) && (
+                      <img 
+                        src={photoFile ? URL.createObjectURL(photoFile) : getImgUrl(editingItem.image)} 
+                        alt="Preview" 
+                        style={{ width: 60, height: 60, borderRadius: 8, objectFit: 'cover', border: '1px solid var(--border-subtle)' }} 
+                      />
+                    )}
+                    <input type="file" onChange={e => setPhotoFile(e.target.files[0])} accept="image/*" />
+                  </div>
+                </div>
+              )}
               
               {type === 'performers' && (
                 <div className="input-group">

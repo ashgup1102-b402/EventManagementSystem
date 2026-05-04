@@ -29,6 +29,16 @@ const EntityManager = () => {
   const [historyLoading, setHistoryLoading] = useState(false)
   const [historyTarget, setHistoryTarget] = useState(null)
 
+  const [photoFile, setPhotoFile] = useState(null)
+  const BASE_URL = 'http://localhost:5000';
+
+  const getImgUrl = (path) => {
+    if (!path) return null;
+    if (path.startsWith('http')) return path;
+    const cleanPath = path.startsWith('/') ? path : `/${path}`;
+    return `http://localhost:5000${cleanPath}`;
+  }
+
   const loadHistory = async (ent) => {
     setHistoryTarget(ent)
     setHistoryLoading(true)
@@ -63,6 +73,7 @@ const EntityManager = () => {
   }, [])
 
   const openAdd = () => { 
+    setPhotoFile(null)
     setForm({ 
       name:'', entity_type: 'Organization', country: 'India', description:'', address:'', city:'', state:'', 
       category_id: categories[0]?.id || '', 
@@ -73,6 +84,7 @@ const EntityManager = () => {
 
   const openEdit = (ent) => { 
     if (!ent) return
+    setPhotoFile(null)
     // Strip nested objects to keep the form flat and clean
     const { admin, entity_category, events, menu_items, bookings, ...cleanForm } = ent
     setForm(cleanForm)
@@ -91,6 +103,10 @@ const EntityManager = () => {
       }
     }
 
+    if (!form.name || !form.address || !form.mobile_1) {
+      return toast.error('Name, Address, and Mobile Number are mandatory.')
+    }
+
     if (!form.state || !form.city) {
       return toast.error('State and District are mandatory.')
     }
@@ -103,17 +119,28 @@ const EntityManager = () => {
 
     setSaving(true)
     try {
+      const fd = new FormData()
+      Object.keys(form).forEach(k => {
+        if (['id', 'createdAt', 'updatedAt', 'unique_number', 'cover_image', 'profile_photo'].includes(k)) return
+        if (form[k] !== null && form[k] !== undefined) fd.append(k, form[k])
+      })
+      if (photoFile) fd.append('cover_image', photoFile)
+
       if (modal === 'add') {
-        await api.post('/entities', form)
+        await api.post('/entities', fd)
         toast.success('Entity created successfully!')
       } else {
-        await api.put(`/entities/${modal.id}`, form)
+        await api.put(`/entities/${modal.id}`, fd)
         toast.success('Entity updated successfully!')
       }
       setModal(null)
+      setPhotoFile(null)
       loadEntities()
     } catch (err) {
-      toast.error(err.response?.data?.message || 'Failed to save entity.')
+      const msg = err.response?.data?.errors 
+        ? err.response.data.errors.map(e => `${e.field}: ${e.message}`).join(', ')
+        : err.response?.data?.message || 'Failed to save entity.'
+      toast.error(msg)
     } finally {
       setSaving(false)
     }
@@ -229,9 +256,16 @@ const EntityManager = () => {
             <tbody>
               {processedEntities.map(e => (
                 <tr key={e.id}>
-                  <td>
-                    <strong>{e.name}</strong>
-                    <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>{e.unique_number}</div>
+                  <td style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                    {e.cover_image ? (
+                      <img src={getImgUrl(e.cover_image)} alt="Img" crossOrigin="anonymous" style={{ width: 40, height: 40, borderRadius: 6, objectFit: 'cover' }} />
+                    ) : (
+                      <div style={{ width: 40, height: 40, background: 'var(--bg-tertiary)', borderRadius: 6, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 14 }}>🏢</div>
+                    )}
+                    <div>
+                      <strong>{e.name}</strong>
+                      <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>{e.unique_number}</div>
+                    </div>
                   </td>
                   <td><span className="badge badge-light">{e.entity_type}</span></td>
                   <td><span className="badge badge-secondary" style={{fontSize: 11}}>{e.entity_category?.name || 'N/A'}</span></td>
@@ -302,6 +336,34 @@ const EntityManager = () => {
                       const dateStr = date.toISOString().slice(0,10).replace(/-/g, '')
                       return `${dateStr}${form.entity_code || '________'}`
                     })()}
+                  </div>
+                </div>
+              </div>
+
+              <div className="input-group">
+                <label>Cover Image</label>
+                <div style={{ display: 'flex', gap: 16, alignItems: 'flex-start', marginTop: 8, padding: 12, background: 'var(--bg-tertiary)', borderRadius: 12, border: '1px dashed var(--border-subtle)' }}>
+                  <div style={{ position: 'relative', width: 100, height: 100, borderRadius: 8, overflow: 'hidden', background: '#000' }}>
+                    {(photoFile || form.cover_image) ? (
+                      <img 
+                        src={photoFile ? URL.createObjectURL(photoFile) : getImgUrl(form.cover_image)} 
+                        alt="Preview" 
+                        crossOrigin="anonymous"
+                        style={{ width: '100%', height: '100%', objectFit: 'cover' }} 
+                      />
+                    ) : (
+                      <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#666', fontSize: 32 }}>🖼️</div>
+                    )}
+                  </div>
+                  <div style={{ flex: 1 }}>
+                    <p style={{ fontSize: 13, color: 'var(--text-muted)', marginBottom: 8, lineHeight: 1.4 }}>Upload a high-quality cover photo for your entity. This will be shown on the discovery page.</p>
+                    <input 
+                      type="file" 
+                      className="input" 
+                      onChange={e => setPhotoFile(e.target.files[0])} 
+                      accept="image/*" 
+                      style={{ fontSize: 12, padding: '8px', cursor: 'pointer' }}
+                    />
                   </div>
                 </div>
               </div>

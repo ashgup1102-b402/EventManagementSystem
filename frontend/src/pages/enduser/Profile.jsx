@@ -62,7 +62,8 @@ const Profile = () => {
   const getImgUrl = (path) => {
     if (!path) return null;
     if (path.startsWith('http')) return path;
-    return `${BASE_URL}${path}`;
+    const cleanPath = path.startsWith('/') ? path : `/${path}`;
+    return `http://localhost:5000${cleanPath}`;
   }
 
   const handlePassChange = async () => {
@@ -96,15 +97,16 @@ const Profile = () => {
       formData.append('preferences', JSON.stringify(preferences))
       if (photoFile) formData.append('profile_photo', photoFile)
 
-      const res = await api.put('/users/profile', formData, {
-        headers: { 'Content-Type': 'multipart/form-data' }
-      })
+      const res = await api.put('/users/profile', formData)
       toast.success('Profile updated!')
       
       updateUser(res.data.data)
       setPhotoFile(null)
     } catch (err) {
-      toast.error(err.response?.data?.message || 'Update failed.')
+      const msg = err.response?.data?.errors 
+        ? err.response.data.errors.map(e => `${e.field}: ${e.message}`).join(', ')
+        : err.response?.data?.message || 'Update failed.'
+      toast.error(msg)
     } finally {
       setSaving(false)
     }

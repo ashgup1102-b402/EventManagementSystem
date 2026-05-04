@@ -1,6 +1,13 @@
 powershell -Command "Set-Location 'D:\ASHISH\CANVA\AI\AntiGravity\Event Management\backend' ; npm.cmd run dev"
 powershell -Command "Set-Location 'D:\ASHISH\CANVA\AI\AntiGravity\Event Management\frontend'; npm.cmd run dev"
 
+powershell -Command "Set-Location 'D:\ASHISH\CANVA\AI\AntiGravity\Event Management
+netstat -ano | findstr :5000; netstat -ano | findstr :5173
+powershell -Command "Set-Location 'D:\ASHISH\CANVA\AI\AntiGravity\Event Management\backend
+cmd /c "npm run dev"
+powershell -Command "Set-Location 'D:\ASHISH\CANVA\AI\AntiGravity\Event Management\frontend
+cmd /c "npm run dev"
+
 Role			Username			Password
 Super Admin		superadmin			Admin@1234
 Admin			admin				Admin@1234

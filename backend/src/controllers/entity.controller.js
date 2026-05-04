@@ -78,7 +78,13 @@ const getOne = async (req, res, next) => {
 const create = async (req, res, next) => {
   const t = await sequelize.transaction();
   try {
-    const data = req.body;
+    const data = { ...req.body };
+    Object.keys(data).forEach(k => { 
+      if (data[k] === '' || data[k] === 'null' || data[k] === 'undefined') data[k] = null; 
+    });
+    delete data.cover_image;
+    delete data.profile_photo;
+
     if (!data.admin_user_id) data.admin_user_id = req.user.id;
 
     // Manual or Random Entity Code
@@ -99,7 +105,24 @@ const create = async (req, res, next) => {
     data.entity_code = entity_code;
     data.unique_number = unique_number;
 
-    // ... rest same ...
+    if (req.file) data.cover_image = `/uploads/properties/${req.file.filename}`;
+
+    // Parse JSON fields from strings (needed for FormData)
+    ['cuisine_types', 'amenities', 'tags', 'gallery'].forEach(key => {
+      if (typeof data[key] === 'string') {
+        try {
+          data[key] = JSON.parse(data[key]);
+        } catch (e) {
+          if (data[key].includes(',')) {
+            data[key] = data[key].split(',').map(s => s.trim());
+          } else if (data[key]) {
+            data[key] = [data[key]];
+          } else {
+            data[key] = [];
+          }
+        }
+      }
+    });
     const newUser = await User.create({
       username: unique_number,
       password_hash: 'Entity123',
@@ -136,13 +159,48 @@ const update = async (req, res, next) => {
       return res.status(403).json({ success: false, message: 'Access denied.' });
     }
 
-    // Clean body: remove nested objects that might crash update
+    // Clean body: remove nested objects and internal fields
     const updateData = { ...req.body };
+    Object.keys(updateData).forEach(k => { 
+      if (updateData[k] === '' || updateData[k] === 'null' || updateData[k] === 'undefined') updateData[k] = null; 
+    });
+
+    const fs = require('fs');
+    fs.appendFileSync('debug_log.txt', `[DEBUG] ${new Date().toISOString()}\n`);
+    fs.appendFileSync('debug_log.txt', `HEADERS: ${JSON.stringify(req.headers)}\n`);
+    fs.appendFileSync('debug_log.txt', `BODY: ${JSON.stringify(req.body)}\n`);
+    fs.appendFileSync('debug_log.txt', `FILES: ${JSON.stringify(req.files)}\n`);
+    fs.appendFileSync('debug_log.txt', `FILE: ${JSON.stringify(req.file)}\n\n`);
+
+    // CRITICAL: Only delete if it's a string path from the body, 
+    // to prevent it from overwriting the file-based update later.
+    // However, if no file is uploaded, we want to KEEP the current DB value, 
+    // so we should remove it from updateData entirely.
+    delete updateData.cover_image;
+    delete updateData.profile_photo;
+    
     delete updateData.admin;
     delete updateData.entity_category;
     delete updateData.events;
     delete updateData.menu_items;
-    delete updateData.unique_number; // recalculate below if code changes
+    delete updateData.unique_number;
+
+    // Parse JSON fields from strings (needed for FormData)
+    ['cuisine_types', 'amenities', 'tags', 'gallery'].forEach(key => {
+      if (typeof updateData[key] === 'string') {
+        try {
+          updateData[key] = JSON.parse(updateData[key]);
+        } catch (e) {
+          if (updateData[key].includes(',')) {
+            updateData[key] = updateData[key].split(',').map(s => s.trim());
+          } else if (updateData[key]) {
+            updateData[key] = [updateData[key]];
+          } else {
+            updateData[key] = [];
+          }
+        }
+      }
+    });
 
     if (req.body.entity_code && req.body.entity_code !== entity.entity_code) {
       if (req.body.entity_code.length !== 8) {
@@ -151,7 +209,6 @@ const update = async (req, res, next) => {
       const existing = await Entity.findOne({ where: { entity_code: req.body.entity_code, id: { [Op.ne]: entity.id } } });
       if (existing) return res.status(400).json({ success: false, message: 'Entity Code already in use.' });
       
-      // Recalculate unique_number using original creation date
       const dateStr = new Date(entity.createdAt).toISOString().slice(0,10).replace(/-/g, '');
       updateData.unique_number = `${dateStr}${req.body.entity_code}`;
       updateData.entity_code = req.body.entity_code;
@@ -159,12 +216,40 @@ const update = async (req, res, next) => {
       delete updateData.entity_code;
     }
 
+    // Handle file uploads (upload.any returns an array)
+    if (req.files && Array.isArray(req.files)) {
+      req.files.forEach(f => {
+        if (f.fieldname === 'cover_image') {
+          updateData.cover_image = `/uploads/properties/${f.filename}`;
+        }
+        if (f.fieldname === 'profile_photo') {
+          updateData.profile_photo = `/uploads/properties/${f.filename}`;
+        }
+      });
+    }
+    // Fallback for single file upload if used
     if (req.file) {
       updateData.cover_image = `/uploads/properties/${req.file.filename}`;
     }
 
+    fs.appendFileSync('debug_log.txt', `FINAL UPDATEDATA: ${JSON.stringify(updateData)}\n`);
+
     const oldValues = entity.toJSON();
-    await entity.update(updateData);
+    try {
+      await entity.update(updateData);
+    } catch (dbErr) {
+      fs.appendFileSync('debug_log.txt', `DB ERROR: ${dbErr.name} - ${dbErr.message}\n`);
+      if (dbErr.errors) fs.appendFileSync('debug_log.txt', `DB ERRORS: ${JSON.stringify(dbErr.errors)}\n`);
+      throw dbErr;
+    }
+
+    // Track changes for Audit Log
+    const changes = {};
+    Object.keys(updateData).forEach(key => {
+      if (updateData[key] !== undefined && updateData[key] !== oldValues[key]) {
+        changes[key] = { old: oldValues[key], new: updateData[key] };
+      }
+    });
 
     // Synchronize changes to the associated User account
     if (entity.entity_user_id) {
@@ -181,7 +266,16 @@ const update = async (req, res, next) => {
       user_id: req.user.id, action: 'UPDATE_ENTITY', entity_type: 'Entity',
       entity_id: entity.id, old_values: oldValues, new_values: updateData
     });
-    res.json({ success: true, message: 'Entity updated.', data: entity });
+
+    // Re-fetch to get associations
+    const updatedEntity = await Entity.findByPk(entity.id, {
+      include: [
+        { model: User, as: 'admin', attributes: ['id','username','email'] },
+        { model: Category, as: 'entity_category', attributes: ['id','name'] }
+      ]
+    });
+
+    res.json({ success: true, message: 'Entity updated.', data: updatedEntity });
   } catch (err) { next(err); }
 };
 

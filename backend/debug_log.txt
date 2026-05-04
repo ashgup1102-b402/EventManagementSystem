@@ -1,0 +1,180 @@
+[REQ] GET /uploads/users/1777623213825-64650752.png
+[REQ] GET /api/config
+[REQ] GET /api/entities?limit=500
+[REQ] GET /api/categories?status=Active
+[REQ] GET /api/config
+[REQ] GET /uploads/config/1777624227456-280454169.png
+[REQ] GET /api/categories?status=Active
+[REQ] GET /api/entities?limit=500
+[REQ] PUT /api/entities/23eabaef-779c-4162-bbe6-8a2cb1472678
+[DEBUG] 2026-05-03T10:17:40.673Z
+HEADERS: {"host":"localhost:5000","connection":"close","content-length":"555","sec-ch-ua-platform":"\"Windows\"","authorization":"Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6ImY3ODVkYWFjLWU1NTctNGU2Yy04MmNiLTdjOTQ2MjQ3OWY1MyIsInJvbGUiOiJTdXBlciBBZG1pbiIsInVzZXJuYW1lIjoic3VwZXJhZG1pbiIsImlhdCI6MTc3NzYzMTEyNSwiZXhwIjoxNzc4MjM1OTI1fQ.wv5uZJ2zHwOVKYbFY9Gn8KFJT9WZQ-nMj02UWgh8Ycg","user-agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36","accept":"application/json, text/plain, */*","sec-ch-ua":"\"Google Chrome\";v=\"147\", \"Not.A/Brand\";v=\"8\", \"Chromium\";v=\"147\"","content-type":"application/json","sec-ch-ua-mobile":"?0","origin":"http://localhost:5173","sec-fetch-site":"same-origin","sec-fetch-mode":"cors","sec-fetch-dest":"empty","referer":"http://localhost:5173/admin/entities","accept-encoding":"gzip, deflate, br, zstd","accept-language":"en-US,en;q=0.9"}
+BODY: {"name":"GURU","entity_type":"Organization","entity_code":"INPB-PAT","address":"GURU","city":"Patiala","state":"Punjab","country":"India","category":"restaurant","category_id":"c75f7618-fe8d-4bde-a71e-96ff429183ad","admin_user_id":"f785daac-e557-4e6c-82cb-7c9462479f53","entity_user_id":"f7fe96ed-3dfb-47c0-bd9d-df2b3cdc53f8","pan_number":"1234567890","aadhar_number":"123456789012","gst_number":"3453453532","mobile_1":"34534534534","email":"qwerty@qwerty.com","rating":"0.00","total_reviews":"0","status":"Active","is_featured":"false","cover_image":{}}
+FILES: undefined
+FILE: undefined
+
+FINAL UPDATEDATA: {"name":"GURU","entity_type":"Organization","address":"GURU","city":"Patiala","state":"Punjab","country":"India","category":"restaurant","category_id":"c75f7618-fe8d-4bde-a71e-96ff429183ad","admin_user_id":"f785daac-e557-4e6c-82cb-7c9462479f53","entity_user_id":"f7fe96ed-3dfb-47c0-bd9d-df2b3cdc53f8","pan_number":"1234567890","aadhar_number":"123456789012","gst_number":"3453453532","mobile_1":"34534534534","email":"qwerty@qwerty.com","rating":"0.00","total_reviews":"0","status":"Active","is_featured":"false"}
+[REQ] GET /api/entities?limit=500
+[REQ] GET /api/entities/23eabaef-779c-4162-bbe6-8a2cb1472678/history
+[REQ] GET /api/config
+[REQ] GET /api/entities?limit=500
+[REQ] GET /api/categories?status=Active
+[REQ] GET /api/config
+[REQ] GET /api/entities?limit=500
+[REQ] GET /api/config
+[REQ] GET /api/entities?limit=500
+[REQ] GET /api/categories?status=Active
+[REQ] GET /api/categories?status=Active
+[REQ] GET /api/config
+[REQ] GET /api/categories?status=Active
+[REQ] GET /api/entities?limit=500
+[REQ] GET /uploads/users/1777623213825-64650752.png
+[REQ] GET /api/config
+[REQ] GET /api/entities?limit=500
+[REQ] GET /api/categories?status=Active
+[REQ] GET /api/categories?status=Active
+[REQ] GET /api/config
+[REQ] GET /uploads/config/1777624227456-280454169.png
+[REQ] GET /api/entities?limit=500
+[REQ] PUT /api/entities/23eabaef-779c-4162-bbe6-8a2cb1472678
+[DEBUG] 2026-05-03T10:24:00.087Z
+HEADERS: {"host":"localhost:5000","connection":"close","content-length":"51969","sec-ch-ua-platform":"\"Windows\"","authorization":"Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6ImY3ODVkYWFjLWU1NTctNGU2Yy04MmNiLTdjOTQ2MjQ3OWY1MyIsInJvbGUiOiJTdXBlciBBZG1pbiIsInVzZXJuYW1lIjoic3VwZXJhZG1pbiIsImlhdCI6MTc3NzYzMTEyNSwiZXhwIjoxNzc4MjM1OTI1fQ.wv5uZJ2zHwOVKYbFY9Gn8KFJT9WZQ-nMj02UWgh8Ycg","user-agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36","accept":"application/json, text/plain, */*","sec-ch-ua":"\"Google Chrome\";v=\"147\", \"Not.A/Brand\";v=\"8\", \"Chromium\";v=\"147\"","content-type":"multipart/form-data; boundary=----WebKitFormBoundary8TebOSLvQA4NDp0c","sec-ch-ua-mobile":"?0","origin":"http://localhost:5173","sec-fetch-site":"same-origin","sec-fetch-mode":"cors","sec-fetch-dest":"empty","referer":"http://localhost:5173/admin/entities","accept-encoding":"gzip, deflate, br, zstd","accept-language":"en-US,en;q=0.9"}
+BODY: {"name":"GURU","entity_type":"Organization","entity_code":"INPB-PAT","address":"GURU","city":"Patiala","state":"Punjab","country":"India","category":"restaurant","category_id":"c75f7618-fe8d-4bde-a71e-96ff429183ad","admin_user_id":"f785daac-e557-4e6c-82cb-7c9462479f53","entity_user_id":"f7fe96ed-3dfb-47c0-bd9d-df2b3cdc53f8","pan_number":"1234567890","aadhar_number":"123456789012","gst_number":"3453453532","mobile_1":"34534534534","email":"qwerty@qwerty.com","rating":"0.00","total_reviews":"0","status":"Active","is_featured":"false"}
+FILES: [{"fieldname":"cover_image","originalname":"couple ring ceremony on couch.png","encoding":"7bit","mimetype":"image/png","destination":"D:\\ASHISH\\CANVA\\AI\\AntiGravity\\Event Management\\backend\\uploads\\properties","filename":"1777803839780-822188737.png","path":"D:\\ASHISH\\CANVA\\AI\\AntiGravity\\Event Management\\backend\\uploads\\properties\\1777803839780-822188737.png","size":49599}]
+FILE: undefined
+
+FINAL UPDATEDATA: {"name":"GURU","entity_type":"Organization","address":"GURU","city":"Patiala","state":"Punjab","country":"India","category":"restaurant","category_id":"c75f7618-fe8d-4bde-a71e-96ff429183ad","admin_user_id":"f785daac-e557-4e6c-82cb-7c9462479f53","entity_user_id":"f7fe96ed-3dfb-47c0-bd9d-df2b3cdc53f8","pan_number":"1234567890","aadhar_number":"123456789012","gst_number":"3453453532","mobile_1":"34534534534","email":"qwerty@qwerty.com","rating":"0.00","total_reviews":"0","status":"Active","is_featured":"false","cover_image":"/uploads/properties/1777803839780-822188737.png"}
+[REQ] GET /api/entities?limit=500
+[REQ] GET /uploads/properties/1777803839780-822188737.png
+[REQ] POST /api/auth/login
+[REQ] GET /uploads/users/1777791900876-588444518.jpg
+[REQ] GET /api/config
+[REQ] GET /api/search/filters
+[REQ] GET /api/search?q=&city=&date=
+[REQ] GET /api/search/filters
+[REQ] GET /api/config
+[REQ] GET /uploads/config/1777624227456-280454169.png
+[REQ] GET /uploads/properties/1777803839780-822188737.png
+[REQ] HEAD /api/health
+[REQ] GET /api/health
+[REQ] GET /uploads/users/1777791900876-588444518.jpg
+[REQ] GET /api/config
+[REQ] GET /api/search/filters
+[REQ] GET /api/search?q=&city=&date=
+[REQ] GET /api/search/filters
+[REQ] GET /uploads/users/1777791900876-588444518.jpg
+[REQ] GET /api/config
+[REQ] GET /api/search?q=&city=&date=
+[REQ] GET /uploads/properties/1777803839780-822188737.png
+[REQ] GET /uploads/config/1777624227456-280454169.png
+[REQ] GET /uploads/properties/1777803839780-822188737.png
+[REQ] GET /api/search/filters
+[REQ] GET /api/search/filters
+[REQ] GET /api/config
+[REQ] GET /api/config
+[REQ] GET /uploads/config/1777624227456-280454169.png
+[REQ] POST /api/auth/login
+[REQ] GET /uploads/users/1777623213825-64650752.png
+[REQ] GET /api/config
+[REQ] GET /api/dashboard/superadmin
+[REQ] GET /api/config
+[REQ] GET /api/dashboard/superadmin
+[REQ] GET /api/config
+[REQ] GET /api/entities?limit=500
+[REQ] GET /api/categories?status=Active
+[REQ] GET /api/config
+[REQ] GET /api/categories?status=Active
+[REQ] GET /api/entities?limit=500
+[REQ] GET /uploads/properties/1777803839780-822188737.png
+[REQ] GET /uploads/users/1777623213825-64650752.png
+[REQ] GET /api/config
+[REQ] GET /api/search/filters
+[REQ] GET /api/search?q=&city=&date=
+[REQ] GET /api/search/filters
+[REQ] GET /api/config
+[REQ] GET /uploads/config/1777624227456-280454169.png
+[REQ] GET /uploads/properties/1777803839780-822188737.png
+[REQ] PUT /api/entities/19f1b4d6-9934-49c1-827f-7c4bf1afeffc
+[DEBUG] 2026-05-04T07:08:00.285Z
+HEADERS: {"host":"localhost:5000","connection":"close","content-length":"15988","sec-ch-ua-platform":"\"Windows\"","authorization":"Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6ImY3ODVkYWFjLWU1NTctNGU2Yy04MmNiLTdjOTQ2MjQ3OWY1MyIsInJvbGUiOiJTdXBlciBBZG1pbiIsInVzZXJuYW1lIjoic3VwZXJhZG1pbiIsImlhdCI6MTc3Nzg3ODE0OSwiZXhwIjoxNzc4NDgyOTQ5fQ.eS4nB_N-O9avhI2osipgSRQVhVCRA88y1g1vFn7SucA","user-agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36","accept":"application/json, text/plain, */*","sec-ch-ua":"\"Google Chrome\";v=\"147\", \"Not.A/Brand\";v=\"8\", \"Chromium\";v=\"147\"","content-type":"multipart/form-data; boundary=----WebKitFormBoundaryyVTdHzIN6qlgZl8I","sec-ch-ua-mobile":"?0","origin":"http://localhost:5173","sec-fetch-site":"same-origin","sec-fetch-mode":"cors","sec-fetch-dest":"empty","referer":"http://localhost:5173/admin/entities","accept-encoding":"gzip, deflate, br, zstd","accept-language":"en-US,en;q=0.9"}
+BODY: {"name":"Le First Modified","entity_type":"Organization","entity_code":"INMH-ARG","address":"Le First","city":"Aurangabad","state":"Maharashtra","country":"India","category":"restaurant","category_id":"a511318c-0b4c-4608-819e-8debd9e1086e","admin_user_id":"f785daac-e557-4e6c-82cb-7c9462479f53","entity_user_id":"662fcc6f-ca71-4518-ab0b-fb8ef801cb96","gst_number":"121212121212121","mobile_1":"12121212","rating":"0.00","total_reviews":"0","status":"Active","is_featured":"false"}
+FILES: [{"fieldname":"cover_image","originalname":"5.jpg","encoding":"7bit","mimetype":"image/jpeg","destination":"D:\\ASHISH\\CANVA\\AI\\AntiGravity\\Event Management\\backend\\uploads\\properties","filename":"1777878480071-883904446.jpg","path":"D:\\ASHISH\\CANVA\\AI\\AntiGravity\\Event Management\\backend\\uploads\\properties\\1777878480071-883904446.jpg","size":13946}]
+FILE: undefined
+
+FINAL UPDATEDATA: {"name":"Le First Modified","entity_type":"Organization","address":"Le First","city":"Aurangabad","state":"Maharashtra","country":"India","category":"restaurant","category_id":"a511318c-0b4c-4608-819e-8debd9e1086e","admin_user_id":"f785daac-e557-4e6c-82cb-7c9462479f53","entity_user_id":"662fcc6f-ca71-4518-ab0b-fb8ef801cb96","gst_number":"121212121212121","mobile_1":"12121212","rating":"0.00","total_reviews":"0","status":"Active","is_featured":"false","cover_image":"/uploads/properties/1777878480071-883904446.jpg"}
+[REQ] GET /api/entities?limit=500
+[REQ] GET /uploads/properties/1777878480071-883904446.jpg
+[REQ] PUT /api/entities/b585a46c-b04f-43cf-97df-693c35b447a7
+[DEBUG] 2026-05-04T07:08:22.206Z
+HEADERS: {"host":"localhost:5000","connection":"close","content-length":"17013","sec-ch-ua-platform":"\"Windows\"","authorization":"Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6ImY3ODVkYWFjLWU1NTctNGU2Yy04MmNiLTdjOTQ2MjQ3OWY1MyIsInJvbGUiOiJTdXBlciBBZG1pbiIsInVzZXJuYW1lIjoic3VwZXJhZG1pbiIsImlhdCI6MTc3Nzg3ODE0OSwiZXhwIjoxNzc4NDgyOTQ5fQ.eS4nB_N-O9avhI2osipgSRQVhVCRA88y1g1vFn7SucA","user-agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36","accept":"application/json, text/plain, */*","sec-ch-ua":"\"Google Chrome\";v=\"147\", \"Not.A/Brand\";v=\"8\", \"Chromium\";v=\"147\"","content-type":"multipart/form-data; boundary=----WebKitFormBoundaryaIbpI595xn1VFOxm","sec-ch-ua-mobile":"?0","origin":"http://localhost:5173","sec-fetch-site":"same-origin","sec-fetch-mode":"cors","sec-fetch-dest":"empty","referer":"http://localhost:5173/admin/entities","accept-encoding":"gzip, deflate, br, zstd","accept-language":"en-US,en;q=0.9"}
+BODY: {"name":"Le Newly","entity_type":"Organization","entity_code":"INMN-NNY","description":"","address":"ADDRESS Le Newly","city":"Noney","state":"Manipur","country":"India","category":"restaurant","category_id":"a511318c-0b4c-4608-819e-8debd9e1086e","gallery":"","admin_user_id":"f785daac-e557-4e6c-82cb-7c9462479f53","entity_user_id":"deaa4e43-f1e2-4e9a-8372-db23a2f4f533","pan_number":"PAN1212121","gst_number":"GST12121212","mobile_1":"9879879871","cuisine_types":"","amenities":"","tags":"","rating":"0.00","total_reviews":"0","status":"Active","is_featured":"false"}
+FILES: [{"fieldname":"cover_image","originalname":"14.jpg","encoding":"7bit","mimetype":"image/jpeg","destination":"D:\\ASHISH\\CANVA\\AI\\AntiGravity\\Event Management\\backend\\uploads\\properties","filename":"1777878501973-17175435.jpg","path":"D:\\ASHISH\\CANVA\\AI\\AntiGravity\\Event Management\\backend\\uploads\\properties\\1777878501973-17175435.jpg","size":14396}]
+FILE: undefined
+
+FINAL UPDATEDATA: {"name":"Le Newly","entity_type":"Organization","description":null,"address":"ADDRESS Le Newly","city":"Noney","state":"Manipur","country":"India","category":"restaurant","category_id":"a511318c-0b4c-4608-819e-8debd9e1086e","gallery":null,"admin_user_id":"f785daac-e557-4e6c-82cb-7c9462479f53","entity_user_id":"deaa4e43-f1e2-4e9a-8372-db23a2f4f533","pan_number":"PAN1212121","gst_number":"GST12121212","mobile_1":"9879879871","cuisine_types":null,"amenities":null,"tags":null,"rating":"0.00","total_reviews":"0","status":"Active","is_featured":"false","cover_image":"/uploads/properties/1777878501973-17175435.jpg"}
+[REQ] GET /api/entities?limit=500
+[REQ] GET /uploads/properties/1777878501973-17175435.jpg
+[REQ] PUT /api/entities/d1458643-fe60-46e3-8ad0-eac2399282fc
+[DEBUG] 2026-05-04T07:08:55.714Z
+HEADERS: {"host":"localhost:5000","connection":"close","content-length":"18165","sec-ch-ua-platform":"\"Windows\"","authorization":"Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6ImY3ODVkYWFjLWU1NTctNGU2Yy04MmNiLTdjOTQ2MjQ3OWY1MyIsInJvbGUiOiJTdXBlciBBZG1pbiIsInVzZXJuYW1lIjoic3VwZXJhZG1pbiIsImlhdCI6MTc3Nzg3ODE0OSwiZXhwIjoxNzc4NDgyOTQ5fQ.eS4nB_N-O9avhI2osipgSRQVhVCRA88y1g1vFn7SucA","user-agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36","accept":"application/json, text/plain, */*","sec-ch-ua":"\"Google Chrome\";v=\"147\", \"Not.A/Brand\";v=\"8\", \"Chromium\";v=\"147\"","content-type":"multipart/form-data; boundary=----WebKitFormBoundarySW4pL1Gew9uduOeN","sec-ch-ua-mobile":"?0","origin":"http://localhost:5173","sec-fetch-site":"same-origin","sec-fetch-mode":"cors","sec-fetch-dest":"empty","referer":"http://localhost:5173/admin/entities","accept-encoding":"gzip, deflate, br, zstd","accept-language":"en-US,en;q=0.9"}
+BODY: {"name":"The Grandeur Datalog","entity_type":"Organization","entity_code":"d1458643","description":"Grand RoofTop in Delhi","address":"BaraKhamaba Road ","city":"New Delhi","state":"New Delhi","country":"India","pincode":"1000018","category":"rooftop","gallery":"","admin_user_id":"f785daac-e557-4e6c-82cb-7c9462479f53","gst_number":"43we56789","mobile_1":"0000000000","cuisine_types":"","amenities":"","tags":"","rating":"0.00","total_reviews":"0","status":"Active","is_featured":"false"}
+FILES: [{"fieldname":"cover_image","originalname":"37.jpg","encoding":"7bit","mimetype":"image/jpeg","destination":"D:\\ASHISH\\CANVA\\AI\\AntiGravity\\Event Management\\backend\\uploads\\properties","filename":"1777878535449-203496912.jpg","path":"D:\\ASHISH\\CANVA\\AI\\AntiGravity\\Event Management\\backend\\uploads\\properties\\1777878535449-203496912.jpg","size":15789}]
+FILE: undefined
+
+FINAL UPDATEDATA: {"name":"The Grandeur Datalog","entity_type":"Organization","description":"Grand RoofTop in Delhi","address":"BaraKhamaba Road ","city":"New Delhi","state":"New Delhi","country":"India","pincode":"1000018","category":"rooftop","gallery":null,"admin_user_id":"f785daac-e557-4e6c-82cb-7c9462479f53","gst_number":"43we56789","mobile_1":"0000000000","cuisine_types":null,"amenities":null,"tags":null,"rating":"0.00","total_reviews":"0","status":"Active","is_featured":"false","cover_image":"/uploads/properties/1777878535449-203496912.jpg"}
+[REQ] GET /api/entities?limit=500
+[REQ] GET /uploads/properties/1777878535449-203496912.jpg
+[REQ] PUT /api/entities/c6197e7d-5a46-4a45-912c-527751bef876
+[DEBUG] 2026-05-04T07:09:25.081Z
+HEADERS: {"host":"localhost:5000","connection":"close","content-length":"15746","sec-ch-ua-platform":"\"Windows\"","authorization":"Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6ImY3ODVkYWFjLWU1NTctNGU2Yy04MmNiLTdjOTQ2MjQ3OWY1MyIsInJvbGUiOiJTdXBlciBBZG1pbiIsInVzZXJuYW1lIjoic3VwZXJhZG1pbiIsImlhdCI6MTc3Nzg3ODE0OSwiZXhwIjoxNzc4NDgyOTQ5fQ.eS4nB_N-O9avhI2osipgSRQVhVCRA88y1g1vFn7SucA","user-agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36","accept":"application/json, text/plain, */*","sec-ch-ua":"\"Google Chrome\";v=\"147\", \"Not.A/Brand\";v=\"8\", \"Chromium\";v=\"147\"","content-type":"multipart/form-data; boundary=----WebKitFormBoundaryBbHNIMKhkwPGCG6b","sec-ch-ua-mobile":"?0","origin":"http://localhost:5173","sec-fetch-site":"same-origin","sec-fetch-mode":"cors","sec-fetch-dest":"empty","referer":"http://localhost:5173/admin/entities","accept-encoding":"gzip, deflate, br, zstd","accept-language":"en-US,en;q=0.9"}
+BODY: {"name":"The Grand Venue","entity_type":"Organization","entity_code":"c6197e7d","description":"Mumbai's premier event destination featuring world-class entertainment, fine dining, and stunning rooftop views.","address":"42, Marine Drive","city":"Mumbai City","state":"Maharashtra","country":"India","pincode":"400001","category":"banquet_hall","gallery":"","admin_user_id":"4891da39-9b16-41a5-8051-5327d71a41f9","entity_user_id":"b4e5bf4b-8775-458f-8c32-0b8e4bc447ec","gst_number":"KR72DJFYEE","mobile_1":"9876543210","email":"info@grandvenue.com","opening_time":"18:00:00","closing_time":"02:00:00","cuisine_types":"Indian,Continental,Chinese,Mexican","amenities":"Parking,AC,Bar,Dance Floor,Live Music,Valet","tags":"premium,rooftop,events,dining","rating":"4.50","total_reviews":"128","status":"Active","is_featured":"true"}
+FILES: [{"fieldname":"cover_image","originalname":"39.jpg","encoding":"7bit","mimetype":"image/jpeg","destination":"D:\\ASHISH\\CANVA\\AI\\AntiGravity\\Event Management\\backend\\uploads\\properties","filename":"1777878564800-800014256.jpg","path":"D:\\ASHISH\\CANVA\\AI\\AntiGravity\\Event Management\\backend\\uploads\\properties\\1777878564800-800014256.jpg","size":12708}]
+FILE: undefined
+
+FINAL UPDATEDATA: {"name":"The Grand Venue","entity_type":"Organization","description":"Mumbai's premier event destination featuring world-class entertainment, fine dining, and stunning rooftop views.","address":"42, Marine Drive","city":"Mumbai City","state":"Maharashtra","country":"India","pincode":"400001","category":"banquet_hall","gallery":null,"admin_user_id":"4891da39-9b16-41a5-8051-5327d71a41f9","entity_user_id":"b4e5bf4b-8775-458f-8c32-0b8e4bc447ec","gst_number":"KR72DJFYEE","mobile_1":"9876543210","email":"info@grandvenue.com","opening_time":"18:00:00","closing_time":"02:00:00","cuisine_types":["Indian","Continental","Chinese","Mexican"],"amenities":["Parking","AC","Bar","Dance Floor","Live Music","Valet"],"tags":["premium","rooftop","events","dining"],"rating":"4.50","total_reviews":"128","status":"Active","is_featured":"true","cover_image":"/uploads/properties/1777878564800-800014256.jpg"}
+[REQ] GET /api/entities?limit=500
+[REQ] GET /uploads/properties/1777878564800-800014256.jpg
+[REQ] POST /api/auth/login
+[REQ] GET /uploads/users/1777630128193-721609467.png
+[REQ] GET /api/config
+[REQ] GET /api/dashboard/property
+[REQ] GET /api/config
+[REQ] GET /api/dashboard/property
+[REQ] GET /api/bookings?limit=200
+[REQ] GET /api/config
+[REQ] GET /api/config
+[REQ] GET /api/bookings?limit=200
+[REQ] POST /api/auth/login
+[REQ] GET /uploads/users/1777791900876-588444518.jpg
+[REQ] GET /api/config
+[REQ] GET /api/search/filters
+[REQ] GET /api/search?q=&city=&date=
+[REQ] GET /api/search/filters
+[REQ] GET /api/config
+[REQ] GET /uploads/properties/1777878564800-800014256.jpg
+[REQ] GET /uploads/properties/1777803839780-822188737.png
+[REQ] GET /uploads/properties/1777878480071-883904446.jpg
+[REQ] GET /uploads/properties/1777878501973-17175435.jpg
+[REQ] GET /uploads/properties/1777878535449-203496912.jpg
+[REQ] GET /uploads/properties/1777878564800-800014256.jpg
+[REQ] GET /uploads/properties/1777803839780-822188737.png
+[REQ] GET /uploads/properties/1777878480071-883904446.jpg
+[REQ] GET /uploads/properties/1777878501973-17175435.jpg
+[REQ] GET /uploads/properties/1777878535449-203496912.jpg
+[REQ] GET /api/search?q=&city=&date=&event_type_ids%5B%5D=5d455c34-820c-404f-ae68-2dee47833921
+[REQ] GET /api/search?q=&city=&date=&event_type_ids%5B%5D=5d455c34-820c-404f-ae68-2dee47833921&performer_ids%5B%5D=577d09d5-985d-4973-8a57-6348daf87a74
+[REQ] GET /api/search?q=&city=&date=&event_type_ids%5B%5D=5d455c34-820c-404f-ae68-2dee47833921&performer_ids%5B%5D=577d09d5-985d-4973-8a57-6348daf87a74&menu_category_ids%5B%5D=39638d49-f5c7-42da-9e68-1c2ee546b94b
+[REQ] GET /api/search?q=&city=&date=&event_type_ids%5B%5D=5d455c34-820c-404f-ae68-2dee47833921&performer_ids%5B%5D=577d09d5-985d-4973-8a57-6348daf87a74&menu_category_ids%5B%5D=39638d49-f5c7-42da-9e68-1c2ee546b94b&cuisine_type_ids%5B%5D=81d62cec-d578-49ae-a150-1d29a1e35bd8
+[REQ] GET /api/search?q=&city=&date=&event_type_ids%5B%5D=5d455c34-820c-404f-ae68-2dee47833921&performer_ids%5B%5D=577d09d5-985d-4973-8a57-6348daf87a74&menu_category_ids%5B%5D=39638d49-f5c7-42da-9e68-1c2ee546b94b&cuisine_type_ids%5B%5D=81d62cec-d578-49ae-a150-1d29a1e35bd8&is_veg=true
+[REQ] GET /uploads/users/1777791900876-588444518.jpg
+[REQ] GET /api/config
+[REQ] GET /api/search/filters
+[REQ] GET /api/search?q=&city=&date=
+[REQ] GET /api/search/filters
+[REQ] GET /api/config
+[REQ] GET /uploads/config/1777624227456-280454169.png
+[REQ] GET /uploads/properties/1777878564800-800014256.jpg
+[REQ] GET /uploads/properties/1777803839780-822188737.png
+[REQ] GET /uploads/properties/1777878480071-883904446.jpg
+[REQ] GET /uploads/properties/1777878501973-17175435.jpg
+[REQ] GET /uploads/properties/1777878535449-203496912.jpg

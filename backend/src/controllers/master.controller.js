@@ -28,7 +28,14 @@ const createMasterController = (Model, include = []) => ({
 
   create: async (req, res, next) => {
     try {
-      const row = await Model.create(req.body);
+      const data = { ...req.body };
+      Object.keys(data).forEach(k => { 
+        if (data[k] === '' || data[k] === 'null' || data[k] === 'undefined') data[k] = null; 
+      });
+      if (req.file) {
+        data.image = `/uploads/${req.uploadFolder || 'general'}/${req.file.filename}`;
+      }
+      const row = await Model.create(data);
       res.status(201).json({ success: true, data: row });
     } catch (err) { next(err); }
   },
@@ -37,7 +44,16 @@ const createMasterController = (Model, include = []) => ({
     try {
       const row = await Model.findByPk(req.params.id);
       if (!row) return res.status(404).json({ success: false, message: 'Not found.' });
-      await row.update(req.body);
+      
+      const data = { ...req.body };
+      Object.keys(data).forEach(k => { 
+        if (data[k] === '' || data[k] === 'null' || data[k] === 'undefined') data[k] = null; 
+      });
+      if (req.file) {
+        data.image = `/uploads/${req.uploadFolder || 'general'}/${req.file.filename}`;
+      }
+      
+      await row.update(data);
       res.json({ success: true, data: row });
     } catch (err) { next(err); }
   },

@@ -19,6 +19,10 @@ const MenuCategory = sequelize.define('MenuCategory', {
   status: {
     type: DataTypes.ENUM('Active', 'Inactive'),
     defaultValue: 'Active'
+  },
+  image: {
+    type: DataTypes.STRING(255),
+    allowNull: true
   }
 }, {
   tableName: 'menu_categories',
