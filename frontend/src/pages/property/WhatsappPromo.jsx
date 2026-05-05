@@ -1,9 +1,13 @@
 import { useState, useEffect } from 'react'
+import { useLocation, useNavigate } from 'react-router-dom'
 import api from '../../api/axios'
 import Layout from '../../components/Layout'
 import toast from 'react-hot-toast'
+import { useAuth } from '../../context/AuthContext'
 
 const WhatsappPromo = () => {
+  const { user: currentUser } = useAuth()
+  const navigate = useNavigate()
   const [entityId, setEntityId] = useState(null)
   const [qr, setQr] = useState(null)
   const [status, setStatus] = useState('NOT_LOGGED_IN')
@@ -13,18 +17,29 @@ const WhatsappPromo = () => {
   const [logs, setLogs] = useState([])
   const [events, setEvents] = useState([])
 
-  const sessionId = entityId ? `prop_${entityId}` : null
+  const { search: urlSearch } = useLocation()
+  const queryParams = new URLSearchParams(urlSearch)
 
   useEffect(() => {
-    api.get('/entities/my').then(r => {
-      setEntityId(r.data.data.id)
+    const queryId = queryParams.get('entityId');
+    
+    const fetchWithId = (id) => {
+      setEntityId(id)
       return Promise.all([
-        api.get('/whatsapp/logs', { params: { property_id: r.data.data.id } }),
-        api.get('/events', { params: { property_id: r.data.data.id } })
-      ])
-    }).then(([l, e]) => {
-      setLogs(l.data.data); setEvents(e.data.data)
-    }).catch(console.error)
+        api.get('/whatsapp/logs', { params: { property_id: id } }),
+        api.get('/events', { params: { property_id: id } })
+      ]).then(([l, e]) => {
+        setLogs(l.data.data); setEvents(e.data.data)
+      })
+    }
+
+    if (queryId) {
+      fetchWithId(queryId).catch(console.error)
+    } else {
+      api.get('/entities/my').then(r => {
+        return fetchWithId(r.data.data.id)
+      }).catch(console.error)
+    }
   }, [])
 
   useEffect(() => {
@@ -69,7 +84,21 @@ const WhatsappPromo = () => {
 
   return (
     <Layout>
-      <div className="page-header"><div><h1>💬 Promotions (WhatsApp & Email)</h1><p>Engage with your guests and drive more bookings</p></div></div>
+      <div className="page-header">
+        <div className="page-header-row">
+          <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+            {(currentUser?.role === 'Admin' || currentUser?.role === 'Super Admin') && queryParams.get('entityId') && (
+              <button className="btn btn-secondary btn-sm" onClick={() => navigate('/admin/entities')}>
+                ← Back to Entities
+              </button>
+            )}
+            <div>
+              <h1>💬 Promotions (WhatsApp & Email)</h1>
+              <p>Engage with your guests and drive more bookings</p>
+            </div>
+          </div>
+        </div>
+      </div>
 
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 340px', gap: 24, alignItems: 'start' }}>
         <div>

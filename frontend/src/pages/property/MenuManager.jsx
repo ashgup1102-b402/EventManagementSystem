@@ -1,11 +1,14 @@
 import { useState, useEffect } from 'react'
-import { useLocation } from 'react-router-dom'
+import { useLocation, useNavigate } from 'react-router-dom'
 import api from '../../api/axios'
 import Layout from '../../components/Layout'
 import toast from 'react-hot-toast'
 import moment from 'moment'
+import { useAuth } from '../../context/AuthContext'
 
 const MenuManager = () => {
+  const { user: currentUser } = useAuth()
+  const navigate = useNavigate()
   const [items, setItems] = useState([])
   const [categories, setCategories] = useState([])
   const [cuisines, setCuisines] = useState([])
@@ -27,15 +30,23 @@ const MenuManager = () => {
 
   const fetchInit = async () => {
     try {
-      const [entRes, catRes, cuisRes] = await Promise.all([
-        api.get('/entities/my'),
+      const queryId = queryParams.get('entityId');
+      let currentEntityId = queryId;
+
+      const [catRes, cuisRes] = await Promise.all([
         api.get('/masters/menu-categories?status=Active'),
         api.get('/masters/cuisine-types?status=Active')
       ])
-      setEntityId(entRes.data.data.id)
+
+      if (!currentEntityId) {
+        const entRes = await api.get('/entities/my');
+        currentEntityId = entRes.data.data.id;
+      }
+
+      setEntityId(currentEntityId)
       setCategories(catRes.data.data)
       setCuisines(cuisRes.data.data)
-      fetchMenu(entRes.data.data.id, initialStatus)
+      fetchMenu(currentEntityId, initialStatus)
     } catch (err) { toast.error('Failed to load initial data.') }
     finally { setLoading(false) }
   }
@@ -107,9 +118,16 @@ const MenuManager = () => {
     <Layout>
       <div className="page-header">
         <div className="page-header-row">
-          <div>
-            <h1>🍽️ Menu Manager</h1>
-            <p>Manage your food items, categories, and cuisine types.</p>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+            {(currentUser?.role === 'Admin' || currentUser?.role === 'Super Admin') && queryParams.get('entityId') && (
+              <button className="btn btn-secondary btn-sm" onClick={() => navigate('/admin/entities')}>
+                ← Back to Entities
+              </button>
+            )}
+            <div>
+              <h1>🍽️ Menu Manager</h1>
+              <p>Manage your food items, categories, and cuisine types.</p>
+            </div>
           </div>
           <button className="btn btn-primary" onClick={() => { setForm({ price:0, is_veg:true, is_available:true, status:'Active' }); setModal('add'); }}>
             + Add Item

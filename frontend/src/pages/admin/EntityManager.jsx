@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { useLocation } from 'react-router-dom'
+import { useLocation, Link } from 'react-router-dom'
 import api from '../../api/axios'
 import Layout from '../../components/Layout'
 import toast from 'react-hot-toast'
@@ -302,6 +302,30 @@ const EntityManager = () => {
               <h2>{modal === 'add' ? 'Add New Entity' : 'Edit Entity'}</h2>
               <button className="modal-close" onClick={() => setModal(null)}>✕</button>
             </div>
+
+            {modal !== 'add' && (
+              <div className="entity-management-quick-links" style={{ 
+                padding: '16px', 
+                background: 'var(--bg-secondary)', 
+                borderRadius: '12px', 
+                marginBottom: '20px',
+                display: 'flex',
+                flexDirection: 'column',
+                gap: '12px',
+                border: '1px solid var(--border-subtle)'
+              }}>
+                <div style={{ fontSize: '12px', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                  Management Modules
+                </div>
+                <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+                  <Link to={`/entity/events?entityId=${modal.id}`} className="btn btn-secondary btn-sm" style={{ textDecoration: 'none' }}>📅 Events</Link>
+                  <Link to={`/entity/menu?entityId=${modal.id}`} className="btn btn-secondary btn-sm" style={{ textDecoration: 'none' }}>🍔 Menu</Link>
+                  <Link to={`/entity/slots?entityId=${modal.id}`} className="btn btn-secondary btn-sm" style={{ textDecoration: 'none' }}>⏰ Slots</Link>
+                  <Link to={`/entity/discounts?entityId=${modal.id}`} className="btn btn-secondary btn-sm" style={{ textDecoration: 'none' }}>🏷️ Discounts & Combos</Link>
+                  <Link to={`/entity/whatsapp?entityId=${modal.id}`} className="btn btn-secondary btn-sm" style={{ textDecoration: 'none' }}>📱 Promotions</Link>
+                </div>
+              </div>
+            )}
             
             <div className="form-grid" style={{ gap: 14 }}>
               <div className="form-grid form-grid-3">

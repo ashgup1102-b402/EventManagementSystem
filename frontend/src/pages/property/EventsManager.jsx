@@ -1,11 +1,14 @@
 import { useState, useEffect } from 'react'
-import { useLocation } from 'react-router-dom'
+import { useLocation, useNavigate } from 'react-router-dom'
 import api from '../../api/axios'
 import Layout from '../../components/Layout'
 import toast from 'react-hot-toast'
 import moment from 'moment'
+import { useAuth } from '../../context/AuthContext'
 
 const EventsManager = () => {
+  const { user: currentUser } = useAuth()
+  const navigate = useNavigate()
   const [events, setEvents] = useState([])
   const [eventTypes, setEventTypes] = useState([])
   const [performers, setPerformers] = useState([])
@@ -27,15 +30,23 @@ const EventsManager = () => {
 
   const fetchInit = async () => {
     try {
-      const [entRes, typesRes, perfRes] = await Promise.all([
-        api.get('/entities/my'),
+      const queryId = queryParams.get('entityId');
+      let currentEntityId = queryId;
+
+      const [typesRes, perfRes] = await Promise.all([
         api.get('/masters/event-types?status=Active'),
         api.get('/masters/performers?status=Active')
       ])
-      setEntityId(entRes.data.data.id)
+
+      if (!currentEntityId) {
+        const entRes = await api.get('/entities/my');
+        currentEntityId = entRes.data.data.id;
+      }
+      
+      setEntityId(currentEntityId)
       setEventTypes(typesRes.data.data)
       setPerformers(perfRes.data.data)
-      fetchEvents(entRes.data.data.id, initialStatus)
+      fetchEvents(currentEntityId, initialStatus)
     } catch (err) { toast.error('Failed to load initial data.') }
     finally { setLoading(false) }
   }
@@ -118,9 +129,16 @@ const EventsManager = () => {
     <Layout>
       <div className="page-header">
         <div className="page-header-row">
-          <div>
-            <h1>🎭 Events Manager</h1>
-            <p>Manage performance-based events and performer mapping.</p>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+            {(currentUser?.role === 'Admin' || currentUser?.role === 'Super Admin') && queryParams.get('entityId') && (
+              <button className="btn btn-secondary btn-sm" onClick={() => navigate('/admin/entities')}>
+                ← Back to Entities
+              </button>
+            )}
+            <div>
+              <h1>🎭 Events Manager</h1>
+              <p>Manage performance-based events and performer mapping.</p>
+            </div>
           </div>
           <button className="btn btn-primary" onClick={() => { setForm({ ticket_price:0, total_capacity:100, status:'Active' }); setModal('add'); }}>
             + New Event

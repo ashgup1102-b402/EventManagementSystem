@@ -1,11 +1,14 @@
 import { useState, useEffect } from 'react'
-import { useLocation } from 'react-router-dom'
+import { useLocation, useNavigate } from 'react-router-dom'
 import api from '../../api/axios'
 import Layout from '../../components/Layout'
 import toast from 'react-hot-toast'
 import moment from 'moment'
+import { useAuth } from '../../context/AuthContext'
 
 const DiscountManager = () => {
+  const { user: currentUser } = useAuth()
+  const navigate = useNavigate()
   const [discounts, setDiscounts] = useState([])
   const [combos, setCombos] = useState([])
   const [loading, setLoading] = useState(true)
@@ -29,9 +32,16 @@ const DiscountManager = () => {
 
   const fetchInit = async () => {
     try {
-      const entRes = await api.get('/entities/my')
-      setEntityId(entRes.data.data.id)
-      await fetchAll(entRes.data.data.id, initialActive)
+      const queryId = queryParams.get('entityId');
+      let currentEntityId = queryId;
+
+      if (!currentEntityId) {
+        const entRes = await api.get('/entities/my');
+        currentEntityId = entRes.data.data.id;
+      }
+
+      setEntityId(currentEntityId)
+      await fetchAll(currentEntityId, initialActive)
     } catch (err) {
       toast.error('Failed to load initial data.')
     } finally {
@@ -119,9 +129,22 @@ const DiscountManager = () => {
 
   return (
     <Layout>
-      <div className="page-header"><div className="page-header-row"><div><h1>🏷️ Discounts & Combos</h1><p>Manage offers, promos and combo deals</p></div>
-        <div style={{ display:'flex', gap:8 }}><button className="btn btn-primary" onClick={() => openDiscount(null)}>+ Discount</button><button className="btn btn-secondary" onClick={() => openCombo(null)}>+ Combo Deal</button></div>
-      </div></div>
+      <div className="page-header">
+        <div className="page-header-row">
+          <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+            {(currentUser?.role === 'Admin' || currentUser?.role === 'Super Admin') && queryParams.get('entityId') && (
+              <button className="btn btn-secondary btn-sm" onClick={() => navigate('/admin/entities')}>
+                ← Back to Entities
+              </button>
+            )}
+            <div>
+              <h1>🏷️ Discounts & Combos</h1>
+              <p>Manage offers, promos and combo deals</p>
+            </div>
+          </div>
+          <div style={{ display:'flex', gap:8 }}><button className="btn btn-primary" onClick={() => openDiscount(null)}>+ Discount</button><button className="btn btn-secondary" onClick={() => openCombo(null)}>+ Combo Deal</button></div>
+        </div>
+      </div>
 
       <div className="tabs" style={{ marginBottom: 20, maxWidth: 320 }}>
         <button className={`tab-btn ${tab==='discounts'?'active':''}`} onClick={() => setTab('discounts')}>Discounts ({discounts.length})</button>

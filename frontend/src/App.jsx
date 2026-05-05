@@ -57,15 +57,15 @@ const App = () => {
           <Route path="/bookings" element={<ProtectedRoute roles={['End_User', 'Admin', 'Super Admin']}><MyBookings /></ProtectedRoute>} />
 
           {/* Entity Routes */}
-          <Route path="/entity/dashboard" element={<ProtectedRoute roles={['Entity']}><EntityDashboard /></ProtectedRoute>} />
-          <Route path="/entity/events" element={<ProtectedRoute roles={['Entity']}><EventsManager /></ProtectedRoute>} />
-          <Route path="/entity/menu" element={<ProtectedRoute roles={['Entity']}><MenuManager /></ProtectedRoute>} />
-          <Route path="/entity/slots" element={<ProtectedRoute roles={['Entity']}><SlotManager /></ProtectedRoute>} />
-          <Route path="/entity/discounts" element={<ProtectedRoute roles={['Entity']}><DiscountManager /></ProtectedRoute>} />
-          <Route path="/entity/guests" element={<ProtectedRoute roles={['Entity']}><GuestList /></ProtectedRoute>} />
-          <Route path="/entity/bookings" element={<ProtectedRoute roles={['Entity']}><EntityBookings /></ProtectedRoute>} />
-          <Route path="/entity/whatsapp" element={<ProtectedRoute roles={['Entity']}><WhatsappPromo /></ProtectedRoute>} />
-          <Route path="/entity/settings" element={<ProtectedRoute roles={['Entity']}><EntitySettings /></ProtectedRoute>} />
+          <Route path="/entity/dashboard" element={<ProtectedRoute roles={['Entity', 'Admin', 'Super Admin']}><EntityDashboard /></ProtectedRoute>} />
+          <Route path="/entity/events" element={<ProtectedRoute roles={['Entity', 'Admin', 'Super Admin']}><EventsManager /></ProtectedRoute>} />
+          <Route path="/entity/menu" element={<ProtectedRoute roles={['Entity', 'Admin', 'Super Admin']}><MenuManager /></ProtectedRoute>} />
+          <Route path="/entity/slots" element={<ProtectedRoute roles={['Entity', 'Admin', 'Super Admin']}><SlotManager /></ProtectedRoute>} />
+          <Route path="/entity/discounts" element={<ProtectedRoute roles={['Entity', 'Admin', 'Super Admin']}><DiscountManager /></ProtectedRoute>} />
+          <Route path="/entity/guests" element={<ProtectedRoute roles={['Entity', 'Admin', 'Super Admin']}><GuestList /></ProtectedRoute>} />
+          <Route path="/entity/bookings" element={<ProtectedRoute roles={['Entity', 'Admin', 'Super Admin']}><EntityBookings /></ProtectedRoute>} />
+          <Route path="/entity/whatsapp" element={<ProtectedRoute roles={['Entity', 'Admin', 'Super Admin']}><WhatsappPromo /></ProtectedRoute>} />
+          <Route path="/entity/settings" element={<ProtectedRoute roles={['Entity', 'Admin', 'Super Admin']}><EntitySettings /></ProtectedRoute>} />
 
           {/* Admin Routes */}
           <Route path="/admin/dashboard" element={<ProtectedRoute roles={['Admin', 'Super Admin']}><AdminDashboard /></ProtectedRoute>} />
