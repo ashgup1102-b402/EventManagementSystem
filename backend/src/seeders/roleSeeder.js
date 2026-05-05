@@ -39,11 +39,12 @@ const seedRoles = async () => {
   const screens = [
     'Dashboard', 'Entity Management', 'User Management', 'Booking Management', 
     'Event Management', 'Menu Management', 'Slot Management', 'Discount Management',
-    'SMTP Settings', 'Business Rules', 'System Configuration', 'Audit Logs',
+    'Promotions', 'SMTP Settings', 'Business Rules', 'System Configuration', 'Audit Logs',
     'Role Management', 'Authorization', 'Category Management', 'Event Types', 'Performers', 'Menu Categories', 'Cuisine Types'
   ];
 
   const restrictedForAdmin = ['System Configuration', 'Event Types', 'Performers', 'Menu Categories', 'Cuisine Types'];
+  const readOnlyForAdmin = ['Event Management', 'Menu Management', 'Slot Management', 'Discount Management', 'Promotions'];
 
   for (const screen of screens) {
     // 1. Super Admin: Full Access to all
@@ -56,11 +57,19 @@ const seedRoles = async () => {
       }
     });
 
-    // 2. Admin: Full Access to most, restricted on specific screens
-    const adminPermission = restrictedForAdmin.includes(screen) ? 'None' : 'Full Access';
+    // 2. Admin: Logic for permissions
+    let adminPermission = 'Full Access';
+    if (restrictedForAdmin.includes(screen)) adminPermission = 'None';
+    if (readOnlyForAdmin.includes(screen)) adminPermission = 'Read Only';
+
     await Authorization.findOrCreate({
       where: { role_name: 'Admin', screen_name: screen },
       defaults: { role_name: 'Admin', screen_name: screen, permission: adminPermission }
+    }).then(([auth, created]) => {
+      // For existing installations, update the permission to match the new rules
+      if (!created && auth.permission !== adminPermission) {
+        return auth.update({ permission: adminPermission });
+      }
     });
 
     // 3. Entity & End_User: Default to None for administrative screens

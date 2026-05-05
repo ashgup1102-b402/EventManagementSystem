@@ -23,6 +23,10 @@ const EventsManager = () => {
   const { search: urlSearch } = useLocation()
   const queryParams = new URLSearchParams(urlSearch)
   const initialStatus = queryParams.get('status')
+  const mode = queryParams.get('mode') // 'view', 'edit_no_delete', or null
+  const isReadOnly = mode === 'view'
+  const noDelete = mode === 'edit_no_delete' || isReadOnly
+
 
   useEffect(() => {
     fetchInit()
@@ -91,6 +95,7 @@ const EventsManager = () => {
   }
 
   const save = async () => {
+    if (isReadOnly) return
     if (!validate()) return
     setSaving(true)
     try {
@@ -104,6 +109,7 @@ const EventsManager = () => {
   }
 
   const deactivate = async id => {
+    if (noDelete) return
     if (!window.confirm('Deactivate this event?')) return
     try {
       await api.delete(`/events/${id}`)
@@ -140,14 +146,20 @@ const EventsManager = () => {
               <p>Manage performance-based events and performer mapping.</p>
             </div>
           </div>
-          <button className="btn btn-primary" onClick={() => { setForm({ ticket_price:0, total_capacity:100, status:'Active' }); setModal('add'); }}>
-            + New Event
-          </button>
+          {!isReadOnly && (
+            <button className="btn btn-primary" onClick={() => { setForm({ ticket_price:0, total_capacity:100, status:'Active' }); setModal('add'); }}>
+              + New Event
+            </button>
+          )}
         </div>
       </div>
 
       {loading ? <div className="loading-center"><div className="spinner" /></div> : events.length === 0 ?
-        <div className="empty-state"><div className="empty-icon">🎭</div><h3>No events found</h3><button className="btn btn-primary mt-3" onClick={() => setModal('add')}>Create First Event</button></div> :
+        <div className="empty-state">
+          <div className="empty-icon">🎭</div>
+          <h3>No events found</h3>
+          {!isReadOnly && <button className="btn btn-primary mt-3" onClick={() => setModal('add')}>Create First Event</button>}
+        </div> :
         <div className="table-wrap">
           <table className="matrix-table">
             <thead>
@@ -181,12 +193,16 @@ const EventsManager = () => {
                   </td>
                   <td>
                     <div className="table-actions">
-                      <button className="btn btn-sm btn-light" onClick={() => { setForm({...ev}); setModal(ev); }}>Edit</button>
+                      <button className="btn btn-sm btn-light" onClick={() => { setForm({...ev}); setModal(ev); }}>
+                        {isReadOnly ? 'View' : 'Edit'}
+                      </button>
                       <button className="btn btn-sm btn-light" onClick={() => fetchHistory(ev.id)}>📜 History</button>
-                      {ev.status === 'Active' ? (
-                        <button className="btn btn-sm btn-danger" onClick={() => deactivate(ev.id)}>Deactivate</button>
-                      ) : (
-                        <button className="btn btn-sm btn-success" onClick={() => activate(ev.id)}>Activate</button>
+                      {!noDelete && (
+                        ev.status === 'Active' ? (
+                          <button className="btn btn-sm btn-danger" onClick={() => deactivate(ev.id)}>Deactivate</button>
+                        ) : (
+                          <button className="btn btn-sm btn-success" onClick={() => activate(ev.id)}>Activate</button>
+                        )
                       )}
                     </div>
                   </td>
@@ -201,26 +217,28 @@ const EventsManager = () => {
         <div className="modal-overlay">
           <div className="modal card" style={{ maxWidth: 600 }}>
             <div className="modal-header">
-              <h2>{modal === 'add' ? 'Create Event' : 'Edit Event'}</h2>
+              <h2>
+                {modal === 'add' ? 'Create Event' : (isReadOnly ? 'View Event' : 'Edit Event')}
+              </h2>
               <button className="modal-close" onClick={() => setModal(null)}>✕</button>
             </div>
             <div className="form-grid" style={{ gap: 16 }}>
               <div className="input-group">
                 <label>Event Name *</label>
-                <input className="input" value={form.name||''} onChange={set('name')} placeholder="e.g. Rock Night 2024" />
+                <input className="input" value={form.name||''} onChange={set('name')} placeholder="e.g. Rock Night 2024" disabled={isReadOnly} />
               </div>
 
               <div className="form-grid-2">
                 <div className="input-group">
                   <label>Event Type *</label>
-                  <select className="input" value={form.event_type_id||''} onChange={e => setForm({...form, event_type_id: e.target.value, performer_id: ''})}>
+                  <select className="input" value={form.event_type_id||''} onChange={e => setForm({...form, event_type_id: e.target.value, performer_id: ''})} disabled={isReadOnly}>
                     <option value="">Select Type</option>
                     {eventTypes.map(t => <option key={t.id} value={t.id}>{t.name}</option>)}
                   </select>
                 </div>
                 <div className="input-group">
                   <label>Performer</label>
-                  <select className="input" value={form.performer_id||''} onChange={set('performer_id')}>
+                  <select className="input" value={form.performer_id||''} onChange={set('performer_id')} disabled={isReadOnly}>
                     <option value="">Select Performer</option>
                     {filteredPerformers.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
                   </select>
@@ -229,21 +247,21 @@ const EventsManager = () => {
 
               <div className="input-group">
                 <label>Description</label>
-                <textarea className="input" value={form.description||''} onChange={set('description')} rows={2} />
+                <textarea className="input" value={form.description||''} onChange={set('description')} rows={2} disabled={isReadOnly} />
               </div>
 
               <div className="form-grid-3">
                 <div className="input-group">
                   <label>Start Date *</label>
-                  <input className="input" type="date" value={form.event_date||''} onChange={set('event_date')} />
+                  <input className="input" type="date" value={form.event_date||''} onChange={set('event_date')} disabled={isReadOnly} />
                 </div>
                 <div className="input-group">
                   <label>End Date</label>
-                  <input className="input" type="date" value={form.end_date||''} onChange={set('end_date')} min={form.event_date} />
+                  <input className="input" type="date" value={form.end_date||''} onChange={set('end_date')} min={form.event_date} disabled={isReadOnly} />
                 </div>
                 <div className="input-group">
                   <label>Status</label>
-                  <select className="input" value={form.status||'Active'} onChange={set('status')}>
+                  <select className="input" value={form.status||'Active'} onChange={set('status')} disabled={isReadOnly}>
                     <option value="Active">Active</option>
                     <option value="Inactive">Inactive</option>
                   </select>
@@ -253,28 +271,34 @@ const EventsManager = () => {
               <div className="form-grid-2">
                 <div className="input-group">
                   <label>Start Time *</label>
-                  <input className="input" type="time" value={form.start_time||''} onChange={set('start_time')} />
+                  <input className="input" type="time" value={form.start_time||''} onChange={set('start_time')} disabled={isReadOnly} />
                 </div>
                 <div className="input-group">
                   <label>End Time</label>
-                  <input className="input" type="time" value={form.end_time||''} onChange={set('end_time')} />
+                  <input className="input" type="time" value={form.end_time||''} onChange={set('end_time')} disabled={isReadOnly} />
                 </div>
               </div>
 
               <div className="form-grid-2">
                 <div className="input-group">
                   <label>Ticket Price (₹) *</label>
-                  <input className="input" type="number" min="0" value={form.ticket_price||0} onChange={set('ticket_price')} />
+                  <input className="input" type="number" min="0" value={form.ticket_price||0} onChange={set('ticket_price')} disabled={isReadOnly} />
                 </div>
                 <div className="input-group">
                   <label>Total Capacity *</label>
-                  <input className="input" type="number" min="1" value={form.total_capacity||100} onChange={set('total_capacity')} />
+                  <input className="input" type="number" min="1" value={form.total_capacity||100} onChange={set('total_capacity')} disabled={isReadOnly} />
                 </div>
               </div>
             </div>
             <div className="modal-footer">
-              <button className="btn btn-secondary" onClick={() => setModal(null)}>Cancel</button>
-              <button className="btn btn-primary" onClick={save} disabled={saving}>{saving ? 'Saving…' : 'Save Event'}</button>
+              <button className="btn btn-secondary" onClick={() => setModal(null)}>
+                {isReadOnly ? 'Close' : 'Cancel'}
+              </button>
+              {!isReadOnly && (
+                <button className="btn btn-primary" onClick={save} disabled={saving}>
+                  {saving ? 'Saving…' : 'Save Event'}
+                </button>
+              )}
             </div>
           </div>
         </div>

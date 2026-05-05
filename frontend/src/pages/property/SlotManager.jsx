@@ -23,6 +23,10 @@ const SlotManager = () => {
   const { search: urlSearch } = useLocation()
   const queryParams = new URLSearchParams(urlSearch)
   const initialActive = queryParams.get('is_active')
+  const mode = queryParams.get('mode')
+  const isReadOnly = mode === 'view'
+  const noDelete = mode === 'edit_no_delete' || isReadOnly
+
 
   useEffect(() => {
     fetchInitial()
@@ -82,6 +86,7 @@ const SlotManager = () => {
   const openEdit = slot => { setForm({ ...slot }); setModal(slot) }
 
   const save = async () => {
+    if (isReadOnly) return
     if (!form.slot_name || !form.slot_date || !form.start_time || !form.end_time) {
       return toast.error('Please fill required fields.')
     }
@@ -101,6 +106,7 @@ const SlotManager = () => {
   }
 
   const deactivate = async id => {
+    if (noDelete) return
     if (!window.confirm('Are you sure you want to set this slot to Inactive?')) return
     try {
       await api.delete(`/slots/${id}`)
@@ -139,7 +145,10 @@ const SlotManager = () => {
               <p>Manage table reservations and hall slots</p>
             </div>
           </div>
-          <button className="btn btn-primary" onClick={openAdd}>+ New Slot</button>
+          {!isReadOnly && (
+            <button className="btn btn-primary" onClick={openAdd}>+ New Slot</button>
+          )}
+
         </div>
       </div>
 
@@ -149,7 +158,7 @@ const SlotManager = () => {
         <div className="empty-state">
           <div className="empty-icon">📅</div>
           <h3>No slots configured</h3>
-          <button className="btn btn-primary mt-3" onClick={openAdd}>Create Slot</button>
+          {!isReadOnly && <button className="btn btn-primary mt-3" onClick={openAdd}>Create Slot</button>}
         </div>
       ) : (
         <div className="table-wrap">
@@ -184,12 +193,16 @@ const SlotManager = () => {
                   </td>
                   <td>
                     <div style={{ display:'flex', gap:6 }}>
-                      <button className="btn btn-secondary btn-sm" onClick={() => openEdit(s)}>Edit</button>
+                      <button className="btn btn-secondary btn-sm" onClick={() => openEdit(s)}>
+                        {isReadOnly ? 'View' : 'Edit'}
+                      </button>
                       <button className="btn btn-ghost btn-sm" onClick={() => fetchHistory(s.id)}>📜 History</button>
-                      {s.is_active ? (
-                        <button className="btn btn-danger btn-sm" onClick={() => deactivate(s.id)}>Deactivate</button>
-                      ) : (
-                        <button className="btn btn-success btn-sm" onClick={() => activate(s.id)}>Activate</button>
+                      {!noDelete && (
+                        s.is_active ? (
+                          <button className="btn btn-danger btn-sm" onClick={() => deactivate(s.id)}>Deactivate</button>
+                        ) : (
+                          <button className="btn btn-success btn-sm" onClick={() => activate(s.id)}>Activate</button>
+                        )
                       )}
                     </div>
                   </td>
@@ -204,18 +217,18 @@ const SlotManager = () => {
         <div className="modal-overlay" onClick={e => e.target===e.currentTarget && setModal(null)}>
           <div className="modal card" style={{ maxWidth: 700 }}>
             <div className="modal-header">
-              <h2>{modal === 'add' ? 'Create Slot' : 'Edit Slot'}</h2>
+              <h2>{modal === 'add' ? 'Create Slot' : (isReadOnly ? 'View Slot' : 'Edit Slot')}</h2>
               <button className="modal-close" onClick={() => setModal(null)}>✕</button>
             </div>
             <div className="form-grid" style={{ gap:14 }}>
               <div className="form-grid form-grid-2">
                 <div className="input-group">
                   <label>Slot Name *</label>
-                  <input className="input" value={form.slot_name||''} onChange={set('slot_name')} />
+                  <input className="input" value={form.slot_name||''} onChange={set('slot_name')} disabled={isReadOnly} />
                 </div>
                 <div className="input-group">
                   <label>Type *</label>
-                  <select className="input" value={form.slot_type||''} onChange={set('slot_type')}>
+                  <select className="input" value={form.slot_type||''} onChange={set('slot_type')} disabled={isReadOnly}>
                     {['hall','outdoor','rooftop','table','private_room'].map(t => (
                       <option key={t} value={t}>{t.replace('_',' ')}</option>
                     ))}
@@ -225,48 +238,50 @@ const SlotManager = () => {
               <div className="form-grid form-grid-3">
                 <div className="input-group">
                   <label>Date *</label>
-                  <input type="date" className="input" value={form.slot_date||''} onChange={set('slot_date')} />
+                  <input type="date" className="input" value={form.slot_date||''} onChange={set('slot_date')} disabled={isReadOnly} />
                 </div>
                 <div className="input-group">
                   <label>Start *</label>
-                  <input type="time" className="input" value={form.start_time||''} onChange={set('start_time')} />
+                  <input type="time" className="input" value={form.start_time||''} onChange={set('start_time')} disabled={isReadOnly} />
                 </div>
                 <div className="input-group">
                   <label>End *</label>
-                  <input type="time" className="input" value={form.end_time||''} onChange={set('end_time')} />
+                  <input type="time" className="input" value={form.end_time||''} onChange={set('end_time')} disabled={isReadOnly} />
                 </div>
               </div>
               <div className="form-grid form-grid-2">
                 <div className="input-group">
                   <label>Total Capacity *</label>
-                  <input type="number" className="input" value={form.total_capacity||''} onChange={set('total_capacity')} />
+                  <input type="number" className="input" value={form.total_capacity||''} onChange={set('total_capacity')} disabled={isReadOnly} />
                 </div>
                 <div className="input-group">
                   <label>Price / Head (₹)</label>
-                  <input type="number" className="input" value={form.price_per_head||''} onChange={set('price_per_head')} />
+                  <input type="number" className="input" value={form.price_per_head||''} onChange={set('price_per_head')} disabled={isReadOnly} />
                 </div>
               </div>
               <div className="form-grid form-grid-2">
                 <div className="input-group">
                   <label>Min Guests</label>
-                  <input type="number" className="input" value={form.min_guests||''} onChange={set('min_guests')} />
+                  <input type="number" className="input" value={form.min_guests||''} onChange={set('min_guests')} disabled={isReadOnly} />
                 </div>
                 <div className="input-group">
                   <label>Max Guests</label>
-                  <input type="number" className="input" value={form.max_guests||''} onChange={set('max_guests')} />
+                  <input type="number" className="input" value={form.max_guests||''} onChange={set('max_guests')} disabled={isReadOnly} />
                 </div>
               </div>
               <div className="input-group">
                 <label style={{ display:'flex', alignItems:'center', gap:8, cursor:'pointer' }}>
-                  <input type="checkbox" checked={form.is_active} onChange={set('is_active')} /> Active Status
+                  <input type="checkbox" checked={form.is_active} onChange={set('is_active')} disabled={isReadOnly} /> Active Status
                 </label>
               </div>
             </div>
             <div className="modal-footer">
-              <button className="btn btn-secondary" onClick={() => setModal(null)}>Cancel</button>
-              <button className="btn btn-primary" onClick={save} disabled={saving}>
-                {saving ? 'Saving…' : 'Save Slot'}
-              </button>
+              <button className="btn btn-secondary" onClick={() => setModal(null)}>{isReadOnly ? 'Close' : 'Cancel'}</button>
+              {!isReadOnly && (
+                <button className="btn btn-primary" onClick={save} disabled={saving}>
+                  {saving ? 'Saving…' : 'Save Slot'}
+                </button>
+              )}
             </div>
           </div>
         </div>

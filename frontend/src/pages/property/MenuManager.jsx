@@ -23,6 +23,10 @@ const MenuManager = () => {
   const { search: urlSearch } = useLocation()
   const queryParams = new URLSearchParams(urlSearch)
   const initialStatus = queryParams.get('status')
+  const mode = queryParams.get('mode')
+  const isReadOnly = mode === 'view'
+  const noDelete = mode === 'edit_no_delete' || isReadOnly
+
 
   useEffect(() => {
     fetchInit()
@@ -81,6 +85,7 @@ const MenuManager = () => {
   }
 
   const save = async () => {
+    if (isReadOnly) return
     if (!validate()) return
     setSaving(true)
     try {
@@ -95,6 +100,7 @@ const MenuManager = () => {
   }
 
   const deactivate = async id => {
+    if (noDelete) return
     if (!window.confirm('Deactivate this menu item?')) return
     try {
       await api.delete(`/menu/${id}`)
@@ -129,14 +135,20 @@ const MenuManager = () => {
               <p>Manage your food items, categories, and cuisine types.</p>
             </div>
           </div>
-          <button className="btn btn-primary" onClick={() => { setForm({ price:0, is_veg:true, is_available:true, status:'Active' }); setModal('add'); }}>
-            + Add Item
-          </button>
+          {!isReadOnly && (
+            <button className="btn btn-primary" onClick={() => { setForm({ price:0, is_veg:true, is_available:true, status:'Active' }); setModal('add'); }}>
+              + Add Item
+            </button>
+          )}
         </div>
       </div>
 
       {loading ? <div className="loading-center"><div className="spinner" /></div> : items.length === 0 ?
-        <div className="empty-state"><div className="empty-icon">🍽️</div><h3>No menu items</h3><button className="btn btn-primary mt-3" onClick={() => setModal('add')}>Add First Item</button></div> :
+        <div className="empty-state">
+          <div className="empty-icon">🍽️</div>
+          <h3>No menu items</h3>
+          {!isReadOnly && <button className="btn btn-primary mt-3" onClick={() => setModal('add')}>Add First Item</button>}
+        </div> :
         <div className="table-wrap">
           <table className="matrix-table">
             <thead>
@@ -166,12 +178,16 @@ const MenuManager = () => {
                   </td>
                   <td>
                     <div className="table-actions">
-                      <button className="btn btn-sm btn-light" onClick={() => { setForm({...item}); setModal(item); }}>Edit</button>
+                      <button className="btn btn-sm btn-light" onClick={() => { setForm({...item}); setModal(item); }}>
+                        {isReadOnly ? 'View' : 'Edit'}
+                      </button>
                       <button className="btn btn-sm btn-light" onClick={() => fetchHistory(item.id)}>📜 History</button>
-                      {item.status === 'Active' ? (
-                        <button className="btn btn-sm btn-danger" onClick={() => deactivate(item.id)}>Deactivate</button>
-                      ) : (
-                        <button className="btn btn-sm btn-success" onClick={() => activate(item.id)}>Activate</button>
+                      {!noDelete && (
+                        item.status === 'Active' ? (
+                          <button className="btn btn-sm btn-danger" onClick={() => deactivate(item.id)}>Deactivate</button>
+                        ) : (
+                          <button className="btn btn-sm btn-success" onClick={() => activate(item.id)}>Activate</button>
+                        )
                       )}
                     </div>
                   </td>
@@ -186,26 +202,26 @@ const MenuManager = () => {
         <div className="modal-overlay">
           <div className="modal card" style={{ maxWidth: 600 }}>
             <div className="modal-header">
-              <h2>{modal === 'add' ? 'Add Menu Item' : 'Edit Menu Item'}</h2>
+              <h2>{modal === 'add' ? 'Add Menu Item' : (isReadOnly ? 'View Menu Item' : 'Edit Menu Item')}</h2>
               <button className="modal-close" onClick={() => setModal(null)}>✕</button>
             </div>
             <div className="form-grid" style={{ gap: 16 }}>
               <div className="input-group">
                 <label>Item Name *</label>
-                <input className="input" value={form.name||''} onChange={set('name')} placeholder="e.g. Paneer Tikka" />
+                <input className="input" value={form.name||''} onChange={set('name')} placeholder="e.g. Paneer Tikka" disabled={isReadOnly} />
               </div>
 
               <div className="form-grid-2">
                 <div className="input-group">
                   <label>Category *</label>
-                  <select className="input" value={form.menu_category_id||''} onChange={set('menu_category_id')}>
+                  <select className="input" value={form.menu_category_id||''} onChange={set('menu_category_id')} disabled={isReadOnly}>
                     <option value="">Select Category</option>
                     {categories.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
                   </select>
                 </div>
                 <div className="input-group">
                   <label>Cuisine Type</label>
-                  <select className="input" value={form.cuisine_type_id||''} onChange={set('cuisine_type_id')}>
+                  <select className="input" value={form.cuisine_type_id||''} onChange={set('cuisine_type_id')} disabled={isReadOnly}>
                     <option value="">Select Cuisine</option>
                     {cuisines.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
                   </select>
@@ -214,17 +230,17 @@ const MenuManager = () => {
 
               <div className="input-group">
                 <label>Description</label>
-                <textarea className="input" value={form.description||''} onChange={set('description')} rows={2} />
+                <textarea className="input" value={form.description||''} onChange={set('description')} rows={2} disabled={isReadOnly} />
               </div>
 
               <div className="form-grid-2">
                 <div className="input-group">
                   <label>Price (₹) *</label>
-                  <input className="input" type="number" step="0.01" min="0" value={form.price||''} onChange={set('price')} />
+                  <input className="input" type="number" step="0.01" min="0" value={form.price||''} onChange={set('price')} disabled={isReadOnly} />
                 </div>
                 <div className="input-group">
                   <label>Status</label>
-                  <select className="input" value={form.status||'Active'} onChange={set('status')}>
+                  <select className="input" value={form.status||'Active'} onChange={set('status')} disabled={isReadOnly}>
                     <option value="Active">Active</option>
                     <option value="Inactive">Inactive</option>
                   </select>
@@ -233,16 +249,18 @@ const MenuManager = () => {
 
               <div style={{ display:'flex', gap:20, alignItems:'center' }}>
                 <label style={{ display:'flex', alignItems:'center', gap:8, cursor:'pointer' }}>
-                  <input type="checkbox" checked={form.is_veg} onChange={set('is_veg')} /> 🟢 Vegetarian
+                  <input type="checkbox" checked={form.is_veg} onChange={set('is_veg')} disabled={isReadOnly} /> 🟢 Vegetarian
                 </label>
                 <label style={{ display:'flex', alignItems:'center', gap:8, cursor:'pointer' }}>
-                  <input type="checkbox" checked={form.is_available} onChange={set('is_available')} /> Available In Inventory
+                  <input type="checkbox" checked={form.is_available} onChange={set('is_available')} disabled={isReadOnly} /> Available In Inventory
                 </label>
               </div>
             </div>
             <div className="modal-footer">
-              <button className="btn btn-secondary" onClick={() => setModal(null)}>Cancel</button>
-              <button className="btn btn-primary" onClick={save} disabled={saving}>{saving ? 'Saving…' : 'Save Item'}</button>
+              <button className="btn btn-secondary" onClick={() => setModal(null)}>{isReadOnly ? 'Close' : 'Cancel'}</button>
+              {!isReadOnly && (
+                <button className="btn btn-primary" onClick={save} disabled={saving}>{saving ? 'Saving…' : 'Save Item'}</button>
+              )}
             </div>
           </div>
         </div>

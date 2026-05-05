@@ -12,6 +12,8 @@ const EntityManager = () => {
   const [entities, setEntities] = useState([])
   const [loading, setLoading] = useState(true)
   const [modal, setModal] = useState(null)
+  const [auths, setAuths] = useState([])
+
   const [form, setForm] = useState({})
   const [saving, setSaving] = useState(false)
   const [categories, setCategories] = useState([])
@@ -70,7 +72,53 @@ const EntityManager = () => {
   useEffect(() => {
     loadEntities()
     loadCategories()
-  }, [])
+    if (currentUser) {
+      api.get('/auth/authorizations').then(r => {
+        setAuths(r.data.data.filter(a => a.role_name === currentUser.role))
+      }).catch(console.error)
+    }
+  }, [currentUser])
+
+  const getScreenPerm = (screenName) => {
+    if (currentUser?.role === 'Super Admin') return 'Full Access'
+    if (!auths || auths.length === 0) return 'Loading'
+    const auth = auths.find(a => a.screen_name.trim().toLowerCase() === screenName.trim().toLowerCase())
+    return auth ? auth.permission : 'None'
+  }
+
+  const renderModuleButton = (label, screen, path, icon) => {
+    const perm = getScreenPerm(screen)
+    const isDisabled = perm === 'None'
+    const isReadOnly = perm === 'Read Only'
+    const isEditOnly = perm === 'Read and Edit'
+    
+    let targetPath = `${path}?entityId=${modal?.id}`
+    if (isReadOnly) targetPath += '&mode=view'
+    if (isEditOnly) targetPath += '&mode=edit_no_delete'
+
+    if (isDisabled) {
+      return (
+        <button key={label} className="btn btn-secondary btn-sm" disabled style={{ opacity: 0.5, cursor: 'not-allowed' }}>
+          {icon} {label}
+        </button>
+      )
+    }
+
+    return (
+      <Link 
+        key={label}
+        to={targetPath} 
+        className="btn btn-secondary btn-sm" 
+        style={{ textDecoration: 'none' }}
+      >
+        {icon} {label}
+      </Link>
+    )
+  }
+
+  const screenPerm = getScreenPerm('Entity Management')
+  const canEdit = currentUser?.role === 'Super Admin' || screenPerm === 'Full Access' || screenPerm === 'Read and Edit' || screenPerm === 'Loading'
+  const isReadOnlyScreen = !canEdit || screenPerm === 'Read Only'
 
   const openAdd = () => { 
     setPhotoFile(null)
@@ -111,6 +159,7 @@ const EntityManager = () => {
       return toast.error('State and District are mandatory.')
     }
 
+    if (!canEdit) return
     if (modal === 'add' && currentUser?.role === 'Super Admin' && form.entity_code) {
       if (form.entity_code.length !== 8) {
         return toast.error('Entity Code must be exactly 8 characters.')
@@ -147,6 +196,7 @@ const EntityManager = () => {
   }
 
   const toggleStatus = async (ent) => {
+    if (!canEdit) return
     const newStatus = ent.status === 'Active' ? 'Inactive' : 'Active'
     if (!window.confirm(`Are you sure you want to set this entity to ${newStatus}?`)) return
     try {
@@ -221,7 +271,9 @@ const EntityManager = () => {
                 onChange={e => setSearch(e.target.value)}
               />
             </div>
-            <button className="btn btn-primary" onClick={openAdd}>+ Add Entity</button>
+            {canEdit && (
+              <button className="btn btn-primary" onClick={openAdd}>+ Add Entity</button>
+            )}
           </div>
         </div>
       </div>
@@ -297,35 +349,47 @@ const EntityManager = () => {
 
       {modal && (
         <div className="modal-overlay" onClick={e => e.target === e.currentTarget && setModal(null)}>
-          <div className="modal" style={{ maxWidth: 850 }}>
-            <div className="modal-header">
-              <h2>{modal === 'add' ? 'Add New Entity' : 'Edit Entity'}</h2>
-              <button className="modal-close" onClick={() => setModal(null)}>✕</button>
+          <div className="modal" style={{ maxWidth: 850, padding: 0, overflow: 'hidden', maxHeight: '90vh', display: 'flex', flexDirection: 'column' }}>
+            <div className="modal-header" style={{ 
+              background: 'var(--bg-tertiary)', 
+              padding: '20px 28px', 
+              margin: 0, 
+              borderBottom: '1px solid var(--border-subtle)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              flexShrink: 0
+            }}>
+              <h2 style={{ fontSize: '18px', fontWeight: 700, color: 'var(--text-primary)' }}>
+                {modal === 'add' ? 'Add New Entity' : 'Entity Management'}
+              </h2>
+              <button className="modal-close" onClick={() => setModal(null)} style={{ margin: 0 }}>✕</button>
             </div>
 
-            {modal !== 'add' && (
-              <div className="entity-management-quick-links" style={{ 
-                padding: '16px', 
-                background: 'var(--bg-secondary)', 
-                borderRadius: '12px', 
-                marginBottom: '20px',
-                display: 'flex',
-                flexDirection: 'column',
-                gap: '12px',
-                border: '1px solid var(--border-subtle)'
-              }}>
-                <div style={{ fontSize: '12px', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
-                  Management Modules
+            <div style={{ padding: '28px', overflowY: 'auto', flex: 1 }}>
+              {modal !== 'add' && (
+                <div className="entity-management-quick-links" style={{ 
+                  padding: '16px', 
+                  background: 'var(--bg-secondary)', 
+                  borderRadius: '12px', 
+                  marginBottom: '24px',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: '12px',
+                  border: '1px solid var(--border-subtle)'
+                }}>
+                  <div style={{ fontSize: '11px', fontWeight: 800, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '1px' }}>
+                    Quick Access Modules
+                  </div>
+                  <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+                    {renderModuleButton('Events', 'Event Management', '/entity/events', '📅')}
+                    {renderModuleButton('Menu', 'Menu Management', '/entity/menu', '🍔')}
+                    {renderModuleButton('Slots', 'Slot Management', '/entity/slots', '⏰')}
+                    {renderModuleButton('Discounts & Combos', 'Discount Management', '/entity/discounts', '🏷️')}
+                    {renderModuleButton('Promotions', 'Promotions', '/entity/whatsapp', '📱')}
+                  </div>
                 </div>
-                <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
-                  <Link to={`/entity/events?entityId=${modal.id}`} className="btn btn-secondary btn-sm" style={{ textDecoration: 'none' }}>📅 Events</Link>
-                  <Link to={`/entity/menu?entityId=${modal.id}`} className="btn btn-secondary btn-sm" style={{ textDecoration: 'none' }}>🍔 Menu</Link>
-                  <Link to={`/entity/slots?entityId=${modal.id}`} className="btn btn-secondary btn-sm" style={{ textDecoration: 'none' }}>⏰ Slots</Link>
-                  <Link to={`/entity/discounts?entityId=${modal.id}`} className="btn btn-secondary btn-sm" style={{ textDecoration: 'none' }}>🏷️ Discounts & Combos</Link>
-                  <Link to={`/entity/whatsapp?entityId=${modal.id}`} className="btn btn-secondary btn-sm" style={{ textDecoration: 'none' }}>📱 Promotions</Link>
-                </div>
-              </div>
-            )}
+              )}
             
             <div className="form-grid" style={{ gap: 14 }}>
               <div className="form-grid form-grid-3">
@@ -333,18 +397,18 @@ const EntityManager = () => {
                   <label>Entity Type *</label>
                   <div className="radio-group" style={{ display: 'flex', gap: 15, marginTop: 8 }}>
                     <label style={{ display: 'flex', alignItems: 'center', gap: 4, cursor: 'pointer', fontSize: 13 }}>
-                      <input type="radio" name="entity_type" value="Organization" checked={form.entity_type === 'Organization'} onChange={set('entity_type')} /> 
+                      <input type="radio" name="entity_type" value="Organization" checked={form.entity_type === 'Organization'} onChange={set('entity_type')} disabled={isReadOnlyScreen} /> 
                       Organization
                     </label>
                     <label style={{ display: 'flex', alignItems: 'center', gap: 4, cursor: 'pointer', fontSize: 13 }}>
-                      <input type="radio" name="entity_type" value="Individual" checked={form.entity_type === 'Individual'} onChange={set('entity_type')} /> 
+                      <input type="radio" name="entity_type" value="Individual" checked={form.entity_type === 'Individual'} onChange={set('entity_type')} disabled={isReadOnlyScreen} /> 
                       Individual
                     </label>
                   </div>
                 </div>
                 <div className="input-group">
                   <label>Category *</label>
-                  <select className="input" value={form.category_id||''} onChange={set('category_id')}>
+                  <select className="input" value={form.category_id||''} onChange={set('category_id')} disabled={isReadOnlyScreen}>
                     <option value="">Select Category</option>
                     {categories.map(c => 
                       <option key={c.id} value={c.id}>{c.name}</option>
@@ -353,7 +417,7 @@ const EntityManager = () => {
                 </div>
                 <div className="input-group">
                   <label>Unique Code *</label>
-                  <input className="input" value={form.entity_code||''} onChange={set('entity_code')} maxLength={8} placeholder="8 chars (e.g. AB123456)" />
+                  <input className="input" value={form.entity_code||''} onChange={set('entity_code')} maxLength={8} placeholder="8 chars (e.g. AB123456)" disabled={isReadOnlyScreen} />
                   <div style={{ fontSize: 11, color: 'var(--primary)', marginTop: 4 }}>
                     Revised ID: {(() => {
                       const date = modal === 'add' ? new Date() : new Date(modal.createdAt)
@@ -387,6 +451,7 @@ const EntityManager = () => {
                       onChange={e => setPhotoFile(e.target.files[0])} 
                       accept="image/*" 
                       style={{ fontSize: 12, padding: '8px', cursor: 'pointer' }}
+                      disabled={isReadOnlyScreen}
                     />
                   </div>
                 </div>
@@ -394,65 +459,65 @@ const EntityManager = () => {
 
               <div className="input-group">
                 <label>Entity Name *</label>
-                <input className="input" value={form.name||''} onChange={set('name')} placeholder="Unique Legal Name" />
+                <input className="input" value={form.name||''} onChange={set('name')} placeholder="Unique Legal Name" disabled={isReadOnlyScreen} />
               </div>
 
               <div className="form-grid form-grid-3">
                 <div className="input-group">
                   <label>PAN Number {form.entity_type === 'Individual' ? '*' : ''}</label>
-                  <input className="input" value={form.pan_number||''} onChange={set('pan_number')} maxLength={10} placeholder="ABCDE1234F" />
+                  <input className="input" value={form.pan_number||''} onChange={set('pan_number')} maxLength={10} placeholder="ABCDE1234F" disabled={isReadOnlyScreen} />
                 </div>
                 <div className="input-group">
                   <label>Aadhar Number {form.entity_type === 'Individual' ? '*' : ''}</label>
-                  <input className="input" value={form.aadhar_number||''} onChange={set('aadhar_number')} maxLength={12} placeholder="12-digit number" />
+                  <input className="input" value={form.aadhar_number||''} onChange={set('aadhar_number')} maxLength={12} placeholder="12-digit number" disabled={isReadOnlyScreen} />
                 </div>
                 <div className="input-group">
                   <label>GSTIN {form.entity_type === 'Organization' ? '*' : ''}</label>
-                  <input className="input" value={form.gst_number||''} onChange={set('gst_number')} maxLength={15} placeholder="15-digit GSTIN" />
+                  <input className="input" value={form.gst_number||''} onChange={set('gst_number')} maxLength={15} placeholder="15-digit GSTIN" disabled={isReadOnlyScreen} />
                 </div>
               </div>
 
               <div className="form-grid form-grid-2">
                 <div className="input-group">
                   <label>Mobile Number 1 *</label>
-                  <input className="input" value={form.mobile_1||''} onChange={set('mobile_1')} />
+                  <input className="input" value={form.mobile_1||''} onChange={set('mobile_1')} disabled={isReadOnlyScreen} />
                 </div>
                 <div className="input-group">
                   <label>Email ID</label>
-                  <input className="input" type="email" value={form.email||''} onChange={set('email')} />
+                  <input className="input" type="email" value={form.email||''} onChange={set('email')} disabled={isReadOnlyScreen} />
                 </div>
               </div>
 
               <div className="input-group">
                 <label>Address *</label>
-                <input className="input" value={form.address||''} onChange={set('address')} />
+                <input className="input" value={form.address||''} onChange={set('address')} disabled={isReadOnlyScreen} />
               </div>
 
               <div className="form-grid form-grid-2">
                 <div className="input-group">
                   <label>Country *</label>
-                  <select className="input" value={form.country||'India'} onChange={set('country')}>
+                  <select className="input" value={form.country||'India'} onChange={set('country')} disabled={isReadOnlyScreen}>
                     <option value="India">India</option>
                   </select>
                 </div>
                 <div className="form-grid form-grid-3">
                   <div className="input-group">
                     <label>State *</label>
-                    <select className="input" value={form.state||''} onChange={set('state')}>
+                    <select className="input" value={form.state||''} onChange={set('state')} disabled={isReadOnlyScreen}>
                       <option value="">Select State</option>
                       {states.map(s => <option key={s} value={s}>{s}</option>)}
                     </select>
                   </div>
                   <div className="input-group">
                     <label>District/City *</label>
-                    <select className="input" value={form.city||''} onChange={set('city')} disabled={!form.state}>
+                    <select className="input" value={form.city||''} onChange={set('city')} disabled={isReadOnlyScreen || !form.state}>
                       <option value="">Select District</option>
                       {cities.map(c => <option key={c} value={c}>{c}</option>)}
                     </select>
                   </div>
                   <div className="input-group">
                     <label>Status</label>
-                    <select className="input" value={form.status||'Active'} onChange={set('status')}>
+                    <select className="input" value={form.status||'Active'} onChange={set('status')} disabled={isReadOnlyScreen}>
                       <option value="Active">Active</option>
                       <option value="Inactive">Inactive</option>
                     </select>
@@ -465,13 +530,18 @@ const EntityManager = () => {
                   <p style={{ margin: 0, fontSize: 12 }}>Note: Creating an entity will automatically create a unique username (YYYYMMDD+CODE) and default password (Entity123) for this entity.</p>
                 </div>
               )}
+              </div>
             </div>
 
-            <div className="modal-footer">
-              <button className="btn btn-secondary" onClick={() => setModal(null)}>Cancel</button>
-              <button className="btn btn-primary" onClick={save} disabled={saving}>
-                {saving ? 'Saving…' : 'Save Entity'}
+            <div className="modal-footer" style={{ flexShrink: 0 }}>
+              <button className="btn btn-secondary" onClick={() => setModal(null)}>
+                {canEdit ? 'Cancel' : 'Close'}
               </button>
+              {canEdit && (
+                <button className="btn btn-primary" onClick={save} disabled={saving}>
+                  {saving ? 'Saving…' : 'Save Entity'}
+                </button>
+              )}
             </div>
           </div>
         </div>

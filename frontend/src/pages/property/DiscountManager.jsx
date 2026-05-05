@@ -25,6 +25,10 @@ const DiscountManager = () => {
   const { search: urlSearch } = useLocation()
   const queryParams = new URLSearchParams(urlSearch)
   const initialActive = queryParams.get('is_active')
+  const mode = queryParams.get('mode')
+  const isReadOnly = mode === 'view'
+  const noDelete = mode === 'edit_no_delete' || isReadOnly
+
 
   useEffect(() => {
     fetchInit()
@@ -88,6 +92,7 @@ const DiscountManager = () => {
   }
 
   const save = async () => {
+    if (isReadOnly) return
     setSaving(true)
     try {
       const payload = { ...form, property_id: entityId }
@@ -104,6 +109,8 @@ const DiscountManager = () => {
   }
 
   const deactivate = async (type, id) => {
+    if (isReadOnly) return
+    if (noDelete) return
     if (!window.confirm(`Deactivate this ${type}?`)) return
     try {
       if (type === 'discount') await api.delete(`/discounts/discounts/${id}`)
@@ -142,7 +149,12 @@ const DiscountManager = () => {
               <p>Manage offers, promos and combo deals</p>
             </div>
           </div>
-          <div style={{ display:'flex', gap:8 }}><button className="btn btn-primary" onClick={() => openDiscount(null)}>+ Discount</button><button className="btn btn-secondary" onClick={() => openCombo(null)}>+ Combo Deal</button></div>
+          {!isReadOnly && (
+            <div style={{ display:'flex', gap:8 }}>
+              <button className="btn btn-primary" onClick={() => openDiscount(null)}>+ Discount</button>
+              <button className="btn btn-secondary" onClick={() => openCombo(null)}>+ Combo Deal</button>
+            </div>
+          )}
         </div>
       </div>
 
@@ -168,12 +180,16 @@ const DiscountManager = () => {
                 <td><span className={`badge ${d.is_active?'badge-success':'badge-danger'}`}>{d.is_active?'Active':'Inactive'}</span></td>
                 <td>
                   <div style={{ display:'flex', gap:6 }}>
-                    <button className="btn btn-secondary btn-sm" onClick={() => openDiscount(d)}>Edit</button>
+                    <button className="btn btn-secondary btn-sm" onClick={() => openDiscount(d)}>
+                      {isReadOnly ? 'View' : 'Edit'}
+                    </button>
                     <button className="btn btn-ghost btn-sm" onClick={() => fetchHistory('discount', d.id)}>📜</button>
-                    {d.is_active ? (
-                      <button className="btn btn-danger btn-sm" onClick={() => deactivate('discount', d.id)}>✕</button>
-                    ) : (
-                      <button className="btn btn-success btn-sm" onClick={() => activate('discount', d.id)}>✓</button>
+                    {!noDelete && (
+                      d.is_active ? (
+                        <button className="btn btn-danger btn-sm" onClick={() => deactivate('discount', d.id)}>✕</button>
+                      ) : (
+                        <button className="btn btn-success btn-sm" onClick={() => activate('discount', d.id)}>✓</button>
+                      )
                     )}
                   </div>
                 </td>
@@ -202,10 +218,12 @@ const DiscountManager = () => {
             </div>
             <div style={{ marginTop:16, display:'flex', gap:8, borderTop: '1px solid var(--border-color)', paddingTop: 12 }}>
               <button className="btn btn-ghost btn-sm" onClick={() => fetchHistory('combo', c.id)}>📜 History</button>
-              {c.is_active ? (
-                <button className="btn btn-danger btn-sm" onClick={() => deactivate('combo', c.id)}>Deactivate</button>
-              ) : (
-                <button className="btn btn-success btn-sm" onClick={() => activate('combo', c.id)}>Activate</button>
+              {!noDelete && (
+                c.is_active ? (
+                  <button className="btn btn-danger btn-sm" onClick={() => deactivate('combo', c.id)}>Deactivate</button>
+                ) : (
+                  <button className="btn btn-success btn-sm" onClick={() => activate('combo', c.id)}>Activate</button>
+                )
               )}
             </div>
           </div>
@@ -215,40 +233,45 @@ const DiscountManager = () => {
       {modal && (
         <div className="modal-overlay" onClick={e => e.target===e.currentTarget && setModal(null)}>
           <div className="modal card" style={{ maxWidth: 600 }}>
-            <div className="modal-header"><h2>{modal.item ? 'Edit' : 'Create'} {modal.type === 'discount' ? 'Discount' : 'Combo Deal'}</h2><button className="modal-close" onClick={() => setModal(null)}>✕</button></div>
+            <div className="modal-header"><h2>{modal.item ? (isReadOnly ? 'View' : 'Edit') : 'Create'} {modal.type === 'discount' ? 'Discount' : 'Combo Deal'}</h2><button className="modal-close" onClick={() => setModal(null)}>✕</button></div>
             <div className="form-grid" style={{ gap:14 }}>
-              <div className="input-group"><label>Name *</label><input className="input" value={form.name||''} onChange={set('name')} /></div>
+              <div className="input-group"><label>Name *</label><input className="input" value={form.name||''} onChange={set('name')} disabled={isReadOnly} /></div>
               {modal.type === 'discount' ? <>
                 <div className="form-grid form-grid-2">
-                  <div className="input-group"><label>Type</label><select className="input" value={form.discount_type||''} onChange={set('discount_type')}><option value="percentage">Percentage</option><option value="flat">Flat Amount</option></select></div>
-                  <div className="input-group"><label>Value *</label><input className="input" type="number" value={form.discount_value||''} onChange={set('discount_value')} placeholder={form.discount_type==='percentage'?'e.g. 10':'e.g. 100'} /></div>
+                  <div className="input-group"><label>Type</label><select className="input" value={form.discount_type||''} onChange={set('discount_type')} disabled={isReadOnly}><option value="percentage">Percentage</option><option value="flat">Flat Amount</option></select></div>
+                  <div className="input-group"><label>Value *</label><input className="input" type="number" value={form.discount_value||''} onChange={set('discount_value')} placeholder={form.discount_type==='percentage'?'e.g. 10':'e.g. 100'} disabled={isReadOnly} /></div>
                 </div>
                 <div className="form-grid form-grid-2">
-                  <div className="input-group"><label>Applies To</label><select className="input" value={form.applicable_on||''} onChange={set('applicable_on')}>{['total','all_menu','all_events','menu_item','event','slot','combo_deal'].map(o => <option key={o} value={o}>{o.replace('_',' ')}</option>)}</select></div>
-                  <div className="input-group"><label>Promo Code</label><input className="input" value={form.promo_code||''} onChange={set('promo_code')} placeholder="Optional" /></div>
+                  <div className="input-group"><label>Applies To</label><select className="input" value={form.applicable_on||''} onChange={set('applicable_on')} disabled={isReadOnly}>{['total','all_menu','all_events','menu_item','event','slot','combo_deal'].map(o => <option key={o} value={o}>{o.replace('_',' ')}</option>)}</select></div>
+                  <div className="input-group"><label>Promo Code</label><input className="input" value={form.promo_code||''} onChange={set('promo_code')} placeholder="Optional" disabled={isReadOnly} /></div>
                 </div>
                 <div className="form-grid form-grid-2">
-                  <div className="input-group"><label>Min Booking ₹</label><input className="input" type="number" value={form.min_booking_amount||''} onChange={set('min_booking_amount')} /></div>
-                  <div className="input-group"><label>Max Discount ₹</label><input className="input" type="number" value={form.max_discount_amount||''} onChange={set('max_discount_amount')} /></div>
+                  <div className="input-group"><label>Min Booking ₹</label><input className="input" type="number" value={form.min_booking_amount||''} onChange={set('min_booking_amount')} disabled={isReadOnly} /></div>
+                  <div className="input-group"><label>Max Discount ₹</label><input className="input" type="number" value={form.max_discount_amount||''} onChange={set('max_discount_amount')} disabled={isReadOnly} /></div>
                 </div>
               </> : <>
-                <div className="input-group"><label>Description</label><textarea className="input" value={form.description||''} onChange={set('description')} rows={2} /></div>
+                <div className="input-group"><label>Description</label><textarea className="input" value={form.description||''} onChange={set('description')} rows={2} disabled={isReadOnly} /></div>
                 <div className="form-grid form-grid-2">
-                  <div className="input-group"><label>Original Price ₹ *</label><input className="input" type="number" value={form.original_price||''} onChange={set('original_price')} /></div>
-                  <div className="input-group"><label>Deal Price ₹ *</label><input className="input" type="number" value={form.deal_price||''} onChange={set('deal_price')} /></div>
+                  <div className="input-group"><label>Original Price ₹ *</label><input className="input" type="number" value={form.original_price||''} onChange={set('original_price')} disabled={isReadOnly} /></div>
+                  <div className="input-group"><label>Deal Price ₹ *</label><input className="input" type="number" value={form.deal_price||''} onChange={set('deal_price')} disabled={isReadOnly} /></div>
                 </div>
               </>}
               <div className="form-grid form-grid-2">
-                <div className="input-group"><label>Valid From</label><input className="input" type="date" value={form.valid_from||''} onChange={set('valid_from')} /></div>
-                <div className="input-group"><label>Valid To</label><input className="input" type="date" value={form.valid_to||''} onChange={set('valid_to')} /></div>
+                <div className="input-group"><label>Valid From</label><input className="input" type="date" value={form.valid_from||''} onChange={set('valid_from')} disabled={isReadOnly} /></div>
+                <div className="input-group"><label>Valid To</label><input className="input" type="date" value={form.valid_to||''} onChange={set('valid_to')} disabled={isReadOnly} /></div>
               </div>
               <div className="input-group">
                 <label style={{ display:'flex', alignItems:'center', gap:8, cursor:'pointer' }}>
-                  <input type="checkbox" checked={form.is_active} onChange={set('is_active')} /> Active Status
+                  <input type="checkbox" checked={form.is_active} onChange={set('is_active')} disabled={isReadOnly} /> Active Status
                 </label>
               </div>
             </div>
-            <div className="modal-footer"><button className="btn btn-secondary" onClick={() => setModal(null)}>Cancel</button><button className="btn btn-primary" onClick={save} disabled={saving}>{saving ? 'Saving…' : 'Save'}</button></div>
+            <div className="modal-footer">
+              <button className="btn btn-secondary" onClick={() => setModal(null)}>{isReadOnly ? 'Close' : 'Cancel'}</button>
+              {!isReadOnly && (
+                <button className="btn btn-primary" onClick={save} disabled={saving}>{saving ? 'Saving…' : 'Save'}</button>
+              )}
+            </div>
           </div>
         </div>
       )}

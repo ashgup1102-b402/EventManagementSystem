@@ -7,7 +7,7 @@ import { useAuth } from '../../context/AuthContext'
 const SCREENS = [
   'Dashboard', 'Entity Management', 'User Management', 'Booking Management', 
   'Event Management', 'Menu Management', 'Slot Management', 'Discount Management',
-  'SMTP Settings', 'Business Rules', 'System Configuration', 'Audit Logs',
+  'Promotions', 'SMTP Settings', 'Business Rules', 'System Configuration', 'Audit Logs',
   'Role Management', 'Authorization', 'Category Management',
   'Event Types', 'Performers', 'Menu Categories', 'Cuisine Types'
 ]
