@@ -37,6 +37,7 @@ import AuthorizationMatrix from './pages/superadmin/AuthorizationMatrix'
 import CategoryManagement from './pages/superadmin/CategoryManagement'
 import MasterManagement from './pages/superadmin/MasterManagement'
 import SystemConfig from './pages/superadmin/SystemConfig'
+import AuditLogs from './pages/superadmin/AuditLogs'
 import Placeholder from './pages/Placeholder'
 
 const App = () => {
@@ -82,7 +83,7 @@ const App = () => {
           <Route path="/superadmin/categories" element={<ProtectedRoute roles={['Super Admin']}><CategoryManagement /></ProtectedRoute>} />
           <Route path="/superadmin/masters/:type" element={<ProtectedRoute roles={['Super Admin']}><MasterManagement /></ProtectedRoute>} />
           <Route path="/superadmin/config" element={<ProtectedRoute roles={['Super Admin']}><SystemConfig /></ProtectedRoute>} />
-          <Route path="/superadmin/audit" element={<ProtectedRoute roles={['Super Admin']}><Placeholder title="Audit Logs" /></ProtectedRoute>} />
+          <Route path="/superadmin/audit" element={<ProtectedRoute roles={['Super Admin']}><AuditLogs /></ProtectedRoute>} />
 
           {/* Fallback */}
           <Route path="/unauthorized" element={<div style={{ textAlign: 'center', padding: '100px 20px' }}><h2>403 - Unauthorized</h2><p>You do not have permission to view this page.</p><a href="/search" style={{ color: 'var(--brand-primary)' }}>Return Home</a></div>} />

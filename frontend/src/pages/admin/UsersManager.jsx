@@ -14,6 +14,7 @@ const UsersManager = () => {
   const [modal, setModal] = useState(null)
   const [form, setForm] = useState({})
   const [saving, setSaving] = useState(false)
+  const [showPass, setShowPass] = useState(false)
   
   // Get initial search from URL if present (e.g. /admin/users?status=Active)
   const queryParams = new URLSearchParams(location.search)
@@ -224,7 +225,7 @@ const UsersManager = () => {
                 <tr key={u.id} className={u.status === 'Inactive' ? 'row-inactive' : ''}>
                   <td>
                     <div style={{ fontWeight: 600, color: 'var(--brand-primary)' }}>{u.username}</div>
-                    <div style={{ fontSize: 13, fontWeight: 500 }}>{u.first_name} {u.last_name}</div>
+                    <div style={{ fontSize: 13, fontWeight: 500, marginTop: 4 }}>{u.first_name} {u.last_name}</div>
                     {u.role === 'Entity' && (
                       <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>
                         Property: {entities.find(e => e.entity_user_id === u.id)?.name || 'Unmapped'}
@@ -334,7 +335,31 @@ const UsersManager = () => {
 
               <div className="input-group">
                 <label>{modal === 'add' ? 'Password *' : 'New Password (leave blank to keep current)'}</label>
-                <input className="input" type="password" value={form.password||''} onChange={set('password')} />
+                <div style={{ position: 'relative' }}>
+                  <input 
+                    className="input" 
+                    type={showPass ? 'text' : 'password'} 
+                    value={form.password||''} 
+                    onChange={set('password')} 
+                    style={{ paddingRight: '40px' }}
+                  />
+                  <button 
+                    type="button" 
+                    onClick={() => setShowPass(!showPass)}
+                    style={{
+                      position: 'absolute',
+                      right: '10px',
+                      top: '50%',
+                      transform: 'translateY(-50%)',
+                      background: 'none',
+                      border: 'none',
+                      cursor: 'pointer',
+                      fontSize: '16px'
+                    }}
+                  >
+                    {showPass ? '👁️' : '🙈'}
+                  </button>
+                </div>
               </div>
 
               <div className="input-group">
