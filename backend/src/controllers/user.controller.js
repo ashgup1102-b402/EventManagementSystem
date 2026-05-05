@@ -143,7 +143,7 @@ const update = async (req, res, next) => {
           },
           include: [{
             model: Entity,
-            as: 'mapped_entity', // I need to make sure this association exists or query Entity
+            as: 'entity',
             where: { id: targetEntityId }
           }]
         });
