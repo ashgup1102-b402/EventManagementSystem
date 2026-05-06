@@ -92,9 +92,16 @@ const SlotManager = () => {
     }
     setSaving(true)
     try {
-      const payload = { ...form, property_id: entityId }
-      if (modal === 'add') await api.post('/slots', payload)
-      else await api.put(`/slots/${modal.id}`, payload)
+      const fd = new FormData();
+      Object.keys(form).forEach(k => {
+        if (k === 'image' && typeof form[k] === 'string') return;
+        if (['entity', 'property_id', 'createdAt', 'updatedAt', 'id'].includes(k)) return;
+        if (form[k] !== null && form[k] !== undefined) fd.append(k, form[k]);
+      });
+      fd.append('property_id', entityId);
+
+      if (modal === 'add') await api.post('/slots', fd)
+      else await api.put(`/slots/${modal.id}`, fd)
       toast.success('Slot saved!')
       setModal(null)
       fetchSlots(entityId)
@@ -268,6 +275,13 @@ const SlotManager = () => {
                   <label>Max Guests</label>
                   <input type="number" className="input" value={form.max_guests||''} onChange={set('max_guests')} disabled={isReadOnly} />
                 </div>
+              </div>
+              <div className="input-group">
+                <label>Slot Image</label>
+                <input type="file" className="input" accept="image/*" onChange={e => setForm(f => ({ ...f, image: e.target.files[0] }))} disabled={isReadOnly} />
+                {form.image && typeof form.image === 'string' && (
+                  <img src={`http://localhost:5000${form.image}`} alt="Preview" style={{ width: 60, height: 40, marginTop: 8, borderRadius: 4, objectFit: 'cover' }} />
+                )}
               </div>
               <div className="input-group">
                 <label style={{ display:'flex', alignItems:'center', gap:8, cursor:'pointer' }}>

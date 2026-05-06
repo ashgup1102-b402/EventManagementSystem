@@ -19,7 +19,8 @@ const NAV = {
     { to: '/entity/discounts', icon: '🏷️', label: 'Discounts & Combos' },
     { to: '/entity/bookings', icon: '🎟️', label: 'Bookings' },
     { to: '/entity/guests', icon: '👥', label: 'Guest List' },
-    { to: '/entity/whatsapp', icon: '💬', label: 'Promotions' },
+    { to: '/entity/whatsapp', icon: '💬', label: 'Direct Marketing' },
+    { to: '/entity/promotions', icon: '🚀', label: 'Promotions' },
     { to: '/entity/settings', icon: '⚙️', label: 'Entity Settings' },
   ],
   Admin: [
@@ -62,7 +63,7 @@ const Sidebar = () => {
   const BASE_URL = 'http://localhost:5000'; // Define backend base URL
   
   useEffect(() => {
-    api.get('/config').then(r => {
+    api.get('/config/public').then(r => {
       if (r.data?.data) {
         setSiteConfig(r.data.data)
       }

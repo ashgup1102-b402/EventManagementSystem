@@ -1,4 +1,4 @@
-const { Entity, Event, MenuItem, Booking, User, EventType, Performer, MenuCategory, CuisineType } = require('../models');
+const { Entity, Event, MenuItem, Booking, User, EventType, Performer, MenuCategory, CuisineType, EntitySlot, Discount, ComboDeal, Promotion } = require('../models');
 const { Op, fn, col, literal } = require('sequelize');
 
 // GET /api/search
@@ -41,10 +41,10 @@ const search = async (req, res, next) => {
     const eventWhere = { is_active: true, status: 'Active' };
     if (etIds.length > 0) eventWhere.event_type_id = { [Op.in]: etIds };
     if (pIds.length > 0) eventWhere.performer_id = { [Op.in]: pIds };
-    if (date) eventWhere.event_date = date;
-    if (min_price) eventWhere.ticket_price = { [Op.gte]: parseFloat(min_price) };
-    if (max_price) {
-      eventWhere.ticket_price = { ...eventWhere.ticket_price, [Op.lte]: parseFloat(max_price) };
+    if (date && date !== '') eventWhere.event_date = date;
+    if (min_price && !isNaN(min_price)) eventWhere.ticket_price = { [Op.gte]: parseFloat(min_price) };
+    if (max_price && !isNaN(max_price)) {
+      eventWhere.ticket_price = { ...(eventWhere.ticket_price || {}), [Op.lte]: parseFloat(max_price) };
     }
     if (q) {
       eventWhere[Op.or] = [
@@ -65,90 +65,86 @@ const search = async (req, res, next) => {
     if (is_veg !== undefined && is_veg !== '') menuWhere.is_veg = is_veg === 'true';
     if (q) menuWhere.name = { [Op.iLike]: `%${q}%` };
 
-    const [entities, events, menuItems] = await Promise.all([
+    const [entities, events, menuItems, slots, discounts, combos, promos] = await Promise.all([
       Entity.findAndCountAll({
         where: propWhere, limit: parseInt(limit), offset,
         attributes: ['id','name','description','city','state','category','cover_image','rating','total_reviews','cuisine_types','is_featured'],
         order: [['is_featured','DESC'],['rating','DESC']]
       }),
       Event.findAndCountAll({
-        where: eventWhere, limit: parseInt(limit), offset,
+        where: {
+          ...eventWhere,
+          [Op.and]: [
+            { '$event_type_ref.status$': { [Op.or]: [{ [Op.eq]: null }, 'Active'] } },
+            { '$performer_ref.status$': { [Op.or]: [{ [Op.eq]: null }, 'Active'] } }
+          ]
+        },
+        limit: parseInt(limit), offset,
         include: [
           { 
-            model: Entity, 
-            as: 'entity', 
+            model: Entity, as: 'entity', 
             attributes: ['id','name','city','cover_image'],
             where: { status: 'Active', ...(city ? { city: { [Op.iLike]: `%${city}%` } } : {}) },
             required: true
           },
-          {
-            model: EventType,
-            as: 'event_type_ref',
-            attributes: ['id', 'name', 'status'],
-            required: false
-          },
-          {
-            model: Performer,
-            as: 'performer_ref',
-            attributes: ['id', 'name', 'status'],
-            required: false
-          }
+          { model: EventType, as: 'event_type_ref', attributes: ['id', 'name', 'status'], required: false },
+          { model: Performer, as: 'performer_ref', attributes: ['id', 'name', 'status'], required: false }
         ],
-        // Manual filter for association status to allow NULLs but block Inactive
-        where: {
-          [Op.and]: [
-            eventWhere,
-            literal(`("event_type_ref"."status" IS NULL OR "event_type_ref"."status" = 'Active')`),
-            literal(`("performer_ref"."status" IS NULL OR "performer_ref"."status" = 'Active')`)
-          ]
-        },
         order: [['event_date','ASC']]
       }),
       MenuItem.findAndCountAll({
-        where: menuWhere, limit: parseInt(limit), offset,
+        where: {
+          ...menuWhere,
+          [Op.and]: [
+            { '$menu_category_ref.status$': { [Op.or]: [{ [Op.eq]: null }, 'Active'] } },
+            { '$cuisine_type_ref.status$': { [Op.or]: [{ [Op.eq]: null }, 'Active'] } }
+          ]
+        },
+        limit: parseInt(limit), offset,
         include: [
           { 
-            model: Entity, 
-            as: 'entity', 
+            model: Entity, as: 'entity', 
             attributes: ['id','name','city','cover_image'],
             where: { status: 'Active', ...(city ? { city: { [Op.iLike]: `%${city}%` } } : {}) },
             required: true
           },
-          {
-            model: MenuCategory,
-            as: 'menu_category_ref',
-            attributes: ['id', 'name', 'status'],
-            required: false
-          },
-          {
-            model: CuisineType,
-            as: 'cuisine_type_ref',
-            attributes: ['id', 'name', 'status'],
-            required: false
-          }
+          { model: MenuCategory, as: 'menu_category_ref', attributes: ['id', 'name', 'status'], required: false },
+          { model: CuisineType, as: 'cuisine_type_ref', attributes: ['id', 'name', 'status'], required: false }
         ],
-        where: {
-          [Op.and]: [
-            menuWhere,
-            literal(`("menu_category_ref"."status" IS NULL OR "menu_category_ref"."status" = 'Active')`),
-            literal(`("cuisine_type_ref"."status" IS NULL OR "cuisine_type_ref"."status" = 'Active')`)
-          ]
-        },
         order: [['is_featured','DESC'],['name','ASC']]
+      }),
+      EntitySlot.findAndCountAll({
+        where: { is_active: true, ...(q ? { slot_name: { [Op.iLike]: `%${q}%` } } : {}) },
+        limit: parseInt(limit), offset,
+        include: [{ model: Entity, as: 'entity', attributes: ['id','name','city'], where: { status: 'Active', ...(city ? { city: { [Op.iLike]: `%${city}%` } } : {}) }, required: true }]
+      }),
+      Discount.findAndCountAll({
+        where: { is_active: true, ...(q ? { name: { [Op.iLike]: `%${q}%` } } : {}) },
+        limit: parseInt(limit), offset,
+        include: [{ model: Entity, as: 'entity', attributes: ['id','name','city'], where: { status: 'Active', ...(city ? { city: { [Op.iLike]: `%${city}%` } } : {}) }, required: true }]
+      }),
+      ComboDeal.findAndCountAll({
+        where: { is_active: true, ...(q ? { name: { [Op.iLike]: `%${q}%` } } : {}) },
+        limit: parseInt(limit), offset,
+        include: [{ model: Entity, as: 'entity', attributes: ['id','name','city'], where: { status: 'Active', ...(city ? { city: { [Op.iLike]: `%${city}%` } } : {}) }, required: true }]
+      }),
+      Promotion.findAndCountAll({
+        where: { is_active: true, ...(q ? { title: { [Op.iLike]: `%${q}%` } } : {}) },
+        limit: parseInt(limit), offset,
+        include: [{ model: Entity, as: 'entity', attributes: ['id','name','city'], where: { status: 'Active', ...(city ? { city: { [Op.iLike]: `%${city}%` } } : {}) }, required: true }]
       })
     ]);
-
-    // Post-filtering for the (ref is null OR ref.status = 'Active') logic if needed, 
-    // or use Op.or in include. Actually, the above include will filter out rows where ref.status != 'Active' 
-    // BUT only if they have a ref. If they don't have a ref, they will still show up (because required: false).
-    // This is exactly what we want: Master data only blocks if it EXISTS and is Inactive.
 
     res.json({
       success: true,
       data: {
         properties: { rows: entities.rows, total: entities.count },
         events: { rows: events.rows, total: events.count },
-        menu_items: { rows: menuItems.rows, total: menuItems.count }
+        menu_items: { rows: menuItems.rows, total: menuItems.count },
+        slots: { rows: slots.rows, total: slots.count },
+        discounts: { rows: discounts.rows, total: discounts.count },
+        combos: { rows: combos.rows, total: combos.count },
+        promotions: { rows: promos.rows, total: promos.count }
       },
       meta: { query: q, page: parseInt(page), limit: parseInt(limit) }
     });

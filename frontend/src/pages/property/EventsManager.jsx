@@ -99,9 +99,18 @@ const EventsManager = () => {
     if (!validate()) return
     setSaving(true)
     try {
-      const payload = { ...form, property_id: entityId }
-      if (modal === 'add') { await api.post('/events', payload); toast.success('Event created!') }
-      else { await api.put(`/events/${modal.id}`, payload); toast.success('Event updated!') }
+      const fd = new FormData();
+      Object.keys(form).forEach(k => {
+        // Skip keys that are handled separately, calculated fields, or are objects/refs
+        if (k === 'image' && typeof form[k] === 'string') return;
+        if (['entity', 'event_type_ref', 'performer_ref', 'property_id', 'booked_count', 'createdAt', 'updatedAt', 'id'].includes(k)) return;
+        
+        if (form[k] !== null && form[k] !== undefined) fd.append(k, form[k]);
+      });
+      fd.append('property_id', entityId);
+
+      if (modal === 'add') { await api.post('/events', fd); toast.success('Event created!') }
+      else { await api.put(`/events/${modal.id}`, fd); toast.success('Event updated!') }
       setModal(null)
       fetchEvents(entityId)
     } catch (err) { toast.error(err.response?.data?.message || 'Failed.') }
@@ -288,6 +297,14 @@ const EventsManager = () => {
                   <label>Total Capacity *</label>
                   <input className="input" type="number" min="1" value={form.total_capacity||100} onChange={set('total_capacity')} disabled={isReadOnly} />
                 </div>
+              </div>
+
+              <div className="input-group">
+                <label>Event Banner</label>
+                <input type="file" className="input" accept="image/*" onChange={e => setForm(f => ({ ...f, image: e.target.files[0] }))} disabled={isReadOnly} />
+                {form.image && typeof form.image === 'string' && (
+                  <img src={`http://localhost:5000${form.image}`} alt="Preview" style={{ width: 60, height: 40, marginTop: 8, borderRadius: 4, objectFit: 'cover' }} />
+                )}
               </div>
             </div>
             <div className="modal-footer">

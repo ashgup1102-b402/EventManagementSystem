@@ -12,7 +12,7 @@ const Navbar = () => {
   const [scrolled, setScrolled] = useState(false)
 
   useEffect(() => {
-    api.get('/config').then(r => {
+    api.get('/config/public').then(r => {
       if (r.data?.data) setSiteConfig(r.data.data)
     }).catch(() => {})
 

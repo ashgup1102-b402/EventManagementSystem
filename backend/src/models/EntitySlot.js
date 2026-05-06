@@ -18,6 +18,7 @@ const PropertySlot = sequelize.define('PropertySlot', {
   min_guests:      { type: DataTypes.INTEGER, defaultValue: 1 },
   max_guests:      { type: DataTypes.INTEGER, defaultValue: 10 },
   description:     { type: DataTypes.TEXT, allowNull: true },
+  image:           { type: DataTypes.STRING, allowNull: true },
   is_active:       { type: DataTypes.BOOLEAN, defaultValue: true }
 }, { tableName: 'property_slots' });
 

@@ -25,6 +25,7 @@ const slotRoutes = require('./routes/slot.routes');
 const categoryRoutes = require('./routes/category.routes');
 const masterRoutes = require('./routes/master.routes');
 const auditRoutes = require('./routes/audit.routes');
+const promotionRoutes = require('./routes/promotion.routes');
 
 const app = express();
 
@@ -86,6 +87,7 @@ app.use('/api/slots', slotRoutes);
 app.use('/api/categories', categoryRoutes);
 app.use('/api/masters', masterRoutes);
 app.use('/api/audit', auditRoutes);
+app.use('/api/promotions', promotionRoutes);
 
 // Health check
 app.get('/api/health', (req, res) => {

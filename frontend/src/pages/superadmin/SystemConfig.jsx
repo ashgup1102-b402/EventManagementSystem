@@ -28,6 +28,7 @@ const SystemConfig = () => {
       if (logoFile) {
         const formData = new FormData();
         Object.keys(form).forEach(key => {
+          if (['id', 'createdAt', 'updatedAt', 'site_logo'].includes(key)) return;
           if (form[key] !== null && form[key] !== undefined) {
             formData.append(key, form[key]);
           }

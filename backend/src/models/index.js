@@ -18,6 +18,7 @@ const EventType = require('./EventType');
 const Performer = require('./Performer');
 const MenuCategory = require('./MenuCategory');
 const CuisineType = require('./CuisineType');
+const Promotion = require('./Promotion');
 
 // ─── Associations ──────────────────────────────────────────────
 
@@ -48,6 +49,10 @@ ComboDeal.belongsTo(Entity, { foreignKey: 'property_id', as: 'entity' });
 // Entity → Discounts
 Entity.hasMany(Discount, { foreignKey: 'property_id', as: 'discounts', onDelete: 'CASCADE' });
 Discount.belongsTo(Entity, { foreignKey: 'property_id', as: 'entity' });
+
+// Entity → Promotions
+Entity.hasMany(Promotion, { foreignKey: 'property_id', as: 'promotions', onDelete: 'CASCADE' });
+Promotion.belongsTo(Entity, { foreignKey: 'property_id', as: 'entity' });
 
 // User → Bookings
 User.hasMany(Booking, { foreignKey: 'user_id', as: 'bookings', onDelete: 'SET NULL' });
@@ -106,5 +111,5 @@ module.exports = {
   User, Entity, EntitySlot, Event, MenuItem,
   ComboDeal, Discount, Booking, BookingItem,
   WhatsappLog, AuditLog, SystemConfig, Role, Authorization, Category,
-  EventType, Performer, MenuCategory, CuisineType
+  EventType, Performer, MenuCategory, CuisineType, Promotion
 };

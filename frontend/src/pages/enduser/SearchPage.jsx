@@ -91,7 +91,8 @@ const SearchPage = () => {
   }
 
   const totalResults = results
-    ? (results.properties?.total || 0) + (results.events?.total || 0) + (results.menu_items?.total || 0)
+    ? (results.properties?.total || 0) + (results.events?.total || 0) + (results.menu_items?.total || 0) + 
+      (results.slots?.total || 0) + (results.discounts?.total || 0) + (results.combos?.total || 0) + (results.promotions?.total || 0)
     : 0
 
   const resetFilters = () => {
@@ -174,6 +175,8 @@ const SearchPage = () => {
             { key: 'venues', label: `Venues (${results?.properties?.total || 0})` },
             { key: 'events', label: `Events (${results?.events?.total || 0})` },
             { key: 'food', label: `Food (${results?.menu_items?.total || 0})` },
+            { key: 'offers', label: `Offers (${(results?.discounts?.total || 0) + (results?.combos?.total || 0) + (results?.promotions?.total || 0)})` },
+            { key: 'slots', label: `Slots (${results?.slots?.total || 0})` },
           ].map(t => (
             <button key={t.key} className={`tab-btn-full ${activeTab === t.key ? 'active' : ''}`} onClick={() => setActiveTab(t.key)}>{t.label}</button>
           ))}
@@ -282,6 +285,79 @@ const SearchPage = () => {
                       <div className="event-card-footer">
                         <span style={{ fontSize: 12, color: 'var(--text-muted)' }}>{item.entity?.name}</span>
                         <button className="btn btn-secondary btn-sm" onClick={e => { e.stopPropagation(); navigate(`/entity/${item.property_id}`) }}>View Venue</button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </section>
+            )}
+
+            {/* Promotions & Banners */}
+            {(activeTab === 'all' || activeTab === 'offers') && results.promotions?.rows?.length > 0 && (
+              <section style={{ marginBottom: 36 }}>
+                <div className="section-title">🚀 Highlights & Promotions</div>
+                <div className="grid-auto">
+                  {results.promotions.rows.map(p => (
+                    <div key={p.id} className="event-card" style={{ border: '2px solid var(--brand-primary)' }}>
+                      <div className="event-card-img-wrap" style={{ height: 180 }}>
+                        {p.image ? <img src={getImgUrl(p.image)} alt={p.title} className="event-card-img" /> : <div className="event-card-img-placeholder">🚀</div>}
+                      </div>
+                      <div className="event-card-body">
+                        <div className="event-card-title">{p.title}</div>
+                        <div className="event-card-meta" style={{ minHeight: 40 }}>{p.description}</div>
+                        <div className="event-card-meta">📍 {p.entity?.name}, {p.entity?.city}</div>
+                      </div>
+                      <div className="event-card-footer">
+                        <button className="btn btn-primary btn-block" onClick={() => navigate(`/entity/${p.property_id}`)}>Claim Offer</button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </section>
+            )}
+
+            {/* Discounts & Combos */}
+            {(activeTab === 'all' || activeTab === 'offers') && (results.discounts?.rows?.length > 0 || results.combos?.rows?.length > 0) && (
+              <section style={{ marginBottom: 36 }}>
+                <div className="section-title">🏷️ Exclusive Offers</div>
+                <div className="grid-auto">
+                  {[...(results.discounts?.rows || []), ...(results.combos?.rows || [])].map(item => (
+                    <div key={item.id} className="event-card" onClick={() => navigate(`/entity/${item.property_id}`)}>
+                      <div className="event-card-img-wrap">
+                        {item.image ? <img src={getImgUrl(item.image)} alt={item.name} className="event-card-img" /> : <div className="event-card-img-placeholder">{item.deal_price ? '🎁' : '🏷️'}</div>}
+                      </div>
+                      <div className="event-card-body">
+                        <div className="badge badge-warning" style={{ marginBottom: 8 }}>{item.deal_price ? 'Combo Deal' : 'Special Discount'}</div>
+                        <div className="event-card-title">{item.name}</div>
+                        {item.discount_value && <div className="event-card-price" style={{ color: 'var(--success)' }}>{item.discount_type === 'percentage' ? `${item.discount_value}% OFF` : `₹${item.discount_value} FLAT OFF`}</div>}
+                        {item.deal_price && <div className="event-card-price">₹{item.deal_price} <span style={{ textDecoration: 'line-through', fontSize: 13, color: 'var(--text-muted)' }}>₹{item.original_price}</span></div>}
+                        <div className="event-card-meta">📍 {item.entity?.name}</div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </section>
+            )}
+
+            {/* Slots */}
+            {(activeTab === 'all' || activeTab === 'slots') && results.slots?.rows?.length > 0 && (
+              <section style={{ marginBottom: 36 }}>
+                <div className="section-title">📅 Available Slots</div>
+                <div className="grid-auto">
+                  {results.slots.rows.map(s => (
+                    <div key={s.id} className="event-card" onClick={() => navigate(`/entity/${s.property_id}`)}>
+                      <div className="event-card-img-wrap">
+                        {s.image ? <img src={getImgUrl(s.image)} alt={s.slot_name} className="event-card-img" /> : <div className="event-card-img-placeholder">📅</div>}
+                      </div>
+                      <div className="event-card-body">
+                        <div className="badge badge-primary" style={{ marginBottom: 8 }}>{s.slot_type}</div>
+                        <div className="event-card-title">{s.slot_name}</div>
+                        <div className="event-card-meta">📅 {s.slot_date} &nbsp;🕐 {s.start_time}</div>
+                        <div className="event-card-meta">📍 {s.entity?.name}, {s.entity?.city}</div>
+                        <div className="event-card-price">₹{s.price_per_head} <span style={{ fontSize: 13, color: 'var(--text-muted)' }}>/ head</span></div>
+                      </div>
+                      <div className="event-card-footer">
+                        <button className="btn btn-secondary btn-block">Book Slot</button>
                       </div>
                     </div>
                   ))}

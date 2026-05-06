@@ -23,6 +23,7 @@ const Discount = sequelize.define('Discount', {
   usage_limit:         { type: DataTypes.INTEGER, allowNull: true },
   used_count:          { type: DataTypes.INTEGER, defaultValue: 0 },
   promo_code:          { type: DataTypes.STRING(30), allowNull: true },
+  image:               { type: DataTypes.STRING, allowNull: true },
   is_stackable:        { type: DataTypes.BOOLEAN, defaultValue: false },
   is_active:           { type: DataTypes.BOOLEAN, defaultValue: true }
 }, { tableName: 'discounts' });

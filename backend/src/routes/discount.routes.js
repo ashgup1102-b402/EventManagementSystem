@@ -7,8 +7,8 @@ const audit = require('../middleware/audit');
 
 // Discounts
 router.get('/discounts', optionalAuthenticate, ctrl.getDiscounts);
-router.post('/discounts', authenticate, isEntity, audit('Discount'), ctrl.createDiscount);
-router.put('/discounts/:id', authenticate, isEntity, audit('Discount'), ctrl.updateDiscount);
+router.post('/discounts', authenticate, isEntity, (req, res, next) => { req.uploadFolder = 'discounts'; next(); }, upload.single('image'), audit('Discount'), ctrl.createDiscount);
+router.put('/discounts/:id', authenticate, isEntity, (req, res, next) => { req.uploadFolder = 'discounts'; next(); }, upload.single('image'), audit('Discount'), ctrl.updateDiscount);
 router.delete('/discounts/:id', authenticate, isEntity, audit('Discount'), ctrl.deleteDiscount);
 router.get('/:type/:id/history', authenticate, ctrl.getHistory);
 

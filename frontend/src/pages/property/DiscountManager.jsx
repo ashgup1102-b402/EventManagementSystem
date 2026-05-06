@@ -95,13 +95,23 @@ const DiscountManager = () => {
     if (isReadOnly) return
     setSaving(true)
     try {
-      const payload = { ...form, property_id: entityId }
+      const fd = new FormData();
+      Object.keys(form).forEach(k => {
+        if (k === 'image' && typeof form[k] === 'string') return;
+        if (['entity', 'property_id', 'createdAt', 'updatedAt', 'id', 'items'].includes(k)) return;
+        if (form[k] !== null && form[k] !== undefined) fd.append(k, form[k]);
+      });
+      // Handle items separately if it's an array (combos)
+      if (form.items && Array.isArray(form.items)) fd.append('items', JSON.stringify(form.items));
+
+      fd.append('property_id', entityId);
+
       if (modal.type === 'discount') {
-        if (modal.item) await api.put(`/discounts/discounts/${modal.item.id}`, payload)
-        else await api.post('/discounts/discounts', payload)
+        if (modal.item) await api.put(`/discounts/discounts/${modal.item.id}`, fd)
+        else await api.post('/discounts/discounts', fd)
       } else {
-        if (modal.item) await api.put(`/discounts/combos/${modal.item.id}`, payload)
-        else await api.post('/discounts/combos', payload)
+        if (modal.item) await api.put(`/discounts/combos/${modal.item.id}`, fd)
+        else await api.post('/discounts/combos', fd)
       }
       toast.success('Saved!'); setModal(null); fetchAll(entityId)
     } catch (err) { toast.error(err.response?.data?.message || 'Failed.') }
@@ -259,6 +269,13 @@ const DiscountManager = () => {
               <div className="form-grid form-grid-2">
                 <div className="input-group"><label>Valid From</label><input className="input" type="date" value={form.valid_from||''} onChange={set('valid_from')} disabled={isReadOnly} /></div>
                 <div className="input-group"><label>Valid To</label><input className="input" type="date" value={form.valid_to||''} onChange={set('valid_to')} disabled={isReadOnly} /></div>
+              </div>
+              <div className="input-group">
+                <label>{modal.type === 'discount' ? 'Discount' : 'Combo'} Image</label>
+                <input type="file" className="input" accept="image/*" onChange={e => setForm(f => ({ ...f, image: e.target.files[0] }))} disabled={isReadOnly} />
+                {form.image && typeof form.image === 'string' && (
+                  <img src={`http://localhost:5000${form.image}`} alt="Preview" style={{ width: 60, height: 40, marginTop: 8, borderRadius: 4, objectFit: 'cover' }} />
+                )}
               </div>
               <div className="input-group">
                 <label style={{ display:'flex', alignItems:'center', gap:8, cursor:'pointer' }}>

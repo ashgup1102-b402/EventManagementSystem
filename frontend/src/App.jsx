@@ -22,6 +22,7 @@ import WhatsappPromo from './pages/property/WhatsappPromo'
 import EntitySettings from './pages/property/EntitySettings'
 import GuestList from './pages/property/GuestList'
 import EntityBookings from './pages/property/EntityBookings'
+import PromotionManager from './pages/property/PromotionManager'
 
 // Admin & Super Admin Pages
 import AdminDashboard from './pages/admin/AdminDashboard'
@@ -65,6 +66,7 @@ const App = () => {
           <Route path="/entity/guests" element={<ProtectedRoute roles={['Entity', 'Admin', 'Super Admin']}><GuestList /></ProtectedRoute>} />
           <Route path="/entity/bookings" element={<ProtectedRoute roles={['Entity', 'Admin', 'Super Admin']}><EntityBookings /></ProtectedRoute>} />
           <Route path="/entity/whatsapp" element={<ProtectedRoute roles={['Entity', 'Admin', 'Super Admin']}><WhatsappPromo /></ProtectedRoute>} />
+          <Route path="/entity/promotions" element={<ProtectedRoute roles={['Entity', 'Admin', 'Super Admin']}><PromotionManager /></ProtectedRoute>} />
           <Route path="/entity/settings" element={<ProtectedRoute roles={['Entity', 'Admin', 'Super Admin']}><EntitySettings /></ProtectedRoute>} />
 
           {/* Admin Routes */}

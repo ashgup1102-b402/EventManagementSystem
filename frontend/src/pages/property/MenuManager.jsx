@@ -89,9 +89,16 @@ const MenuManager = () => {
     if (!validate()) return
     setSaving(true)
     try {
-      const payload = { ...form, property_id: entityId }
-      if (modal === 'add') await api.post('/menu', payload)
-      else await api.put(`/menu/${modal.id}`, payload)
+      const fd = new FormData();
+      Object.keys(form).forEach(k => {
+        if (k === 'image' && typeof form[k] === 'string') return;
+        if (['entity', 'property_id', 'menu_category_ref', 'cuisine_type_ref', 'createdAt', 'updatedAt', 'id'].includes(k)) return;
+        if (form[k] !== null && form[k] !== undefined) fd.append(k, form[k]);
+      });
+      fd.append('property_id', entityId);
+
+      if (modal === 'add') await api.post('/menu', fd)
+      else await api.put(`/menu/${modal.id}`, fd)
       toast.success('Menu item saved!')
       setModal(null)
       fetchMenu(entityId)
@@ -254,6 +261,14 @@ const MenuManager = () => {
                 <label style={{ display:'flex', alignItems:'center', gap:8, cursor:'pointer' }}>
                   <input type="checkbox" checked={form.is_available} onChange={set('is_available')} disabled={isReadOnly} /> Available In Inventory
                 </label>
+              </div>
+
+              <div className="input-group">
+                <label>Item Image</label>
+                <input type="file" className="input" accept="image/*" onChange={e => setForm(f => ({ ...f, image: e.target.files[0] }))} disabled={isReadOnly} />
+                {form.image && typeof form.image === 'string' && (
+                  <img src={`http://localhost:5000${form.image}`} alt="Preview" style={{ width: 60, height: 40, marginTop: 8, borderRadius: 4, objectFit: 'cover' }} />
+                )}
               </div>
             </div>
             <div className="modal-footer">

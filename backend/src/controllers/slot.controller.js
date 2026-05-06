@@ -77,6 +77,7 @@ const create = async (req, res, next) => {
     const hasAccess = await checkAccess(req.body.property_id, req.user);
     if (!hasAccess) return res.status(403).json({ success: false, message: 'Access denied.' });
     
+    if (req.file) req.body.image = `/uploads/slots/${req.file.filename}`;
     const slot = await EntitySlot.create(req.body);
 
     await AuditLog.create({
@@ -97,6 +98,7 @@ const update = async (req, res, next) => {
     if (!hasAccess) return res.status(403).json({ success: false, message: 'Access denied.' });
     
     const oldValues = slot.toJSON();
+    if (req.file) req.body.image = `/uploads/slots/${req.file.filename}`;
     await slot.update(req.body);
 
     await AuditLog.create({

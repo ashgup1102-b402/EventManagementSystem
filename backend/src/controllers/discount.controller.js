@@ -34,6 +34,7 @@ const createDiscount = async (req, res, next) => {
   try {
     const hasAccess = await checkAccess(req.body.property_id, req.user);
     if (!hasAccess) return res.status(403).json({ success: false, message: 'Access denied.' });
+    if (req.file) req.body.image = `/uploads/discounts/${req.file.filename}`;
     const discount = await Discount.create(req.body);
 
     await AuditLog.create({
@@ -54,6 +55,7 @@ const updateDiscount = async (req, res, next) => {
     if (!hasAccess) return res.status(403).json({ success: false, message: 'Access denied.' });
     
     const oldValues = discount.toJSON();
+    if (req.file) req.body.image = `/uploads/discounts/${req.file.filename}`;
     await discount.update(req.body);
 
     await AuditLog.create({
