@@ -174,6 +174,9 @@ const SlotManager = () => {
       <div className="page-header">
         <div className="page-header-row">
           <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+            <button className="btn btn-secondary btn-sm" onClick={() => navigate('/entity/dashboard')}>
+              📊 Dashboard
+            </button>
             {(currentUser?.role === 'Admin' || currentUser?.role === 'Super Admin') && queryParams.get('entityId') && (
               <button className="btn btn-secondary btn-sm" onClick={() => navigate('/admin/entities')}>
                 ← Back to Entities
@@ -184,9 +187,14 @@ const SlotManager = () => {
               <p>Manage table reservations and hall slots</p>
             </div>
           </div>
-          {!isReadOnly && (
-            <button className="btn btn-primary" onClick={openAdd}>+ New Slot</button>
-          )}
+          <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+            {queryParams.get('is_active') && (
+              <button className="btn btn-ghost btn-sm" onClick={() => { navigate(window.location.pathname); fetchSlots(entityId, 'all'); }}>✕ Clear Filters</button>
+            )}
+            {!isReadOnly && (
+              <button className="btn btn-primary" onClick={openAdd}>+ New Slot</button>
+            )}
+          </div>
 
         </div>
       </div>

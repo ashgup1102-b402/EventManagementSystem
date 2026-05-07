@@ -39,26 +39,33 @@ const EntityDashboard = () => {
     </div>
   )
 
-  const HealthTile = ({ icon, label, active, inactive, color, path, filterType = 'status' }) => (
-    <div className="health-tile">
-      <div className="health-header">
-        <span className="health-icon" style={{ backgroundColor: `${color}15`, color }}>{icon}</span>
-        <span className="health-label">{label}</span>
-      </div>
-      <div className="health-body">
-        <div className="health-stat active" onClick={() => navigate(`${path}?${filterType}=${filterType === 'is_active' ? 'true' : 'Active'}`)}>
-          <span className="dot"></span>
-          <span className="count">{active}</span>
-          <span className="txt">Active</span>
+  const HealthTile = ({ icon, label, active, inactive, color, path, filterType = 'status', extraParams = '' }) => {
+    const buildPath = (val) => {
+      let p = `${path}?${filterType}=${val}`;
+      if (extraParams) p += `&${extraParams}`;
+      return p;
+    };
+    return (
+      <div className="health-tile">
+        <div className="health-header">
+          <span className="health-icon" style={{ backgroundColor: `${color}15`, color }}>{icon}</span>
+          <span className="health-label">{label}</span>
         </div>
-        <div className="health-stat inactive" onClick={() => navigate(`${path}?${filterType}=${filterType === 'is_active' ? 'false' : 'Inactive'}`)}>
-          <span className="dot"></span>
-          <span className="count">{inactive}</span>
-          <span className="txt">Inactive</span>
+        <div className="health-body">
+          <div className="health-stat active" onClick={() => navigate(buildPath(filterType === 'is_active' ? 'true' : 'Active'))}>
+            <span className="dot"></span>
+            <span className="count">{active}</span>
+            <span className="txt">Active</span>
+          </div>
+          <div className="health-stat inactive" onClick={() => navigate(buildPath(filterType === 'is_active' ? 'false' : 'Inactive'))}>
+            <span className="dot"></span>
+            <span className="count">{inactive}</span>
+            <span className="txt">Inactive</span>
+          </div>
         </div>
       </div>
-    </div>
-  )
+    )
+  }
 
   return (
     <Layout>
@@ -90,12 +97,13 @@ const EntityDashboard = () => {
       </div>
 
       {/* Row 3: Module Health */}
-      <div className="tile-row row-5 mt-3">
+      <div className="tile-row row-6 mt-3">
         <HealthTile icon="🍽️" label="Menu" active={row3.menu.active} inactive={row3.menu.inactive} color="#10b981" path="/entity/menu" />
         <HealthTile icon="🎭" label="Events" active={row3.events.active} inactive={row3.events.inactive} color="#3b82f6" path="/entity/events" />
         <HealthTile icon="📅" label="Slots" active={row3.slots.active} inactive={row3.slots.inactive} color="#8b5cf6" path="/entity/slots" filterType="is_active" />
-        <HealthTile icon="🏷️" label="Discounts" active={row3.discounts.active} inactive={row3.discounts.inactive} color="#f59e0b" path="/entity/discounts" filterType="is_active" />
-        <HealthTile icon="🎁" label="Promotions" active={row3.promotions.active} inactive={row3.promotions.inactive} color="#ec4899" path="/entity/discounts" filterType="is_active" />
+        <HealthTile icon="🏷️" label="Discounts" active={row3.discounts.active} inactive={row3.discounts.inactive} color="#f59e0b" path="/entity/discounts" filterType="is_active" extraParams="tab=discounts" />
+        <HealthTile icon="🎁" label="Combos" active={row3.combos.active} inactive={row3.combos.inactive} color="#8b5cf6" path="/entity/discounts" filterType="is_active" extraParams="tab=combos" />
+        <HealthTile icon="🚀" label="Promotions" active={row3.promotions.active} inactive={row3.promotions.inactive} color="#ec4899" path="/entity/promotions" filterType="is_active" />
       </div>
 
       <div className="dashboard-grid mt-4">

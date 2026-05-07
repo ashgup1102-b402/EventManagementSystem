@@ -28,7 +28,7 @@ const getAll = async (req, res, next) => {
     );
 
     const where = {};
-    if (status) where.status = status;
+    if (status && status !== 'all') where.status = status;
     if (property_id) where.property_id = property_id;
     if (event_type_id) where.event_type_id = event_type_id;
     if (performer_id) where.performer_id = performer_id;

@@ -9,32 +9,25 @@ import { useAuth } from '../../context/AuthContext'
 const DiscountManager = () => {
   const { user: currentUser } = useAuth()
   const navigate = useNavigate()
-  const [discounts, setDiscounts] = useState([])
-  const [combos, setCombos] = useState([])
-  const [loading, setLoading] = useState(true)
-  const [tab, setTab] = useState('discounts')
-  const [modal, setModal] = useState(null)
-  const [form, setForm] = useState({})
-  const [saving, setSaving] = useState(false)
-  const [entityId, setEntityId] = useState(null)
-  const BASE_URL = 'http://localhost:5000';
-
-  const getImgUrl = (path) => {
-    if (!path) return null;
-    if (path.startsWith('http')) return path;
-    const cleanPath = path.startsWith('/') ? path : `/${path}`;
-    return `${BASE_URL}${cleanPath}`;
-  }
-  
-  const [historyModal, setHistoryModal] = useState(null)
-  const [history, setHistory] = useState([])
-  const [historyLoading, setHistoryLoading] = useState(false)
-
   const { search: urlSearch } = useLocation()
   const queryParams = new URLSearchParams(urlSearch)
   const initialActive = queryParams.get('is_active')
   const mode = queryParams.get('mode')
 
+  const [discounts, setDiscounts] = useState([])
+  const [combos, setCombos] = useState([])
+  const [loading, setLoading] = useState(true)
+  const [tab, setTab] = useState(queryParams.get('tab') || 'discounts')
+  const [modal, setModal] = useState(null)
+  const [form, setForm] = useState({})
+  const [saving, setSaving] = useState(false)
+  const [entityId, setEntityId] = useState(null)
+  const BASE_URL = 'http://localhost:5000';
+  
+  const [historyModal, setHistoryModal] = useState(null)
+  const [history, setHistory] = useState([])
+  const [historyLoading, setHistoryLoading] = useState(false)
+  
   const [permissions, setPermissions] = useState({ isReadOnly: false, noDelete: false })
 
   useEffect(() => {
@@ -61,34 +54,40 @@ const DiscountManager = () => {
   const canActivate = !isReadOnly
   const canDeactivate = !noDelete
 
+  useEffect(() => {
+    const urlTab = queryParams.get('tab')
+    if (urlTab && urlTab !== tab) setTab(urlTab)
+  }, [urlSearch])
 
   useEffect(() => {
-    fetchInit()
-  }, [])
-
-  const fetchInit = async () => {
-    try {
-      const queryId = queryParams.get('entityId');
-      let currentEntityId = queryId;
-
-      if (!currentEntityId) {
-        const entRes = await api.get('/entities/my');
-        currentEntityId = entRes.data.data.id;
+    const fetchInit = async () => {
+      try {
+        let currentEntityId = entityId
+        if (!currentEntityId) {
+          const queryId = queryParams.get('entityId');
+          if (queryId) {
+            currentEntityId = queryId
+          } else {
+            const entRes = await api.get('/entities/my');
+            currentEntityId = entRes.data.data.id;
+          }
+          setEntityId(currentEntityId)
+        }
+        if (currentEntityId) {
+          fetchAll(currentEntityId, initialActive)
+        }
+      } catch (err) {
+        toast.error('Failed to load data.')
+      } finally {
+        setLoading(false)
       }
-
-      setEntityId(currentEntityId)
-      await fetchAll(currentEntityId, initialActive)
-    } catch (err) {
-      toast.error('Failed to load initial data.')
-    } finally {
-      setLoading(false)
     }
-  }
+    fetchInit()
+  }, [urlSearch, entityId])
 
   const fetchAll = async (id, activeFilter) => {
     try {
-      const params = { property_id: id }
-      if (activeFilter !== null) params.is_active = activeFilter
+      const params = { property_id: id, is_active: activeFilter || 'all' }
       const [d, c] = await Promise.all([
         api.get('/discounts/discounts', { params }),
         api.get('/discounts/combos', { params })
@@ -176,11 +175,21 @@ const DiscountManager = () => {
 
   if (loading) return <Layout><div className="loading-center"><div className="spinner" /></div></Layout>
 
+  const getImgUrl = (path) => {
+    if (!path) return null;
+    if (path.startsWith('http')) return path;
+    const cleanPath = path.startsWith('/') ? path : `/${path}`;
+    return `${BASE_URL}${cleanPath}`;
+  }
+
   return (
     <Layout>
       <div className="page-header">
         <div className="page-header-row">
           <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+            <button className="btn btn-secondary btn-sm" onClick={() => navigate('/entity/dashboard')}>
+              📊 Dashboard
+            </button>
             {(currentUser?.role === 'Admin' || currentUser?.role === 'Super Admin') && queryParams.get('entityId') && (
               <button className="btn btn-secondary btn-sm" onClick={() => navigate('/admin/entities')}>
                 ← Back to Entities
@@ -191,12 +200,17 @@ const DiscountManager = () => {
               <p>Manage offers, promos and combo deals</p>
             </div>
           </div>
-          {!isReadOnly && (
-            <div style={{ display:'flex', gap:8 }}>
-              <button className="btn btn-primary" onClick={() => openDiscount(null)}>+ Discount</button>
-              <button className="btn btn-secondary" onClick={() => openCombo(null)}>+ Combo Deal</button>
-            </div>
-          )}
+          <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+            {queryParams.get('is_active') && (
+              <button className="btn btn-ghost btn-sm" onClick={() => { navigate(`${window.location.pathname}?tab=${tab}`); fetchAll(entityId, 'all'); }}>✕ Clear Filters</button>
+            )}
+            {!isReadOnly && (
+              <>
+                <button className="btn btn-primary" onClick={() => openDiscount(null)}>+ Discount</button>
+                <button className="btn btn-secondary" onClick={() => openCombo(null)}>+ Combo Deal</button>
+              </>
+            )}
+          </div>
         </div>
       </div>
 

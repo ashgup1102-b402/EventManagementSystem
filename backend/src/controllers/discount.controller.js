@@ -15,7 +15,7 @@ const getDiscounts = async (req, res, next) => {
     const { property_id, is_active } = req.query;
     const where = {};
     if (property_id) where.property_id = property_id;
-    if (is_active !== undefined) {
+    if (is_active !== undefined && is_active !== 'all') {
       where.is_active = is_active === 'true';
     } else if (!req.user || req.user.role === 'End_User') {
       where.is_active = true;
@@ -99,7 +99,7 @@ const getCombos = async (req, res, next) => {
     const { property_id, is_active } = req.query;
     const where = {};
     if (property_id) where.property_id = property_id;
-    if (is_active !== undefined) {
+    if (is_active !== undefined && is_active !== 'all') {
       where.is_active = is_active === 'true';
     } else if (!req.user || req.user.role === 'End_User') {
       where.is_active = true;

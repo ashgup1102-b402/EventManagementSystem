@@ -11,7 +11,7 @@ const getAll = async (req, res, next) => {
   try {
     const { property_id, menu_category_id, cuisine_type_id, status, is_veg, is_available, search, page = 1, limit = 50 } = req.query;
     const where = {};
-    if (status) where.status = status;
+    if (status && status !== 'all') where.status = status;
     if (property_id) where.property_id = property_id;
     if (menu_category_id) where.menu_category_id = menu_category_id;
     if (cuisine_type_id) where.cuisine_type_id = cuisine_type_id;

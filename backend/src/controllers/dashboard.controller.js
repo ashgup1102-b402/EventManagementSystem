@@ -1,4 +1,4 @@
-const { Booking, Entity, Event, User, AuditLog, Discount, MenuItem, EntitySlot, WhatsappLog, ComboDeal, sequelize } = require('../models');
+const { Booking, Entity, Event, User, AuditLog, Discount, MenuItem, EntitySlot, WhatsappLog, ComboDeal, Promotion, sequelize } = require('../models');
 const { fn, col, literal, Op } = require('sequelize');
 const moment = require('moment');
 
@@ -62,7 +62,7 @@ const propertyDashboard = async (req, res, next) => {
       EntitySlot.findAll({ where: { property_id: entityId }, attributes: ['is_active', [fn('COUNT', col('id')), 'count']], group: ['is_active'], raw: true }),
       Discount.findAll({ where: { property_id: entityId }, attributes: ['is_active', [fn('COUNT', col('id')), 'count']], group: ['is_active'], raw: true }),
       ComboDeal.findAll({ where: { property_id: entityId }, attributes: ['is_active', [fn('COUNT', col('id')), 'count']], group: ['is_active'], raw: true }),
-      WhatsappLog.findAll({ where: { property_id: entityId }, attributes: ['status', [fn('COUNT', col('id')), 'count']], group: ['status'], raw: true }),
+      Promotion.findAll({ where: { property_id: entityId }, attributes: ['is_active', [fn('COUNT', col('id')), 'count']], group: ['is_active'], raw: true }),
       
       // Detailed Lists
       Booking.findAll({
@@ -156,7 +156,8 @@ const propertyDashboard = async (req, res, next) => {
           events: formatModule(eventStats, 'status'),
           slots: formatModule(slotStats, 'is_active'),
           discounts: formatModule(discountStats, 'is_active'),
-          promotions: formatModule(comboStats, 'is_active')
+          combos: formatModule(comboStats, 'is_active'),
+          promotions: formatModule(promoStats, 'is_active')
         },
         guest_list: topGuests,
         recent_bookings: recentBookings,

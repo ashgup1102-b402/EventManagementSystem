@@ -12,7 +12,7 @@ const checkAccess = async (propertyId, user) => {
 
 const getAll = async (req, res, next) => {
   try {
-    const { property_id, date, slot_type, page = 1, limit = 50, include_inactive } = req.query;
+    const { property_id, date, slot_type, page = 1, limit = 50, is_active } = req.query;
     
     // Auto-inactivate past slots
     const now = moment();
@@ -38,8 +38,8 @@ const getAll = async (req, res, next) => {
     );
 
     const where = {};
-    if (!include_inactive || include_inactive === 'false') {
-      where.is_active = true;
+    if (is_active !== undefined && is_active !== 'all') {
+      where.is_active = is_active === 'true';
     }
     
     if (property_id) where.property_id = property_id;

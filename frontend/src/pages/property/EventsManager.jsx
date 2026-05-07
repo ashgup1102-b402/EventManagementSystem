@@ -179,6 +179,9 @@ const EventsManager = () => {
       <div className="page-header">
         <div className="page-header-row">
           <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+            <button className="btn btn-secondary btn-sm" onClick={() => navigate('/entity/dashboard')}>
+              📊 Dashboard
+            </button>
             {(currentUser?.role === 'Admin' || currentUser?.role === 'Super Admin') && queryParams.get('entityId') && (
               <button className="btn btn-secondary btn-sm" onClick={() => navigate('/admin/entities')}>
                 ← Back to Entities
@@ -189,11 +192,16 @@ const EventsManager = () => {
               <p>Manage performance-based events and performer mapping.</p>
             </div>
           </div>
-          {!isReadOnly && (
-            <button className="btn btn-primary" onClick={() => { setForm({ ticket_price:0, total_capacity:100, status:'Active' }); setModal('add'); }}>
-              + New Event
-            </button>
-          )}
+          <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+            {queryParams.get('status') && (
+              <button className="btn btn-ghost btn-sm" onClick={() => { navigate(window.location.pathname); fetchEvents(entityId, 'all'); }}>✕ Clear Filters</button>
+            )}
+            {!isReadOnly && (
+              <button className="btn btn-primary" onClick={() => { setForm({ ticket_price:0, total_capacity:100, status:'Active' }); setModal('add'); }}>
+                + New Event
+              </button>
+            )}
+          </div>
         </div>
       </div>
 

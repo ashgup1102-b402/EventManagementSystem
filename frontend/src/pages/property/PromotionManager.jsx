@@ -30,6 +30,7 @@ const PromotionManager = () => {
   
   const { search: urlSearch } = useLocation()
   const queryParams = new URLSearchParams(urlSearch)
+  const initialActive = queryParams.get('is_active')
   const mode = queryParams.get('mode')
   
   const [permissions, setPermissions] = useState({ isReadOnly: false, noDelete: false })
@@ -69,7 +70,7 @@ const PromotionManager = () => {
         currentEntityId = entRes.data.data.id;
       }
       setEntityId(currentEntityId)
-      await fetchPromos(currentEntityId)
+      await fetchPromos(currentEntityId, initialActive)
     } catch (err) {
       toast.error('Failed to load initial data.')
     } finally {
@@ -77,15 +78,21 @@ const PromotionManager = () => {
     }
   }
 
-  const fetchPromos = async (id) => {
+  const fetchPromos = async (id, activeFilter) => {
     try {
-      const { data } = await api.get('/promotions', { params: { property_id: id, is_active: 'all' } })
+      const params = { property_id: id, is_active: activeFilter || 'all' }
+      const { data } = await api.get('/promotions', { params })
       setPromotions(data.data)
     } catch (err) {
       toast.error('Failed to reload promotions.')
     }
   }
-  
+
+  const clearFilters = () => {
+    navigate(window.location.pathname)
+    fetchPromos(entityId, 'all')
+  }
+
   const fetchHistory = async (id) => {
     setHistoryLoading(true)
     setHistoryModal(id)
@@ -120,7 +127,7 @@ const PromotionManager = () => {
       if (modal === 'add') await api.post('/promotions', fd)
       else await api.put(`/promotions/${form.id}`, fd)
       
-      toast.success('Promotion saved!'); setModal(null); fetchPromos(entityId)
+      toast.success('Promotion saved!'); setModal(null); fetchPromos(entityId, initialActive)
     } catch (err) { toast.error(err.response?.data?.message || 'Failed.') }
     finally { setSaving(false) }
   }
@@ -133,41 +140,65 @@ const PromotionManager = () => {
     <Layout>
       <div className="page-header">
         <div className="page-header-row">
-          <div>
-            <h1>🚀 Promotions & Highlights</h1>
-            <p>Create visual banners and special highlights for the Discover page</p>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+            <button className="btn btn-secondary btn-sm" onClick={() => navigate('/entity/dashboard')}>
+              📊 Dashboard
+            </button>
+            {(currentUser?.role === 'Admin' || currentUser?.role === 'Super Admin') && queryParams.get('entityId') && (
+              <button className="btn btn-secondary btn-sm" onClick={() => navigate('/admin/entities')}>
+                ← Back to Entities
+              </button>
+            )}
+            <div>
+              <h1>🚀 Promotions & Highlights</h1>
+              <p>Create visual banners and special highlights for the Discover page</p>
+            </div>
           </div>
-          {!isReadOnly && <button className="btn btn-primary" onClick={() => openModal(null)}>+ New Promotion</button>}
+          <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+            {queryParams.get('is_active') && (
+              <button className="btn btn-ghost btn-sm" onClick={clearFilters}>✕ Clear Filters</button>
+            )}
+            {!isReadOnly && <button className="btn btn-primary" onClick={() => openModal(null)}>+ New Promotion</button>}
+          </div>
         </div>
       </div>
 
-      <div className="grid-auto">
-        {promotions.map(p => (
-          <div key={p.id} className={`card ${!p.is_active ? 'card-inactive' : ''}`} style={{ padding: 0, overflow: 'hidden' }}>
-            <div style={{ height: 160, background: 'var(--bg-tertiary)', position: 'relative' }}>
-              {p.image ? (
-                <img src={getImgUrl(p.image)} alt={p.title} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-              ) : (
-                <div style={{ display:'flex', alignItems:'center', justifyContent:'center', height:'100%', fontSize:40 }}>🚀</div>
-              )}
-              <div style={{ position:'absolute', top:10, right:10 }}>
-                <span className={`badge ${p.is_active ? 'badge-success' : 'badge-danger'}`}>{p.is_active ? 'Active' : 'Inactive'}</span>
+      {promotions.length === 0 ? (
+        <div className="empty-state">
+          <div className="empty-icon">🚀</div>
+          <h3>No promotions yet</h3>
+          <p>Create visual banners and special highlights for the Discover page.</p>
+          {!isReadOnly && <button className="btn btn-primary mt-4" onClick={() => openModal(null)}>+ Create First Promotion</button>}
+        </div>
+      ) : (
+        <div className="grid-auto">
+          {promotions.map(p => (
+            <div key={p.id} className={`card ${!p.is_active ? 'card-inactive' : ''}`} style={{ padding: 0, overflow: 'hidden' }}>
+              <div style={{ height: 160, background: 'var(--bg-tertiary)', position: 'relative' }}>
+                {p.image ? (
+                  <img src={getImgUrl(p.image)} alt={p.title} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                ) : (
+                  <div style={{ display:'flex', alignItems:'center', justifyContent:'center', height:'100%', fontSize:40 }}>🚀</div>
+                )}
+                <div style={{ position:'absolute', top:10, right:10 }}>
+                  <span className={`badge ${p.is_active ? 'badge-success' : 'badge-danger'}`}>{p.is_active ? 'Active' : 'Inactive'}</span>
+                </div>
               </div>
-            </div>
-            <div style={{ padding: 20 }}>
-              <h3 style={{ marginBottom: 8 }}>{p.title}</h3>
-              <p style={{ fontSize: 13, color: 'var(--text-secondary)', marginBottom: 16 }}>{p.description}</p>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <span style={{ fontSize: 11, color: 'var(--text-muted)' }}>{p.valid_from || '∞'} - {p.valid_to || '∞'}</span>
-                <div style={{ display:'flex', gap:6 }}>
-                  <button className="btn btn-secondary btn-sm" onClick={() => openModal(p)}>{isReadOnly ? 'View' : 'Edit'}</button>
-                  <button className="btn btn-ghost btn-sm" onClick={() => fetchHistory(p.id)}>📜</button>
+              <div style={{ padding: 20 }}>
+                <h3 style={{ marginBottom: 8 }}>{p.title}</h3>
+                <p style={{ fontSize: 13, color: 'var(--text-secondary)', marginBottom: 16 }}>{p.description}</p>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <span style={{ fontSize: 11, color: 'var(--text-muted)' }}>{p.valid_from || '∞'} - {p.valid_to || '∞'}</span>
+                  <div style={{ display:'flex', gap:6 }}>
+                    <button className="btn btn-secondary btn-sm" onClick={() => openModal(p)}>{isReadOnly ? 'View' : 'Edit'}</button>
+                    <button className="btn btn-ghost btn-sm" onClick={() => fetchHistory(p.id)}>📜</button>
+                  </div>
                 </div>
               </div>
             </div>
-          </div>
-        ))}
-      </div>
+          ))}
+        </div>
+      )}
 
       {modal && (
         <div className="modal-overlay" onClick={e => e.target===e.currentTarget && setModal(null)}>

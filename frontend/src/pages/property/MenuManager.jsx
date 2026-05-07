@@ -157,13 +157,19 @@ const MenuManager = () => {
     } catch (err) { toast.error('Failed to activate.') }
   }
 
-  const set = k => e => setForm(f => ({ ...f, [k]: e.target.type === 'checkbox' ? e.target.checked : e.target.value }))
+  const clearFilters = () => {
+    navigate(window.location.pathname)
+    fetchMenu(entityId, null)
+  }
 
   return (
     <Layout>
       <div className="page-header">
         <div className="page-header-row">
           <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+            <button className="btn btn-secondary btn-sm" onClick={() => navigate('/entity/dashboard')}>
+              📊 Dashboard
+            </button>
             {(currentUser?.role === 'Admin' || currentUser?.role === 'Super Admin') && queryParams.get('entityId') && (
               <button className="btn btn-secondary btn-sm" onClick={() => navigate('/admin/entities')}>
                 ← Back to Entities
@@ -174,11 +180,16 @@ const MenuManager = () => {
               <p>Manage your food items, categories, and cuisine types.</p>
             </div>
           </div>
-          {!isReadOnly && (
-            <button className="btn btn-primary" onClick={() => { setForm({ price:0, is_veg:true, is_available:true, status:'Active' }); setModal('add'); }}>
-              + Add Item
-            </button>
-          )}
+          <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+            {queryParams.get('status') && (
+              <button className="btn btn-ghost btn-sm" onClick={() => { navigate(window.location.pathname); fetchMenu(entityId, 'all'); }}>✕ Clear Filters</button>
+            )}
+            {!isReadOnly && (
+              <button className="btn btn-primary" onClick={() => { setForm({ price:0, is_veg:true, is_available:true, status:'Active' }); setModal('add'); }}>
+                + Add Item
+              </button>
+            )}
+          </div>
         </div>
       </div>
 
