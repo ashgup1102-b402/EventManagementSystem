@@ -270,7 +270,7 @@ const SearchPage = () => {
                   {results.menu_items.rows.map(item => (
                     <div key={item.id} className="event-card" onClick={() => navigate(`/entity/${item.property_id}`)}>
                       <div className="event-card-img-wrap">
-                        {item.image ? <img src={getImgUrl(item.image)} alt={item.name} className="event-card-img" /> : <div className="event-card-img-placeholder" style={{ height: 140 }}>🍽️</div>}
+                        {item.image ? <img src={getImgUrl(item.image)} alt={item.name} className="event-card-img" /> : <div className="event-card-img-placeholder">🍽️</div>}
                       </div>
                       <div className="event-card-body">
                         <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
@@ -299,7 +299,7 @@ const SearchPage = () => {
                 <div className="grid-auto">
                   {results.promotions.rows.map(p => (
                     <div key={p.id} className="event-card" style={{ border: '2px solid var(--brand-primary)' }}>
-                      <div className="event-card-img-wrap" style={{ height: 180 }}>
+                      <div className="event-card-img-wrap">
                         {p.image ? <img src={getImgUrl(p.image)} alt={p.title} className="event-card-img" /> : <div className="event-card-img-placeholder">🚀</div>}
                       </div>
                       <div className="event-card-body">
