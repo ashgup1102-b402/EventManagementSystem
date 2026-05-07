@@ -19,13 +19,45 @@ const MenuManager = () => {
   const [form, setForm] = useState({})
   const [saving, setSaving] = useState(false)
   const [entityId, setEntityId] = useState(null)
+  const BASE_URL = 'http://localhost:5000';
+
+  const getImgUrl = (path) => {
+    if (!path) return null;
+    if (path.startsWith('http')) return path;
+    const cleanPath = path.startsWith('/') ? path : `/${path}`;
+    return `${BASE_URL}${cleanPath}`;
+  }
 
   const { search: urlSearch } = useLocation()
   const queryParams = new URLSearchParams(urlSearch)
   const initialStatus = queryParams.get('status')
   const mode = queryParams.get('mode')
-  const isReadOnly = mode === 'view'
-  const noDelete = mode === 'edit_no_delete' || isReadOnly
+
+  const [permissions, setPermissions] = useState({ isReadOnly: false, noDelete: false })
+
+  useEffect(() => {
+    if (mode) {
+      setPermissions({
+        isReadOnly: mode === 'view',
+        noDelete: mode === 'edit_no_delete' || mode === 'view'
+      })
+    } else if (currentUser) {
+      api.get('/auth/authorizations').then(r => {
+        const myAuths = r.data.data.filter(a => a.role_name === currentUser.role)
+        const screenAuth = myAuths.find(a => a.screen_name === 'Menu Management')
+        const perm = screenAuth ? screenAuth.permission : 'Full Access'
+        
+        setPermissions({
+          isReadOnly: perm === 'Read Only' || perm === 'None',
+          noDelete: perm === 'Read and Edit' || perm === 'Read Only' || perm === 'None'
+        })
+      }).catch(console.error)
+    }
+  }, [mode, currentUser])
+
+  const { isReadOnly, noDelete } = permissions
+  const canActivate = !isReadOnly
+  const canDeactivate = !noDelete
 
 
   useEffect(() => {
@@ -171,9 +203,16 @@ const MenuManager = () => {
             <tbody>
               {items.map(item => (
                 <tr key={item.id}>
-                  <td>
-                    <strong>{item.name}</strong>
-                    <div className="text-muted text-xs">{item.is_veg ? '🟢 Veg' : '🔴 Non-veg'} · {item.is_available ? 'Available' : 'Sold Out'}</div>
+                  <td style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                    {item.image ? (
+                      <img src={getImgUrl(item.image)} alt="Img" style={{ width: 40, height: 40, borderRadius: 6, objectFit: 'cover' }} />
+                    ) : (
+                      <div style={{ width: 40, height: 40, background: 'var(--bg-tertiary)', borderRadius: 6, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 14 }}>🍽️</div>
+                    )}
+                    <div>
+                      <strong>{item.name}</strong>
+                      <div className="text-muted text-xs">{item.is_veg ? '🟢 Veg' : '🔴 Non-veg'} · {item.is_available ? 'Available' : 'Sold Out'}</div>
+                    </div>
                   </td>
                   <td>{item.menu_category_ref?.name || '-'}</td>
                   <td>{item.cuisine_type_ref?.name || '-'}</td>
@@ -189,12 +228,11 @@ const MenuManager = () => {
                         {isReadOnly ? 'View' : 'Edit'}
                       </button>
                       <button className="btn btn-sm btn-light" onClick={() => fetchHistory(item.id)}>📜 History</button>
-                      {!noDelete && (
-                        item.status === 'Active' ? (
-                          <button className="btn btn-sm btn-danger" onClick={() => deactivate(item.id)}>Deactivate</button>
-                        ) : (
-                          <button className="btn btn-sm btn-success" onClick={() => activate(item.id)}>Activate</button>
-                        )
+                      {canActivate && item.status !== 'Active' && (
+                        <button className="btn btn-sm btn-success" onClick={() => activate(item.id)}>Activate</button>
+                      )}
+                      {canDeactivate && item.status === 'Active' && (
+                        <button className="btn btn-sm btn-danger" onClick={() => deactivate(item.id)}>Deactivate</button>
                       )}
                     </div>
                   </td>
@@ -291,11 +329,12 @@ const MenuManager = () => {
             <div className="history-list" style={{ maxHeight: 400, overflowY: 'auto' }}>
               {history.length === 0 ? <p className="text-muted p-4">No changes recorded.</p> : (
                 <table className="matrix-table">
-                  <thead><tr><th>Who</th><th>When</th><th>Field</th><th>Old</th><th>New</th></tr></thead>
+                  <thead><tr><th>Who</th><th>When</th><th>IP</th><th>Field</th><th>Old</th><th>New</th></tr></thead>
                   <tbody>{history.map((h, i) => (
                     <tr key={i}>
                       <td>{h.user}</td>
                       <td>{moment(h.timestamp).format('DD MMM YY HH:mm')}</td>
+                      <td style={{ fontSize: '11px', color: 'var(--text-muted)' }}>{h.ip_address}</td>
                       <td><strong>{h.field}</strong></td>
                       <td className="text-danger strike">{h.old_value}</td>
                       <td className="text-success">{h.new_value}</td>

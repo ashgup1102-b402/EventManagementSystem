@@ -138,7 +138,8 @@ const create = async (req, res, next) => {
 
     await AuditLog.create({
       user_id: req.user.id, action: 'CREATE_ENTITY', entity_type: 'Entity',
-      entity_id: entity.id, new_values: { name: entity.name, unique_number }
+      entity_id: entity.id, new_values: { name: entity.name, unique_number },
+      ip_address: req.ip, user_agent: req.headers['user-agent']
     }, { transaction: t });
 
     await t.commit();
@@ -262,10 +263,16 @@ const update = async (req, res, next) => {
       }
     }
 
-    await AuditLog.create({
-      user_id: req.user.id, action: 'UPDATE_ENTITY', entity_type: 'Entity',
-      entity_id: entity.id, old_values: oldValues, new_values: updateData
-    });
+    // Track changes for Audit Log
+    const { hasChanges, extractDeltas } = require('../utils/historyHelper');
+    if (hasChanges(oldValues, updateData)) {
+      const deltas = extractDeltas(oldValues, updateData);
+      await AuditLog.create({
+        user_id: req.user.id, action: 'UPDATE_ENTITY', entity_type: 'Entity',
+        entity_id: entity.id, old_values: oldValues, new_values: deltas,
+        ip_address: req.ip, user_agent: req.headers['user-agent']
+      });
+    }
 
     // Re-fetch to get associations
     const updatedEntity = await Entity.findByPk(entity.id, {
@@ -284,7 +291,15 @@ const remove = async (req, res, next) => {
   try {
     const entity = await Entity.findByPk(req.params.id);
     if (!entity) return res.status(404).json({ success: false, message: 'Entity not found.' });
+    const oldValues = entity.toJSON();
     await entity.update({ status: 'Inactive' });
+    
+    await AuditLog.create({
+      user_id: req.user.id, action: 'DEACTIVATE_ENTITY', entity_type: 'Entity',
+      entity_id: entity.id, old_values: oldValues, new_values: { status: 'Inactive' },
+      ip_address: req.ip, user_agent: req.headers['user-agent']
+    });
+    
     res.json({ success: true, message: 'Entity deactivated.' });
   } catch (err) { next(err); }
 };

@@ -15,6 +15,14 @@ const SlotManager = () => {
   const [form, setForm] = useState({})
   const [saving, setSaving] = useState(false)
   const [entityId, setEntityId] = useState(null)
+  const BASE_URL = 'http://localhost:5000';
+
+  const getImgUrl = (path) => {
+    if (!path) return null;
+    if (path.startsWith('http')) return path;
+    const cleanPath = path.startsWith('/') ? path : `/${path}`;
+    return `${BASE_URL}${cleanPath}`;
+  }
   
   const [historyModal, setHistoryModal] = useState(null)
   const [history, setHistory] = useState([])
@@ -24,8 +32,32 @@ const SlotManager = () => {
   const queryParams = new URLSearchParams(urlSearch)
   const initialActive = queryParams.get('is_active')
   const mode = queryParams.get('mode')
-  const isReadOnly = mode === 'view'
-  const noDelete = mode === 'edit_no_delete' || isReadOnly
+
+  const [permissions, setPermissions] = useState({ isReadOnly: false, noDelete: false })
+
+  useEffect(() => {
+    if (mode) {
+      setPermissions({
+        isReadOnly: mode === 'view',
+        noDelete: mode === 'edit_no_delete' || mode === 'view'
+      })
+    } else if (currentUser) {
+      api.get('/auth/authorizations').then(r => {
+        const myAuths = r.data.data.filter(a => a.role_name === currentUser.role)
+        const screenAuth = myAuths.find(a => a.screen_name === 'Slot Management')
+        const perm = screenAuth ? screenAuth.permission : 'Full Access'
+        
+        setPermissions({
+          isReadOnly: perm === 'Read Only' || perm === 'None',
+          noDelete: perm === 'Read and Edit' || perm === 'Read Only' || perm === 'None'
+        })
+      }).catch(console.error)
+    }
+  }, [mode, currentUser])
+
+  const { isReadOnly, noDelete } = permissions
+  const canActivate = !isReadOnly
+  const canDeactivate = !noDelete
 
 
   useEffect(() => {
@@ -186,7 +218,16 @@ const SlotManager = () => {
             <tbody>
               {slots.map(s => (
                 <tr key={s.id} className={!s.is_active ? 'row-inactive' : ''}>
-                  <td style={{ fontWeight:600 }}>{s.slot_name}</td>
+                  <td style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                    {s.image ? (
+                      <img src={getImgUrl(s.image)} alt="Img" style={{ width: 40, height: 40, borderRadius: 6, objectFit: 'cover' }} />
+                    ) : (
+                      <div style={{ width: 40, height: 40, background: 'var(--bg-tertiary)', borderRadius: 6, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 14 }}>📅</div>
+                    )}
+                    <div>
+                      <strong style={{ fontWeight: 600 }}>{s.slot_name}</strong>
+                    </div>
+                  </td>
                   <td>{s.slot_date}</td>
                   <td>{s.start_time} - {s.end_time}</td>
                   <td><span className="badge badge-muted">{s.slot_type?.replace('_',' ')}</span></td>
@@ -204,12 +245,11 @@ const SlotManager = () => {
                         {isReadOnly ? 'View' : 'Edit'}
                       </button>
                       <button className="btn btn-ghost btn-sm" onClick={() => fetchHistory(s.id)}>📜 History</button>
-                      {!noDelete && (
-                        s.is_active ? (
-                          <button className="btn btn-danger btn-sm" onClick={() => deactivate(s.id)}>Deactivate</button>
-                        ) : (
-                          <button className="btn btn-success btn-sm" onClick={() => activate(s.id)}>Activate</button>
-                        )
+                      {canActivate && !s.is_active && (
+                        <button className="btn btn-success btn-sm" onClick={() => activate(s.id)}>Activate</button>
+                      )}
+                      {canDeactivate && s.is_active && (
+                        <button className="btn btn-danger btn-sm" onClick={() => deactivate(s.id)}>Deactivate</button>
                       )}
                     </div>
                   </td>
@@ -316,13 +356,14 @@ const SlotManager = () => {
               ) : (
                 <table className="matrix-table">
                   <thead>
-                    <tr><th>Who</th><th>When</th><th>Field</th><th>Old</th><th>New</th></tr>
+                    <tr><th>Who</th><th>When</th><th>IP</th><th>Field</th><th>Old</th><th>New</th></tr>
                   </thead>
                   <tbody>
                     {history.map((h, i) => (
                       <tr key={i}>
                         <td>{h.user}</td>
                         <td>{moment(h.timestamp).format('DD MMM YY HH:mm')}</td>
+                        <td style={{ fontSize: '11px', color: 'var(--text-muted)' }}>{h.ip_address}</td>
                         <td><strong>{h.field}</strong></td>
                         <td className="text-danger strike">{h.old_value}</td>
                         <td className="text-success">{h.new_value}</td>

@@ -12,9 +12,34 @@ const ID_FIELD_MAP = {
 };
 
 const formatValue = (val) => {
-  if (val === null || val === undefined || val === 'null' || val === 'N/A') return '';
-  if (typeof val === 'object') return ''; // Avoid [object Object]
-  return String(val);
+  if (val === null || val === undefined || val === 'null' || val === 'N/A' || val === '') return '-';
+  
+  // Normalize Booleans
+  if (val === true || val === 'true' || val === 1 || val === '1') return 'Yes';
+  if (val === false || val === 'false' || val === 0 || val === '0') return 'No';
+
+  if (val instanceof Date) return val.toISOString().split('T')[0];
+  
+  if (typeof val === 'object') {
+    // Check if it's an empty array or object
+    if (Array.isArray(val) && val.length === 0) return '-';
+    if (Object.keys(val).length === 0) return '-';
+    return '-'; 
+  }
+  
+  const str = String(val).trim();
+  
+  // Try to normalize numbers (pure numeric)
+  if (/^-?\d+(\.\d+)?$/.test(str)) {
+    return String(parseFloat(str));
+  }
+
+  // Try to normalize ISO dates
+  if (str.match(/^\d{4}-\d{2}-\d{2}T/)) {
+    return str.split('T')[0];
+  }
+
+  return str;
 };
 
 const getFormattedHistory = async (logs) => {
@@ -62,50 +87,97 @@ const getFormattedHistory = async (logs) => {
     });
   }));
 
-  // 3. Build history entries
-  logs.forEach(log => {
-    const oldVal = log.old_values || {};
-    const newVal = log.new_values || {};
-    
-    // Determine which fields to compare. 
-    // We check both old and new keys to ensure we catch field additions/removals.
-    const allFields = new Set([...Object.keys(oldVal), ...Object.keys(newVal)]);
-    const fields = Array.from(allFields).filter(f => 
-      f !== 'updatedAt' && 
-      f !== 'createdAt' && 
-      f !== 'gallery' && 
-      f !== 'id' && 
-      f !== 'password_hash' &&
-      typeof oldVal[f] !== 'object' && 
-      typeof newVal[f] !== 'object' &&
-      newVal[f] !== undefined // ONLY track if field is in new values
-    );
+    // Build history entries
+    logs.forEach(log => {
+      let oldVal = log.old_values || {};
+      let newVal = log.new_values || {};
+      
+      // Defensive parsing in case Sequelize didn't auto-parse
+      try { if (typeof oldVal === 'string') oldVal = JSON.parse(oldVal); } catch(e){}
+      try { if (typeof newVal === 'string') newVal = JSON.parse(newVal); } catch(e){}
+      if (!oldVal) oldVal = {};
+      if (!newVal) newVal = {};
 
-    fields.forEach(f => {
-      let vOld = oldVal[f];
-      let vNew = newVal[f];
+      const isCreate = log.action.toUpperCase().includes('CREATE');
+      const actor = log.user?.first_name || log.user?.username || 'System';
+      const ts = log.createdAt;
+      const ip = log.ip_address || 'N/A';
+      
+      if (isCreate) {
+        history.push({ user: actor, timestamp: ts, field: 'ACTION', old_value: '-', new_value: 'RECORD CREATED', ip_address: ip });
+        const idField = ['name', 'title', 'username', 'entity_code'].find(f => newVal[f]);
+        if (idField) {
+          history.push({ user: actor, timestamp: ts, field: idField.replace(/_/g, ' ').toUpperCase(), old_value: '-', new_value: formatValue(newVal[idField]), ip_address: ip });
+        }
+        return;
+      }
 
-      // Deep compare if needed, but here simple stringify check is usually enough for primitives
-      if (JSON.stringify(vOld) !== JSON.stringify(vNew)) {
-        // Resolve IDs to names if applicable
+      const allFields = new Set([...Object.keys(oldVal), ...Object.keys(newVal)]);
+      const fields = Array.from(allFields).filter(f => {
+        if (['updatedAt', 'createdAt', 'gallery', 'id', 'password_hash', 'unique_number'].includes(f)) return false;
+        return newVal[f] !== undefined;
+      });
+  
+      fields.forEach(f => {
+        let vOld = oldVal[f];
+        let vNew = newVal[f];
+  
         if (ID_FIELD_MAP[f]) {
           const modelName = ID_FIELD_MAP[f].model.name;
           vOld = nameCache[modelName]?.[vOld] || vOld;
           vNew = nameCache[modelName]?.[vNew] || vNew;
         }
+  
+        const formattedOld = formatValue(vOld);
+        const formattedNew = formatValue(vNew);
+  
+        if (formattedOld !== formattedNew && (formattedOld !== '-' || formattedNew !== '-')) {
+          history.push({
+            user: actor,
+            timestamp: ts,
+            field: f.replace(/_/g, ' ').toUpperCase(),
+            old_value: formattedOld,
+            new_value: formattedNew,
+            ip_address: ip
+          });
+        }
+      });
+    });
 
-        history.push({
-          user: log.user?.first_name || log.user?.username || 'System',
-          timestamp: log.createdAt,
-          field: f.replace(/_/g, ' ').toUpperCase(),
-          old_value: formatValue(vOld),
-          new_value: formatValue(vNew)
-        });
+    // Final De-duplication check
+    const uniqueHistory = [];
+    const seen = new Set();
+    history.forEach(h => {
+      const key = `${h.timestamp}-${h.field}-${h.old_value}-${h.new_value}`;
+      if (!seen.has(key)) {
+        uniqueHistory.push(h);
+        seen.add(key);
       }
     });
-  });
 
-  return history;
+  return uniqueHistory;
 };
 
-module.exports = { getFormattedHistory };
+const hasChanges = (oldVal, newVal) => {
+  if (!newVal || Object.keys(newVal).length === 0) return false;
+  const fields = Object.keys(newVal).filter(f => !['updatedAt', 'createdAt', 'id'].includes(f));
+  for (const f of fields) {
+    if (formatValue(oldVal[f]) !== formatValue(newVal[f])) return true;
+  }
+  return false;
+};
+
+const extractDeltas = (oldVal, newVal) => {
+  const delta = {};
+  if (!newVal) return delta;
+  Object.keys(newVal).forEach(key => {
+    if (!['updatedAt', 'createdAt', 'id'].includes(key)) {
+      if (formatValue(oldVal[key]) !== formatValue(newVal[key])) {
+        delta[key] = newVal[key];
+      }
+    }
+  });
+  return delta;
+};
+
+module.exports = { getFormattedHistory, hasChanges, extractDeltas };

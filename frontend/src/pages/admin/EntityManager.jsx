@@ -563,9 +563,10 @@ const EntityManager = () => {
                 <table>
                   <thead>
                     <tr>
-                      <th>Login User</th>
-                      <th>Date & Time</th>
-                      <th>Field Name</th>
+                      <th>Who</th>
+                      <th>When</th>
+                      <th>IP</th>
+                      <th>Field</th>
                       <th>Old Value</th>
                       <th>New Value</th>
                     </tr>
@@ -575,6 +576,7 @@ const EntityManager = () => {
                       <tr key={i}>
                         <td>{h.user}</td>
                         <td>{new Date(h.timestamp).toLocaleString()}</td>
+                        <td style={{ fontSize: '11px', color: 'var(--text-muted)' }}>{h.ip_address}</td>
                         <td><span className="badge badge-muted">{h.field}</span></td>
                         <td style={{ color: 'var(--danger)', textDecoration: 'line-through', fontSize: '13px' }}>{h.old_value}</td>
                         <td style={{ color: 'var(--success)', fontWeight: 600, fontSize: '13px' }}>{h.new_value}</td>

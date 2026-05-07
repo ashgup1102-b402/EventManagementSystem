@@ -101,11 +101,15 @@ const update = async (req, res, next) => {
     if (req.file) req.body.image = `/uploads/slots/${req.file.filename}`;
     await slot.update(req.body);
 
-    await AuditLog.create({
-      user_id: req.user.id, action: 'UPDATE_SLOT', entity_type: 'Slot',
-      entity_id: slot.id, old_values: oldValues, new_values: req.body,
-      ip_address: req.ip, user_agent: req.headers['user-agent']
-    });
+    const { hasChanges, extractDeltas } = require('../utils/historyHelper');
+    if (hasChanges(oldValues, req.body)) {
+      const deltas = extractDeltas(oldValues, req.body);
+      await AuditLog.create({
+        user_id: req.user.id, action: 'UPDATE_SLOT', entity_type: 'Slot',
+        entity_id: slot.id, old_values: oldValues, new_values: deltas,
+        ip_address: req.ip, user_agent: req.headers['user-agent']
+      });
+    }
 
     res.json({ success: true, message: 'Slot updated.', data: slot });
   } catch (err) { next(err); }

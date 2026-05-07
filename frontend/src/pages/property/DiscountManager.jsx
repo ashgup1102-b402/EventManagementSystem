@@ -17,6 +17,14 @@ const DiscountManager = () => {
   const [form, setForm] = useState({})
   const [saving, setSaving] = useState(false)
   const [entityId, setEntityId] = useState(null)
+  const BASE_URL = 'http://localhost:5000';
+
+  const getImgUrl = (path) => {
+    if (!path) return null;
+    if (path.startsWith('http')) return path;
+    const cleanPath = path.startsWith('/') ? path : `/${path}`;
+    return `${BASE_URL}${cleanPath}`;
+  }
   
   const [historyModal, setHistoryModal] = useState(null)
   const [history, setHistory] = useState([])
@@ -26,8 +34,32 @@ const DiscountManager = () => {
   const queryParams = new URLSearchParams(urlSearch)
   const initialActive = queryParams.get('is_active')
   const mode = queryParams.get('mode')
-  const isReadOnly = mode === 'view'
-  const noDelete = mode === 'edit_no_delete' || isReadOnly
+
+  const [permissions, setPermissions] = useState({ isReadOnly: false, noDelete: false })
+
+  useEffect(() => {
+    if (mode) {
+      setPermissions({
+        isReadOnly: mode === 'view',
+        noDelete: mode === 'edit_no_delete' || mode === 'view'
+      })
+    } else if (currentUser) {
+      api.get('/auth/authorizations').then(r => {
+        const myAuths = r.data.data.filter(a => a.role_name === currentUser.role)
+        const screenAuth = myAuths.find(a => a.screen_name === 'Discount Management')
+        const perm = screenAuth ? screenAuth.permission : 'Full Access'
+        
+        setPermissions({
+          isReadOnly: perm === 'Read Only' || perm === 'None',
+          noDelete: perm === 'Read and Edit' || perm === 'Read Only' || perm === 'None'
+        })
+      }).catch(console.error)
+    }
+  }, [mode, currentUser])
+
+  const { isReadOnly, noDelete } = permissions
+  const canActivate = !isReadOnly
+  const canDeactivate = !noDelete
 
 
   useEffect(() => {
@@ -180,7 +212,16 @@ const DiscountManager = () => {
             <thead><tr><th>Name</th><th>Type</th><th>Value</th><th>Applies To</th><th>Promo Code</th><th>Valid</th><th>Used</th><th>Status</th><th>Actions</th></tr></thead>
             <tbody>{discounts.map(d => (
               <tr key={d.id} className={!d.is_active ? 'row-inactive' : ''}>
-                <td style={{ fontWeight:600 }}>{d.name}</td>
+                <td style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                  {d.image ? (
+                    <img src={getImgUrl(d.image)} alt="Img" style={{ width: 40, height: 40, borderRadius: 6, objectFit: 'cover' }} />
+                  ) : (
+                    <div style={{ width: 40, height: 40, background: 'var(--bg-tertiary)', borderRadius: 6, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 14 }}>🏷️</div>
+                  )}
+                  <div>
+                    <strong style={{ fontWeight: 600 }}>{d.name}</strong>
+                  </div>
+                </td>
                 <td><span className="badge badge-primary">{d.discount_type}</span></td>
                 <td style={{ fontWeight:700 }}>{d.discount_type==='percentage' ? `${d.discount_value}%` : `₹${d.discount_value}`}</td>
                 <td>{d.applicable_on?.replace('_',' ')}</td>
@@ -194,12 +235,11 @@ const DiscountManager = () => {
                       {isReadOnly ? 'View' : 'Edit'}
                     </button>
                     <button className="btn btn-ghost btn-sm" onClick={() => fetchHistory('discount', d.id)}>📜</button>
-                    {!noDelete && (
-                      d.is_active ? (
-                        <button className="btn btn-danger btn-sm" onClick={() => deactivate('discount', d.id)}>✕</button>
-                      ) : (
-                        <button className="btn btn-success btn-sm" onClick={() => activate('discount', d.id)}>✓</button>
-                      )
+                    {canActivate && !d.is_active && (
+                      <button className="btn btn-success btn-sm" onClick={() => activate('discount', d.id)}>✓</button>
+                    )}
+                    {canDeactivate && d.is_active && (
+                      <button className="btn btn-danger btn-sm" onClick={() => deactivate('discount', d.id)}>✕</button>
                     )}
                   </div>
                 </td>
@@ -212,11 +252,17 @@ const DiscountManager = () => {
       {tab === 'combos' && (
         combos.length === 0 ? <div className="empty-state"><div className="empty-icon">🎁</div><h3>No combos</h3></div> :
         <div className="grid-auto">{combos.map(c => (
-          <div key={c.id} className={`card card-hover ${!c.is_active ? 'card-inactive' : ''}`} style={{ padding: 20, cursor:'pointer', position:'relative' }}>
-            <div style={{ display:'flex', justifyContent:'space-between', marginBottom:8 }}>
-              <div className="badge badge-warning">🎁 Combo Deal</div>
-              <div className={`badge ${c.is_active?'badge-success':'badge-danger'}`}>{c.is_active?'Active':'Inactive'}</div>
-            </div>
+          <div key={c.id} className={`card card-hover ${!c.is_active ? 'card-inactive' : ''}`} style={{ padding: 0, cursor:'pointer', position:'relative', overflow: 'hidden' }}>
+            {c.image ? (
+              <img src={getImgUrl(c.image)} alt={c.name} style={{ width: '100%', height: 120, objectFit: 'cover' }} />
+            ) : (
+              <div style={{ height: 120, background: 'var(--bg-tertiary)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 32 }}>🎁</div>
+            )}
+            <div style={{ padding: 20 }}>
+              <div style={{ display:'flex', justifyContent:'space-between', marginBottom:8 }}>
+                <div className="badge badge-warning">🎁 Combo Deal</div>
+                <div className={`badge ${c.is_active?'badge-success':'badge-danger'}`}>{c.is_active?'Active':'Inactive'}</div>
+              </div>
             <div onClick={() => openCombo(c)}>
               <div style={{ fontWeight:700, fontSize:18, marginBottom:4 }}>{c.name}</div>
               {c.description && <div style={{ fontSize:13, color:'var(--text-secondary)', marginBottom:10 }}>{c.description}</div>}
@@ -228,15 +274,15 @@ const DiscountManager = () => {
             </div>
             <div style={{ marginTop:16, display:'flex', gap:8, borderTop: '1px solid var(--border-color)', paddingTop: 12 }}>
               <button className="btn btn-ghost btn-sm" onClick={() => fetchHistory('combo', c.id)}>📜 History</button>
-              {!noDelete && (
-                c.is_active ? (
-                  <button className="btn btn-danger btn-sm" onClick={() => deactivate('combo', c.id)}>Deactivate</button>
-                ) : (
-                  <button className="btn btn-success btn-sm" onClick={() => activate('combo', c.id)}>Activate</button>
-                )
+              {canActivate && !c.is_active && (
+                <button className="btn btn-success btn-sm" onClick={() => activate('combo', c.id)}>Activate</button>
+              )}
+              {canDeactivate && c.is_active && (
+                <button className="btn btn-danger btn-sm" onClick={() => deactivate('combo', c.id)}>Deactivate</button>
               )}
             </div>
           </div>
+        </div>
         ))}</div>
       )}
 
@@ -308,13 +354,14 @@ const DiscountManager = () => {
               ) : (
                 <table className="matrix-table">
                   <thead>
-                    <tr><th>Who</th><th>When</th><th>Field</th><th>Old</th><th>New</th></tr>
+                    <tr><th>Who</th><th>When</th><th>IP</th><th>Field</th><th>Old</th><th>New</th></tr>
                   </thead>
                   <tbody>
                     {history.map((h, i) => (
                       <tr key={i}>
                         <td>{h.user}</td>
                         <td>{moment(h.timestamp).format('DD MMM YY HH:mm')}</td>
+                        <td style={{ fontSize: '11px', color: 'var(--text-muted)' }}>{h.ip_address}</td>
                         <td><strong>{h.field}</strong></td>
                         <td className="text-danger strike">{h.old_value}</td>
                         <td className="text-success">{h.new_value}</td>

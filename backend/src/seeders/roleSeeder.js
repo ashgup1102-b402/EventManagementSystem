@@ -72,11 +72,21 @@ const seedRoles = async () => {
       }
     });
 
-    // 3. Entity & End_User: Default to None for administrative screens
+    // 3. Entity: Logic for permissions
+    const entityScreens = ['Dashboard', 'Event Management', 'Menu Management', 'Slot Management', 'Discount Management', 'Promotions', 'Booking Management', 'Guest List', 'Direct Marketing', 'Entity Settings'];
+    let entityPermission = 'None';
+    if (entityScreens.includes(screen)) entityPermission = 'Full Access';
+
     await Authorization.findOrCreate({
       where: { role_name: 'Entity', screen_name: screen },
-      defaults: { role_name: 'Entity', screen_name: screen, permission: 'None' }
+      defaults: { role_name: 'Entity', screen_name: screen, permission: entityPermission }
+    }).then(([auth, created]) => {
+      if (!created && auth.permission !== entityPermission && entityPermission !== 'None') {
+        return auth.update({ permission: entityPermission });
+      }
     });
+
+    // 4. End_User: Default to None
     await Authorization.findOrCreate({
       where: { role_name: 'End_User', screen_name: screen },
       defaults: { role_name: 'End_User', screen_name: screen, permission: 'None' }

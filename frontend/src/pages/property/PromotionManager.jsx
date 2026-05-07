@@ -15,11 +15,46 @@ const PromotionManager = () => {
   const [form, setForm] = useState({})
   const [saving, setSaving] = useState(false)
   const [entityId, setEntityId] = useState(null)
+  const BASE_URL = 'http://localhost:5000';
+
+  const getImgUrl = (path) => {
+    if (!path) return null;
+    if (path.startsWith('http')) return path;
+    const cleanPath = path.startsWith('/') ? path : `/${path}`;
+    return `${BASE_URL}${cleanPath}`;
+  }
+  
+  const [historyModal, setHistoryModal] = useState(null)
+  const [history, setHistory] = useState([])
+  const [historyLoading, setHistoryLoading] = useState(false)
   
   const { search: urlSearch } = useLocation()
   const queryParams = new URLSearchParams(urlSearch)
   const mode = queryParams.get('mode')
-  const isReadOnly = mode === 'view'
+  
+  const [permissions, setPermissions] = useState({ isReadOnly: false, noDelete: false })
+
+  useEffect(() => {
+    if (mode) {
+      setPermissions({
+        isReadOnly: mode === 'view',
+        noDelete: mode === 'edit_no_delete' || mode === 'view'
+      })
+    } else if (currentUser) {
+      api.get('/auth/authorizations').then(r => {
+        const myAuths = r.data.data.filter(a => a.role_name === currentUser.role)
+        const screenAuth = myAuths.find(a => a.screen_name === 'Promotions')
+        const perm = screenAuth ? screenAuth.permission : 'Full Access'
+        
+        setPermissions({
+          isReadOnly: perm === 'Read Only' || perm === 'None',
+          noDelete: perm === 'Read and Edit' || perm === 'Read Only' || perm === 'None'
+        })
+      }).catch(console.error)
+    }
+  }, [mode, currentUser])
+
+  const { isReadOnly, noDelete } = permissions
 
   useEffect(() => {
     fetchInit()
@@ -48,6 +83,19 @@ const PromotionManager = () => {
       setPromotions(data.data)
     } catch (err) {
       toast.error('Failed to reload promotions.')
+    }
+  }
+  
+  const fetchHistory = async (id) => {
+    setHistoryLoading(true)
+    setHistoryModal(id)
+    try {
+      const res = await api.get(`/promotions/${id}/history`)
+      setHistory(res.data.data)
+    } catch (err) {
+      toast.error('Failed to load history.')
+    } finally {
+      setHistoryLoading(false)
     }
   }
 
@@ -98,7 +146,7 @@ const PromotionManager = () => {
           <div key={p.id} className={`card ${!p.is_active ? 'card-inactive' : ''}`} style={{ padding: 0, overflow: 'hidden' }}>
             <div style={{ height: 160, background: 'var(--bg-tertiary)', position: 'relative' }}>
               {p.image ? (
-                <img src={`http://localhost:5000${p.image}`} alt={p.title} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                <img src={getImgUrl(p.image)} alt={p.title} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
               ) : (
                 <div style={{ display:'flex', alignItems:'center', justifyContent:'center', height:'100%', fontSize:40 }}>🚀</div>
               )}
@@ -111,7 +159,10 @@ const PromotionManager = () => {
               <p style={{ fontSize: 13, color: 'var(--text-secondary)', marginBottom: 16 }}>{p.description}</p>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <span style={{ fontSize: 11, color: 'var(--text-muted)' }}>{p.valid_from || '∞'} - {p.valid_to || '∞'}</span>
-                <button className="btn btn-secondary btn-sm" onClick={() => openModal(p)}>{isReadOnly ? 'View' : 'Edit'}</button>
+                <div style={{ display:'flex', gap:6 }}>
+                  <button className="btn btn-secondary btn-sm" onClick={() => openModal(p)}>{isReadOnly ? 'View' : 'Edit'}</button>
+                  <button className="btn btn-ghost btn-sm" onClick={() => fetchHistory(p.id)}>📜</button>
+                </div>
               </div>
             </div>
           </div>
@@ -148,6 +199,45 @@ const PromotionManager = () => {
             <div className="modal-footer">
               <button className="btn btn-secondary" onClick={() => setModal(null)}>{isReadOnly ? 'Close' : 'Cancel'}</button>
               {!isReadOnly && <button className="btn btn-primary" onClick={save} disabled={saving}>{saving ? 'Saving…' : 'Save Promotion'}</button>}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {historyModal && (
+        <div className="modal-overlay" onClick={e => e.target===e.currentTarget && setHistoryModal(null)}>
+          <div className="modal card" style={{ maxWidth: 800 }}>
+            <div className="modal-header">
+              <h2>📜 Change History</h2>
+              <button className="modal-close" onClick={() => setHistoryModal(null)}>✕</button>
+            </div>
+            <div className="history-list" style={{ maxHeight: 400, overflowY: 'auto' }}>
+              {historyLoading ? (
+                <div className="loading-center"><div className="spinner" /></div>
+              ) : history.length === 0 ? (
+                <p className="text-muted p-4">No changes recorded.</p>
+              ) : (
+                <table className="matrix-table">
+                  <thead>
+                    <tr><th>Who</th><th>When</th><th>IP</th><th>Field</th><th>Old</th><th>New</th></tr>
+                  </thead>
+                  <tbody>
+                    {history.map((h, i) => (
+                      <tr key={i}>
+                        <td>{h.user}</td>
+                        <td>{moment(h.timestamp).format('DD MMM YY HH:mm')}</td>
+                        <td style={{ fontSize: '11px', color: 'var(--text-muted)' }}>{h.ip_address}</td>
+                        <td><strong>{h.field}</strong></td>
+                        <td className="text-danger strike">{h.old_value}</td>
+                        <td className="text-success">{h.new_value}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              )}
+            </div>
+            <div className="modal-footer">
+              <button className="btn btn-secondary" onClick={() => setHistoryModal(null)}>Close</button>
             </div>
           </div>
         </div>

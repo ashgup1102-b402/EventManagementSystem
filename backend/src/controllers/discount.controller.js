@@ -58,11 +58,15 @@ const updateDiscount = async (req, res, next) => {
     if (req.file) req.body.image = `/uploads/discounts/${req.file.filename}`;
     await discount.update(req.body);
 
-    await AuditLog.create({
-      user_id: req.user.id, action: 'UPDATE_DISCOUNT', entity_type: 'Discount',
-      entity_id: discount.id, old_values: oldValues, new_values: req.body,
-      ip_address: req.ip, user_agent: req.headers['user-agent']
-    });
+    const { hasChanges, extractDeltas } = require('../utils/historyHelper');
+    if (hasChanges(oldValues, req.body)) {
+      const deltas = extractDeltas(oldValues, req.body);
+      await AuditLog.create({
+        user_id: req.user.id, action: 'UPDATE_DISCOUNT', entity_type: 'Discount',
+        entity_id: discount.id, old_values: oldValues, new_values: deltas,
+        ip_address: req.ip, user_agent: req.headers['user-agent']
+      });
+    }
 
     res.json({ success: true, message: 'Discount updated.', data: discount });
   } catch (err) { next(err); }
@@ -138,11 +142,15 @@ const updateCombo = async (req, res, next) => {
     const oldValues = combo.toJSON();
     await combo.update(req.body);
 
-    await AuditLog.create({
-      user_id: req.user.id, action: 'UPDATE_COMBO', entity_type: 'ComboDeal',
-      entity_id: combo.id, old_values: oldValues, new_values: req.body,
-      ip_address: req.ip, user_agent: req.headers['user-agent']
-    });
+    const { hasChanges, extractDeltas } = require('../utils/historyHelper');
+    if (hasChanges(oldValues, req.body)) {
+      const deltas = extractDeltas(oldValues, req.body);
+      await AuditLog.create({
+        user_id: req.user.id, action: 'UPDATE_COMBO', entity_type: 'ComboDeal',
+        entity_id: combo.id, old_values: oldValues, new_values: deltas,
+        ip_address: req.ip, user_agent: req.headers['user-agent']
+      });
+    }
 
     res.json({ success: true, message: 'Combo updated.', data: combo });
   } catch (err) { next(err); }

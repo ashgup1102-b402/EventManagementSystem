@@ -19,13 +19,47 @@ const EventsManager = () => {
   const [form, setForm] = useState({})
   const [saving, setSaving] = useState(false)
   const [entityId, setEntityId] = useState(null)
+  const BASE_URL = 'http://localhost:5000';
+
+  const getImgUrl = (path) => {
+    if (!path) return null;
+    if (path.startsWith('http')) return path;
+    const cleanPath = path.startsWith('/') ? path : `/${path}`;
+    return `${BASE_URL}${cleanPath}`;
+  }
 
   const { search: urlSearch } = useLocation()
   const queryParams = new URLSearchParams(urlSearch)
   const initialStatus = queryParams.get('status')
   const mode = queryParams.get('mode') // 'view', 'edit_no_delete', or null
-  const isReadOnly = mode === 'view'
-  const noDelete = mode === 'edit_no_delete' || isReadOnly
+
+  const [auths, setAuths] = useState([])
+  const [permissions, setPermissions] = useState({ isReadOnly: false, noDelete: false })
+
+  useEffect(() => {
+    if (mode) {
+      setPermissions({
+        isReadOnly: mode === 'view',
+        noDelete: mode === 'edit_no_delete' || mode === 'view'
+      })
+    } else if (currentUser) {
+      // If no mode in URL, check current user's authorizations
+      api.get('/auth/authorizations').then(r => {
+        const myAuths = r.data.data.filter(a => a.role_name === currentUser.role)
+        const screenAuth = myAuths.find(a => a.screen_name === 'Event Management')
+        const perm = screenAuth ? screenAuth.permission : 'Full Access' // Default to Full if not found (legacy)
+        
+        setPermissions({
+          isReadOnly: perm === 'Read Only' || perm === 'None',
+          noDelete: perm === 'Read and Edit' || perm === 'Read Only' || perm === 'None'
+        })
+      }).catch(console.error)
+    }
+  }, [mode, currentUser])
+
+  const { isReadOnly, noDelete } = permissions
+  const canActivate = !isReadOnly
+  const canDeactivate = !noDelete
 
 
   useEffect(() => {
@@ -186,7 +220,16 @@ const EventsManager = () => {
             <tbody>
               {events.map(ev => (
                 <tr key={ev.id}>
-                  <td><strong>{ev.name}</strong></td>
+                  <td style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                    {ev.image ? (
+                      <img src={getImgUrl(ev.image)} alt="Img" style={{ width: 40, height: 40, borderRadius: 6, objectFit: 'cover' }} />
+                    ) : (
+                      <div style={{ width: 40, height: 40, background: 'var(--bg-tertiary)', borderRadius: 6, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 14 }}>🎭</div>
+                    )}
+                    <div>
+                      <strong>{ev.name}</strong>
+                    </div>
+                  </td>
                   <td>{ev.event_type_ref?.name || '-'}</td>
                   <td>{ev.performer_ref?.name || ev.performer_name || '-'}</td>
                   <td>
@@ -206,12 +249,11 @@ const EventsManager = () => {
                         {isReadOnly ? 'View' : 'Edit'}
                       </button>
                       <button className="btn btn-sm btn-light" onClick={() => fetchHistory(ev.id)}>📜 History</button>
-                      {!noDelete && (
-                        ev.status === 'Active' ? (
-                          <button className="btn btn-sm btn-danger" onClick={() => deactivate(ev.id)}>Deactivate</button>
-                        ) : (
-                          <button className="btn btn-sm btn-success" onClick={() => activate(ev.id)}>Activate</button>
-                        )
+                      {canActivate && ev.status !== 'Active' && (
+                        <button className="btn btn-sm btn-success" onClick={() => activate(ev.id)}>Activate</button>
+                      )}
+                      {canDeactivate && ev.status === 'Active' && (
+                        <button className="btn btn-sm btn-danger" onClick={() => deactivate(ev.id)}>Deactivate</button>
                       )}
                     </div>
                   </td>
@@ -331,11 +373,12 @@ const EventsManager = () => {
             <div className="history-list" style={{ maxHeight: 400, overflowY: 'auto' }}>
               {history.length === 0 ? <p className="text-muted p-4">No changes recorded.</p> : (
                 <table className="matrix-table">
-                  <thead><tr><th>Who</th><th>When</th><th>Field</th><th>Old</th><th>New</th></tr></thead>
+                  <thead><tr><th>Who</th><th>When</th><th>IP</th><th>Field</th><th>Old</th><th>New</th></tr></thead>
                   <tbody>{history.map((h, i) => (
                     <tr key={i}>
                       <td>{h.user}</td>
                       <td>{moment(h.timestamp).format('DD MMM YY HH:mm')}</td>
+                      <td style={{ fontSize: '11px', color: 'var(--text-muted)' }}>{h.ip_address}</td>
                       <td><strong>{h.field}</strong></td>
                       <td className="text-danger strike">{h.old_value}</td>
                       <td className="text-success">{h.new_value}</td>

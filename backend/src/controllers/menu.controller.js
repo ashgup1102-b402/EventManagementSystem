@@ -104,11 +104,15 @@ const update = async (req, res, next) => {
     
     await item.update(req.body);
 
-    await AuditLog.create({
-      user_id: req.user.id, action: 'UPDATE_MENU_ITEM', entity_type: 'MenuItem',
-      entity_id: item.id, old_values: oldValues, new_values: req.body,
-      ip_address: req.ip, user_agent: req.headers['user-agent']
-    });
+    const { hasChanges, extractDeltas } = require('../utils/historyHelper');
+    if (hasChanges(oldValues, req.body)) {
+      const deltas = extractDeltas(oldValues, req.body);
+      await AuditLog.create({
+        user_id: req.user.id, action: 'UPDATE_MENU_ITEM', entity_type: 'MenuItem',
+        entity_id: item.id, old_values: oldValues, new_values: deltas,
+        ip_address: req.ip, user_agent: req.headers['user-agent']
+      });
+    }
 
     res.json({ success: true, message: 'Menu item updated.', data: item });
   } catch (err) { next(err); }
