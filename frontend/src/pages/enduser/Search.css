@@ -388,7 +388,7 @@
 }
 
 .event-card-img-wrap {
-  height: 25%; /* Image top 25% as requested */
+  height: 60%; /* Updated from 25% to 60% */
   width: 100%;
   position: relative;
   z-index: 1;
@@ -525,7 +525,7 @@
 }
 
 .property-card-img-wrap {
-  height: 25%;
+  height: 60%; /* Updated from 25% to 60% */
   width: 100%;
   position: relative;
   z-index: 1;
